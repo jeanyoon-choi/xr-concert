@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { registerBroadcastSignaling } from "./broadcast/register-broadcast.mjs";
+import { registerCameraCollageSignaling } from "./camera-collage/register-camera-collage.mjs";
 import { events, roles } from "./core/events.mjs";
 import { applySessionCommand, createSessionState } from "./core/session-state.mjs";
 import { createExperimentRegistry } from "./experiments/index.mjs";
@@ -32,6 +33,7 @@ export function createConcertRealtimeServer(httpServer, options = {}) {
     mode: initialExperiment.defaultMode,
   });
   const broadcastState = { broadcasterId: null, listeners: new Set() };
+  const cameraCollageState = { publishers: new Set(), viewers: new Set() };
 
   const io = new Server(httpServer, {
     cors: {
@@ -100,6 +102,7 @@ export function createConcertRealtimeServer(httpServer, options = {}) {
     });
 
     registerBroadcastSignaling({ io, socket, state: broadcastState });
+    registerCameraCollageSignaling({ io, socket, state: cameraCollageState });
 
     socket.on("disconnect", () => {
       for (const experiment of experiments.values()) experiment.removeClient(socket.id);

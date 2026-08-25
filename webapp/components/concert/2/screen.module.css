@@ -1,0 +1,28 @@
+.page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #080d0e;
+}
+
+.grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.source {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

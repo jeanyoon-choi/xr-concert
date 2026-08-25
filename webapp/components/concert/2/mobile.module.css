@@ -1,0 +1,60 @@
+.page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--field);
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.controls {
+  position: absolute;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left));
+  display: grid;
+  gap: 0.65rem;
+}
+
+.cameraOptions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.option {
+  min-height: 2.75rem;
+  border: 1px solid rgba(237, 240, 237, 0.72);
+  border-radius: var(--radius);
+  background: rgba(16, 23, 25, 0.74);
+  color: var(--paper-bright);
+  cursor: pointer;
+}
+
+.option[aria-pressed="true"] {
+  background: var(--paper-bright);
+  color: var(--ink);
+}
+
+.button {
+  min-height: 3.3rem;
+  border: 1px solid var(--paper-bright);
+  border-radius: var(--radius);
+  background: var(--paper-bright);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  background: var(--paper-bright);
+  color: var(--error);
+  font-size: 0.88rem;
+}

@@ -16,6 +16,14 @@ export const events = Object.freeze({
   ice: "broadcast:ice",
   broadcastStop: "broadcast:stop",
   broadcastDiagnostic: "broadcast:diagnostic",
+  cameraCollagePublish: "camera-collage:publish",
+  cameraCollageUnpublish: "camera-collage:unpublish",
+  cameraCollageViewerReady: "camera-collage:viewer:ready",
+  cameraCollageViewerLeave: "camera-collage:viewer:leave",
+  cameraCollagePublisherLeave: "camera-collage:publisher:leave",
+  cameraCollageOffer: "camera-collage:offer",
+  cameraCollageAnswer: "camera-collage:answer",
+  cameraCollageIce: "camera-collage:ice",
 });
 
 export const roles = Object.freeze(["admin", "mobile", "screen", "external"]);

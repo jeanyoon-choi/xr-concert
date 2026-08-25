@@ -30,3 +30,9 @@
 - Never commit `.env` files, credentials, certificates, private keys, generated output, or dependencies.
 - Do not commit, push, rewrite history, or create releases unless the user explicitly asks.
 - Run verification from the directory that owns the relevant package manifest.
+
+## Regression discipline
+
+- Read the literal error first; fix that named failure before theorizing about other layers.
+- Use the smallest reversible fix. Do not rename directories, reinstall dependencies, or change architecture during a regression.
+- Do not waste the user's time or tokens on speculative investigation.

@@ -11,7 +11,7 @@ Read in this order:
 6. docs/harness/webrtc-agent-guardrails.md before any microphone or WebRTC work
 7. the owning experiment or harness document
 
-Primary routes: /admin, /mobile, /screen
+Primary routes: /admin, /mobile, /screen. Preserved Study 1 is also available at /mobile/1 and /screen/1; camera-collage Study 2 uses /mobile/2 and /screen/2.
 Primary experiment: wave-particle
 Realtime entry: realtime-server.mjs
 Server registry: realtime/experiments/index.mjs
@@ -21,3 +21,4 @@ Local runner: scripts/dev-https.mjs
 Never use HTTP for device rehearsals. Never emit presentation state from the relay. Never claim the peer-to-peer WebRTC broadcaster is a 100-listener solution.
 WebRTC stays minimal and follows `../broadcaster`: admin selects one input and captures one stream; signaling only relays offer/answer/ICE; each listener owns one peer and one audio element. Diagnostics are separate. Do not add mobile audio controls or speculative state machinery.
 Do not infer audible success from signaling, ICE, a live track, or `play()`. Follow `docs/harness/webrtc-agent-guardrails.md`: compare against the known-good broadcaster, prove source-meter energy, prove RTP, prove playback, then verify physical audibility.
+Camera Collage is a separate P2P video trial. Read `docs/experiments/camera-collage/README.md` before changing it; its signaling is `camera-collage:*` only and the realtime relay must never receive media bytes.

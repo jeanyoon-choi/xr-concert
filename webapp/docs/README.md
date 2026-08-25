@@ -17,6 +17,7 @@
 ## Experiments and tutorials
 
 - [Wave / Particle Study](./experiments/wave-particle/README.md)
+- [Camera Collage / Study 2](./experiments/camera-collage/README.md)
 - [Multi-mobile to projector tutorial](./tutorials/multi-mobile-projector.md)
 
 ## Research

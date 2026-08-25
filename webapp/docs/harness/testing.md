@@ -14,6 +14,7 @@ Current pure tests cover:
 - absence of presentation fields in the server frame;
 - revisioned admin state and new reset epochs.
 - broadcaster authorization, listener opt-in, signaling target isolation, and disconnect cleanup.
+- camera-collage publisher/viewer authorization, signaling target isolation, and publisher cleanup.
 
 ## Transport gate
 
