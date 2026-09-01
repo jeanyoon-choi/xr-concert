@@ -18,6 +18,8 @@ Server registry: realtime/experiments/index.mjs
 Client events: lib/realtime/events.ts
 Local runner: scripts/dev-https.mjs
 
+Standalone preserved archives: /parametric-interface (index plus /whole and /1–/7) and /face-voronoi (redirects to /face-voronoi/1, with valid studies /1–/3). They live under components/parametric-interface and components/face-voronoi, retain their SCC behavior and local media, and are deliberately outside the concert realtime registry until an explicitly scoped performance integration.
+
 Never use HTTP for device rehearsals. Never emit presentation state from the relay. Never claim the peer-to-peer WebRTC broadcaster is a 100-listener solution.
 WebRTC stays minimal and follows `../broadcaster`: admin selects one input and captures one stream; signaling only relays offer/answer/ICE; each listener owns one peer and one audio element. Diagnostics are separate. Do not add mobile audio controls or speculative state machinery.
 Do not infer audible success from signaling, ICE, a live track, or `play()`. Follow `docs/harness/webrtc-agent-guardrails.md`: compare against the known-good broadcaster, prove source-meter energy, prove RTP, prove playback, then verify physical audibility.

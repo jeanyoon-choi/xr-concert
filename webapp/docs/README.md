@@ -18,6 +18,8 @@
 
 - [Wave / Particle Study](./experiments/wave-particle/README.md)
 - [Camera Collage / Study 2](./experiments/camera-collage/README.md)
+- [Parametric Interface archive](./experiments/parametric-interface/README.md)
+- [Face Voronoi archive](./experiments/face-voronoi/README.md)
 - [Multi-mobile to projector tutorial](./tutorials/multi-mobile-projector.md)
 
 ## Research
