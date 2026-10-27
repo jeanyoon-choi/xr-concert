@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import ParametricInterfaceArchive from "@/components/parametric-interface/archive";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
-  findParametricInterfaceExperiment,
-  getParametricInterfaceExperimentsForDate,
-  parametricInterfaceExperimentDateKeys,
-  parametricInterfaceExperiments,
-} from "@/components/parametric-interface/experiments";
+  findParametricInterface,
+  findParametricInterfaceVersion,
+  parametricInterfaceVersions,
+} from "@/components/parametric-interface/versions";
 
 export const dynamicParams = false;
+
+// Pre-version paths now live under v1.
+const legacyRedirects: Readonly<Record<string, string>> = {
+  whole: "/parametric-interface/v1",
+  ...Object.fromEntries(
+    ["1", "2", "3", "4", "5", "6"].map((key) => [key, `/parametric-interface/v1/${key}`]),
+  ),
+};
+
 export const metadata: Metadata = { title: "parametric-interface" };
 
 export function generateStaticParams() {
   return [
-    ...parametricInterfaceExperiments
-      .filter((entry) => entry.section === "default")
-      .map((entry) => ({ experiment: [entry.key] })),
-    ...parametricInterfaceExperimentDateKeys.map((dateKey) => ({
-      experiment: [dateKey],
-    })),
-    ...parametricInterfaceExperiments
-      .filter((entry) => entry.section === "dated")
-      .map((entry) => ({ experiment: entry.key.split("/") })),
+    ...Object.keys(legacyRedirects).map((key) => ({ experiment: [key] })),
+    ...parametricInterfaceVersions.flatMap((version) => [
+      { experiment: [version.key] },
+      ...version.interfaces.map((entry) => ({ experiment: [version.key, entry.key] })),
+    ]),
   ];
 }
 
@@ -31,14 +34,15 @@ export default async function ParametricInterfaceExperimentPage({
   params: Promise<{ experiment: string[] }>;
 }) {
   const { experiment: path } = await params;
-  const dateExperiments =
-    path.length === 1 ? getParametricInterfaceExperimentsForDate(path[0]) : [];
+  if (path.length > 2) notFound();
 
-  if (dateExperiments.length > 0) {
-    return <ParametricInterfaceArchive dateKey={path[0]} experiments={dateExperiments} />;
-  }
+  const legacyTarget = path.length === 1 ? legacyRedirects[path[0]!] : undefined;
+  if (legacyTarget) permanentRedirect(legacyTarget);
 
-  const experiment = findParametricInterfaceExperiment(path);
+  const version = findParametricInterfaceVersion(path[0]!);
+  if (!version) notFound();
+
+  const experiment = path.length === 1 ? version : findParametricInterface(version, path[1]!);
   if (!experiment) notFound();
 
   const { default: Component } = await experiment.load();

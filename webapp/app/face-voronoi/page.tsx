@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import ExperimentNavigation from "@/components/navigation";
+import { getNavigationItems } from "@/components/navigation/experiments";
+
+export const metadata: Metadata = { title: "face-voronoi" };
 
 export default function FaceVoronoiIndexPage() {
-  redirect("/face-voronoi/1");
+  return <ExperimentNavigation experiments={getNavigationItems("face-voronoi")} scope="face-voronoi" />;
 }
