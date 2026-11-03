@@ -3,21 +3,17 @@
 import { useEffect, useState } from "react";
 import type { ClockAnchor } from "../../clock";
 import { FollowerSongClock } from "../../clock/follower";
-import { formatSongClock } from "../../model/clock-face";
+import { INTERFACES } from "../../interfaces/registry";
 import { roseScore, sectionAt } from "../../model/score";
-import { useLyricCue } from "../../timeline/use-lyric-cue";
-import { useSungLines } from "../../timeline/use-sung-lines";
+import { useSongClock } from "../../clock";
 import { openTabChannel, TAB_HEARTBEAT_MS } from "../channel";
-import { tabTitle } from "../frame";
-import { TAB_PAGES } from "../pages/registry";
-import { PAGE_HISTORY } from "../pages/types";
 import styles from "./window.module.css";
 
-// One lyric tab (/parametric-interface/v4/tab). It follows the controller's
-// clock, takes its seat from the controller's roster, and shows the page the
-// score assigns that seat, with the sung line as its own tab title. Opened by
-// the controller it carries `?slot=`; opened by hand it joins after them, in
-// the order it arrived.
+// One lyric window (/parametric-interface/v4/tab). It follows the
+// controller's clock (/v4/tabs) and shows, full window, the v2 interface the
+// score assigns its seat. Opened by the controller it carries `?slot=`;
+// opened by hand it joins after them, in the order it arrived. It says hello
+// on the tab channel and takes its seat from the controller's roster.
 
 type Seat = { seat: number; seats: number };
 
@@ -65,25 +61,15 @@ export default function ParametricInterfaceV4Tab() {
 
   return (
     <FollowerSongClock anchor={anchor}>
-      <SeatPage seat={seat.seat} seats={seat.seats} />
+      <SeatInterface seat={seat.seat} seats={seat.seats} />
     </FollowerSongClock>
   );
 }
 
-function SeatPage({ seat, seats }: Seat) {
-  const cue = useLyricCue();
-  const lines = useSungLines(cue, PAGE_HISTORY);
-  const state = sectionAt(roseScore, cue.currentTimeMs).tab(seat, seats);
-  const { Page } = TAB_PAGES[state];
-  const title = tabTitle(lines, state);
-
-  useEffect(() => {
-    document.title = title;
-  }, [title]);
-
-  return (
-    <main className={styles.fill}>
-      <Page seat={seat} lines={lines} clock={formatSongClock(cue.currentTimeMs)} />
-    </main>
-  );
+function SeatInterface({ seat, seats }: Seat) {
+  const { currentTimeMs } = useSongClock();
+  const key = sectionAt(roseScore, currentTimeMs).tab(seat, seats);
+  const { Screen } = INTERFACES[key];
+  // A new interface mounts fresh, as a new page would.
+  return <Screen key={key} />;
 }

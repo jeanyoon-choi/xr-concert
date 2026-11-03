@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
+  <!-- Abstract live-stream still: a dark home studio, out of focus. A violet LED strip along the back wall, a warm key light, a blurred microphone stand. No people, no text. -->
+  <defs>
+    <radialGradient id="key" cx="0.3" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#e7a46a" stop-opacity="0.6"/>
+      <stop offset="0.4" stop-color="#7a4528" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#120c0c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="led" cx="0.7" cy="0.18" r="0.6">
+      <stop offset="0" stop-color="#8a5bd6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#140f22" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b1" r="0.5"><stop offset="0" stop-color="#d8b6ff" stop-opacity="0.45"/><stop offset="0.8" stop-color="#d8b6ff" stop-opacity="0.28"/><stop offset="1" stop-color="#d8b6ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="b2" r="0.5"><stop offset="0" stop-color="#ffcf98" stop-opacity="0.45"/><stop offset="0.8" stop-color="#ffcf98" stop-opacity="0.26"/><stop offset="1" stop-color="#ffcf98" stop-opacity="0"/></radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <rect width="640" height="360" fill="#0d0b12"/>
+  <rect width="640" height="360" fill="url(#led)"/>
+  <rect x="150" y="54" width="480" height="7" rx="3.5" fill="#b38cff" opacity="0.55" filter="url(#soft)"/>
+  <rect width="640" height="360" fill="url(#key)"/>
+  <g filter="url(#soft)" fill="#050407" opacity="0.85">
+    <rect x="330" y="150" width="9" height="230"/>
+    <rect x="318" y="118" width="34" height="58" rx="17"/>
+  </g>
+  <circle cx="520" cy="120" r="22" fill="url(#b1)"/>
+  <circle cx="575" cy="190" r="32" fill="url(#b1)"/>
+  <circle cx="460" cy="230" r="14" fill="url(#b1)"/>
+  <circle cx="110" cy="250" r="26" fill="url(#b2)"/>
+  <circle cx="60" cy="140" r="15" fill="url(#b2)"/>
+  <rect y="280" width="640" height="80" fill="#060508" opacity="0.6"/>
+</svg>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SchematicStudy1 from "@/components/schematic/1";
 import SchematicStudy2 from "@/components/schematic/2";
+import SchematicStudy3 from "@/components/schematic/3";
 import { isSchematicExperimentSlug, schematicExperiments } from "@/components/schematic/experiments";
 
 export function generateStaticParams() {
@@ -27,5 +28,6 @@ export default async function SchematicExperimentPage({
 }) {
   const { experiment } = await params;
   if (!isSchematicExperimentSlug(experiment)) notFound();
+  if (experiment === "3") return <SchematicStudy3 />;
   return experiment === "2" ? <SchematicStudy2 /> : <SchematicStudy1 />;
 }

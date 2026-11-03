@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { fasciaShops, projectingShops, type Shop } from "../model/shops";
-import { createAlley } from "./alley";
+import { ALLEY, createAlley } from "./alley";
 import { createFascias, createLightboxes } from "./signs";
+import { createViewpoint } from "./viewpoint";
 
 const DUSK = "#22304d";
 const CAMERA = { fov: 50, position: new THREE.Vector3(0.35, 1.62, 3.6), target: new THREE.Vector3(-0.1, 2.9, -40) };
@@ -29,8 +30,9 @@ export type Street = {
   dispose: () => void;
 };
 
-// Euljiro back alley at blue hour from a fixed eye-level camera. Nothing moves;
-// the scene is redrawn only when a sign changes or the frame resizes.
+// Euljiro back alley at blue hour, opening at eye level; the viewer can move the
+// camera (./viewpoint). Nothing else moves, so the scene is redrawn only when a
+// sign changes, the camera moves or the frame resizes.
 export function mountStreet(container: HTMLElement, className: string): Street {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -109,6 +111,17 @@ export function mountStreet(container: HTMLElement, className: string): Street {
     renderer.setSize(width, height);
     render();
   };
+  const viewpoint = createViewpoint(renderer.domElement, camera, {
+    position: CAMERA.position,
+    target: CAMERA.target,
+    bounds: new THREE.Box3(
+      new THREE.Vector3(-ALLEY.halfWidth + 0.3, 0.6, ALLEY.end + 2),
+      new THREE.Vector3(ALLEY.halfWidth - 0.3, 14, ALLEY.start + 2),
+    ),
+    step: 0.4,
+    onChange: render,
+  });
+
   const observer = new ResizeObserver(resize);
   observer.observe(container);
   resize();
@@ -123,6 +136,7 @@ export function mountStreet(container: HTMLElement, className: string): Street {
       render();
     },
     dispose() {
+      viewpoint.dispose();
       window.cancelAnimationFrame(pending);
       observer.disconnect();
       disposeScene(scene);

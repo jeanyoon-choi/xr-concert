@@ -1,0 +1,682 @@
+/*
+ * TikTok iOS For You, dark, on the 390 × 844 glass (1 CSS px = 1 pt).
+ * Metrics ported from experiments-jyc SCC clone/12 tiktok.module.css, with the
+ * iOS safe areas fixed at 54 pt (status bar) and 34 pt (home indicator).
+ * The tab bar is opaque (50 pt + 34 pt) and the video stops on it.
+ */
+.app {
+  --red: #fe2c55;
+  --cyan: #25f4ee;
+  --ink: #161823;
+  --muted: #8a8b91;
+  --line: #ececed;
+  --fill: #f1f1f2;
+  --nav: 84px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app :where(button, input) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.app :where(button) { cursor: pointer; }
+
+.app :where(p) { margin: 0; }
+
+/* Feed: the video fills everything above the opaque tab bar. */
+.feed {
+  position: absolute;
+  inset: 0 0 var(--nav);
+  overflow: hidden;
+  background: #000;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 0;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.app[data-sheet] .stage { transform: scale(0.31); }
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.22), transparent 14%, transparent 58%, rgb(0 0 0 / 0.42) 100%);
+  pointer-events: none;
+}
+
+.app[data-sheet] .shade { opacity: 0; }
+
+/* Auto-captions: centred white text on a dark rounded backing, one box per line. */
+.autoCaption {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  bottom: 196px;
+  text-align: center;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
+  color: #fff;
+  pointer-events: none;
+}
+
+.autoCaption span {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 0.62);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Top bar */
+.top {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  text-shadow: 0 0 4px rgb(0 0 0 / 0.33);
+}
+
+.topIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: #fff;
+}
+
+.topIcon svg {
+  width: 27px;
+  height: 27px;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.4));
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.tab {
+  position: relative;
+  padding: 8px 2px 11px;
+  color: rgb(255 255 255 / 0.62);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.1px;
+}
+
+.tab[data-active] {
+  color: #fff;
+  font-weight: 700;
+}
+
+.tab[data-active]::after {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 30px;
+  height: 2.5px;
+  margin-left: -15px;
+  border-radius: 2px;
+  background: #fff;
+  content: "";
+}
+
+.tabDot {
+  position: absolute;
+  top: 3px;
+  right: -6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+/* Right rail */
+.rail {
+  position: absolute;
+  right: 6px;
+  bottom: 14px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.action {
+  display: flex;
+  width: 52px;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.4);
+}
+
+.action > svg {
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.25));
+}
+
+.action[data-on="like"] > svg { color: var(--red); }
+
+.action[data-on="save"] > svg { color: #facd00; }
+
+.creator {
+  position: relative;
+  display: flex;
+  width: 52px;
+  height: 56px;
+  justify-content: center;
+}
+
+.railAvatar {
+  height: 48px;
+  border-radius: 50%;
+}
+
+.railAvatar .avatar { box-shadow: 0 0 0 1.5px #fff; }
+
+.follow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  transform: translateX(-50%);
+  transition: transform 0.25s, background 0.25s;
+}
+
+.follow svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 3.4;
+}
+
+.follow[data-done] {
+  background: #fff;
+  color: var(--red);
+  transform: translateX(-50%) scale(0);
+  transition-delay: 0.6s;
+}
+
+.record {
+  position: relative;
+  margin-top: 6px;
+}
+
+.disc {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2a2a 0 52%, #141414 54% 100%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.notes {
+  position: absolute;
+  top: -12px;
+  left: -14px;
+  width: 20px;
+  height: 40px;
+  pointer-events: none;
+}
+
+.notes i {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-style: normal;
+  opacity: 0;
+}
+
+.app[data-running] .disc { animation: spin 6s linear infinite; }
+
+.app[data-running] .notes i { animation: note 3s linear infinite; }
+
+.app[data-running] .notes i + i { animation-delay: 1.5s; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes note {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  20% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-10px, -30px) scale(1.1); }
+}
+
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.avatar[data-size="tiny"] { width: 26px; height: 26px; font-size: 12px; }
+
+.avatar[data-size="small"] { width: 32px; height: 32px; font-size: 14px; }
+
+.avatar[data-size="medium"] { width: 48px; height: 48px; font-size: 20px; }
+
+/* Caption block */
+.info {
+  position: absolute;
+  right: 76px;
+  bottom: 14px;
+  left: 12px;
+  z-index: 3;
+  text-shadow: 0 0 4px rgb(0 0 0 / 0.45);
+}
+
+.handle {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+
+.caption {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 6px 0 8px !important;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.caption b { font-weight: 700; }
+
+.sound {
+  display: flex;
+  width: 220px;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sound svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.marquee {
+  overflow: hidden;
+  flex: 1;
+  white-space: nowrap;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 88%, transparent);
+}
+
+.marquee > span {
+  display: inline-flex;
+  gap: 36px;
+  padding-left: 6px;
+}
+
+.app[data-running] .marquee > span { animation: marquee 9s linear infinite; }
+
+@keyframes marquee { to { transform: translateX(calc(-50% - 18px)); } }
+
+/* Playback line along the foot of the video. */
+.progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  height: 2px;
+  background: rgb(255 255 255 / 0.2);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: rgb(255 255 255 / 0.85);
+  transform: scaleX(0.38);
+  transform-origin: 0 50%;
+}
+
+.app[data-running] .progress span { animation: play 32s linear infinite; }
+
+@keyframes play {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.app[data-sheet] :is(.top, .rail, .info, .progress) { visibility: hidden; }
+
+/* Tab bar: opaque black on the feed, 50 pt over the home indicator. */
+.tabBar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: grid;
+  height: var(--nav);
+  grid-template-columns: repeat(5, 1fr);
+  align-items: start;
+  padding-bottom: 34px;
+  background: #000;
+  color: rgb(255 255 255 / 0.65);
+}
+
+.navItem {
+  display: flex;
+  height: 50px;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.navItem[data-active] { color: #fff; }
+
+.navIcon {
+  position: relative;
+  display: grid;
+  height: 26px;
+  place-items: center;
+}
+
+.navIcon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.navLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 12px;
+}
+
+.navItem[data-active] .navLabel { font-weight: 700; }
+
+.navBadge {
+  position: absolute;
+  top: -3px;
+  left: 15px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
+.create {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 29px;
+  place-items: center;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  box-shadow: -3.5px 0 0 var(--cyan), 3.5px 0 0 var(--red);
+}
+
+.create svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Comment sheet: the video keeps playing, shrunk into the space above. */
+.sheetLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  cursor: default;
+}
+
+.sheet {
+  position: relative;
+  display: flex;
+  height: 608px;
+  flex-direction: column;
+  padding-bottom: 34px;
+  border-radius: 12px 12px 0 0;
+  background: #fff;
+  color: var(--ink);
+  animation: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+@keyframes sheet-in { from { transform: translateY(100%); } }
+
+.sheetHead {
+  position: relative;
+  display: flex;
+  height: 46px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.sheetHead strong { font-weight: 600; }
+
+.sheetHead button {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+}
+
+.sheetHead svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.2;
+}
+
+.commentList {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 14px 12px;
+  scrollbar-width: none;
+}
+
+.commentList::-webkit-scrollbar { display: none; }
+
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+
+.commentBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.commentBody strong {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.commentBody p {
+  margin: 3px 0 6px;
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.commentBody small {
+  display: flex;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.commentBody small span { font-weight: 600; }
+
+.commentActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  color: var(--muted);
+}
+
+.commentActions > * {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.commentActions svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.7;
+}
+
+.commentActions small {
+  min-width: 12px;
+  font-size: 12px;
+}
+
+.commentActions [data-on] { color: var(--red); }
+
+.commentForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 10px;
+  border-top: 0.5px solid var(--line);
+}
+
+.commentInput {
+  display: flex;
+  height: 40px;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 20px;
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.commentInput input {
+  min-width: 0;
+  flex: 1;
+  outline: 0;
+  caret-color: var(--red);
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.commentInput input::placeholder { color: #a5a6aa; }
+
+.commentInput svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.6;
+}
+
+.sendComment {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+}
+
+.sendComment svg {
+  width: 18px;
+  height: 18px;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage, .follow { transition: none; }
+  .sheet { animation: none; }
+}

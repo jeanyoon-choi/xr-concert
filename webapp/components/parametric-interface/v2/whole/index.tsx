@@ -10,13 +10,15 @@ import ParametricInterfaceSix from "../6";
 import ParametricInterfaceSeven from "../7";
 import ParametricInterfaceEight from "../8";
 import ParametricInterfaceNine from "../9";
+import ParametricInterfaceTen from "../10";
 import type { ParametricSong } from "../model/song";
 import { SongPlayback } from "../playback";
 
-// The newspaper front page leads, then the ROSÉ studies 7–8; the inherited
-// v0 wrappers follow.
+// The newspaper homepage and the plan chart lead, then the ROSÉ studies 7–8;
+// the inherited v0 wrappers follow.
 const wrapperCycle: readonly { id: string; Component: ComponentType }[] = [
   { id: "9", Component: ParametricInterfaceNine },
+  { id: "10", Component: ParametricInterfaceTen },
   { id: "7", Component: ParametricInterfaceSeven },
   { id: "8", Component: ParametricInterfaceEight },
   { id: "3", Component: ParametricInterfaceThree },

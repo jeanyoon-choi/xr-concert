@@ -10,9 +10,3 @@
 }
 
 .idle p { margin: 0; }
-
-/* The page's container: the whole window. */
-.fill {
-  position: fixed;
-  inset: 0;
-}

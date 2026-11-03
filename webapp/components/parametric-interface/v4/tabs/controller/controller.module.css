@@ -73,11 +73,26 @@
   gap: 12px;
 }
 
-/* This screen at scale, each planned window drawn where it will open. */
+/* The plan on this screen, as desktop-collage's previews draw it. */
 .screen {
   width: 100%;
   height: calc(100svh - 200px);
   min-height: 280px;
+}
+
+.desktop { fill: rgb(var(--fg-rgb) / 0.06); }
+
+.plan {
+  fill: rgb(var(--fg-rgb) / 0.1);
+  stroke: rgb(var(--fg-rgb) / 0.55);
+  vector-effect: non-scaling-stroke;
+}
+
+.bar { fill: rgb(var(--fg-rgb) / 0.12); }
+
+.label {
+  fill: rgb(var(--fg-rgb) / 0.7);
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .section {

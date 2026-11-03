@@ -10,7 +10,8 @@ Study 1 is design only. It is a standalone page outside the realtime registry; i
 | --- | --- |
 | `/schematic` | Navigation index |
 | `/schematic/1` | Scripted circuit with Parts 0–3 |
-| `/schematic/2` | Study 1 wiring without symbols; selecting a point sends continuously from it |
+| `/schematic/2` | One direct trace per sender → receiver; select senders to send along their own traces |
+| `/schematic/3` | Copy of Study 2, the base for the next iteration |
 
 ## Sources
 
@@ -50,7 +51,9 @@ Keys `0`–`3` part, `[` `]` local, `;` `'` remote, `p` phones preset, `h` or th
 
 ## Study 2
 
-Study 1's wiring (orthogonal lines and junctions, imported from `1/model`) with the Mixer and Server hubs but no delay coils, latency values, laptop, frames, parts, or captions. Visible text is limited to performer, Mixer, and Server labels. Any number of senders can be selected at once. Selecting a sender starts a wavefront that travels along the wires at 240 units/s (as in study 1) to the devices it affects; each receiver turns on when the front reaches it, then the flow continues; selecting it again clears it; the empty field clears all. Speakers and the projection only receive.
+`components/schematic/2/circuit.ts` wires one dedicated trace per sender → receiver pair directly, like a printed schematic, with no hub blocks; every trace is visible at rest. Parallel traces keep a fixed pitch (tightened only when a bundle would overflow). Below the stage the band stacks a speaker bundle and then one bundle per remote; inside a bundle the nearest performer takes the highest lane, and corridor columns nest (lower lane, outer column), so a bundle never crosses itself. Phones rise through per-row lanes, turn outward on their own band lane, and climb their own projection column. Visible text is performer labels only.
+
+Any number of senders can be selected at once, each in its own shade (local copper family, remote ochre family, phones water). A wavefront travels along the sender's traces at 640 units/s; on release a tail follows from the sender at the same speed, so traces drain in order. Study 1's rings mark direction: a sender emits solid rings expanding outward; a reached receiver shows dashed rings closing inward in the sender's colour. A performer can show both. The empty field releases all. Speakers and the projection only receive.
 
 | Sender | Receivers | Source |
 | --- | --- | --- |

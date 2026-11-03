@@ -1,0 +1,464 @@
+/* Instagram iOS 2026, Home feed scrolled to one post, light, at native points on the 390 × 844 glass.
+   Values from clone/11's measured CSS and the US App Store feed / comment frames (2.351 px/pt); see index.tsx. */
+.app {
+  --ink: #0c1014;
+  --muted: #6a717b;
+  --line: #e3e6eb;
+  --like: #ff3040;
+  --blue: #4a5df9;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app * { box-sizing: border-box; }
+
+.app button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-family: var(--ios-display);
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Header: Create · 120 pt 2026 wordmark · Activity; glyph centres x 27.6 / 363, y 76; wordmark top at 66.8. */
+.header {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  height: 44px;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  padding: 0 0 0 4px;
+  background: #fff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 48px;
+  height: 44px;
+  place-items: center;
+}
+
+.headerIcon:last-child { justify-self: end; margin-right: 3px; }
+
+.wordmark {
+  display: block;
+  width: 120px;
+  height: auto;
+  align-self: start;
+  justify-self: center;
+  margin-top: 12.8px;
+}
+
+.feed {
+  position: absolute;
+  inset: 98px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 110px;
+}
+
+.feed::-webkit-scrollbar { display: none; }
+
+/* Post header: 54 pt row, 32 pt avatar in a 40 pt slot, 14 pt semibold name. */
+.postHead {
+  display: flex;
+  height: 54px;
+  align-items: center;
+  padding: 0 9px 0 6px;
+}
+
+.postAvatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+}
+
+.accountMark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: #1f2a24;
+  color: #efe9df;
+  font: italic 600 13px/1 ui-serif, "New York", Georgia, serif;
+}
+
+.identity {
+  min-width: 0;
+  flex: 1;
+  padding-left: 7px;
+}
+
+.identity strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.postMore {
+  display: grid;
+  width: 32px;
+  height: 44px;
+  place-items: center;
+}
+
+/* The post image: a text-on-colour quote card, square. */
+.photo {
+  position: relative;
+  display: grid;
+  width: 390px;
+  height: 390px;
+  place-items: center;
+  background: #efe9df;
+  color: #1f2a24;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.quote {
+  margin: 0;
+  font: 400 28px/36px ui-serif, "New York", Georgia, serif;
+  letter-spacing: -0.3px;
+  text-align: center;
+}
+
+.quoteHandle {
+  position: absolute;
+  bottom: 22px;
+  left: 0;
+  right: 0;
+  color: #6f746c;
+  font: 400 12px/16px ui-serif, "New York", Georgia, serif;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+/* Action row measured against the US feed frame: 24 pt glyphs, 6 pt to count, 18 pt between groups. */
+.actions {
+  display: flex;
+  height: 50px;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 11px 0 12px;
+}
+
+.actions button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  margin-top: 11px;
+  padding: 5px 0;
+  line-height: 1;
+}
+
+.actions button span {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+.actions svg { flex: none; }
+.actions .save { margin-left: auto; }
+
+.app .liked { color: var(--like); }
+.actions .liked span { color: var(--ink); }
+
+.copy { padding: 0 13px; }
+
+.caption,
+.preview {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.caption b,
+.preview b { font-weight: 600; }
+
+.preview { margin-bottom: 4px; }
+
+.app .viewAll {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.age {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.preview[data-arriving],
+.comment[data-arriving] { animation: arrive 260ms ease-out both; }
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Floating Prism tab bar: 340 × 60 pill, 21 pt above the edge, 66 × 54 active disc. */
+.tabs {
+  position: absolute;
+  bottom: 21px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: 340px;
+  height: 60px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  padding: 0 3px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(12 16 20 / 0.06);
+  border-radius: 30px;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 8px 28px rgb(12 16 20 / 0.12);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  color: var(--ink);
+}
+
+.tabs > span {
+  position: relative;
+  display: grid;
+  height: 54px;
+  place-items: center;
+}
+
+.tabs > span[data-active]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 27px;
+  background: rgb(12 16 20 / 0.07);
+}
+
+.tabs > span > * { position: relative; z-index: 1; }
+
+.tabAvatar { display: block; line-height: 0; }
+
+.dot {
+  position: absolute !important;
+  top: calc(50% + 6px);
+  left: calc(50% + 7px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--like);
+}
+
+/* Comments sheet, after the US comment frame: top at 415 pt, handle centre 438, title centre 461. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+}
+
+.backdrop[data-open] { display: block; }
+
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  height: 429px;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  box-shadow: 0 -1px 0 rgb(12 16 20 / 0.04);
+  transform: translateY(105%);
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sheet[data-open] { transform: none; }
+
+.app .grab {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 21px;
+}
+
+.grab span {
+  width: 32px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: #8e9298;
+}
+
+.grab strong {
+  margin-top: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.comments {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 24px 0 8px;
+}
+
+.comments::-webkit-scrollbar { display: none; }
+
+/* Comment rows: 32 pt avatar at x 12, text from x 51, like heart centred at x 362 on the text line. */
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 8px 16px 8px 12px;
+}
+
+.comment > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.meta b { font-weight: 600; }
+.meta span { color: var(--muted); }
+
+.body {
+  margin: 2px 0 0;
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.reply {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+}
+
+.app .commentLike {
+  display: grid;
+  width: 24px;
+  flex: none;
+  justify-items: center;
+  margin-top: 20px;
+  color: var(--muted);
+}
+
+.app .commentLike.liked { color: var(--like); }
+
+/* Emoji row under a rule at 738 pt, centres from x 24 to 366. */
+.emoji {
+  display: flex;
+  height: 49px;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 11px;
+  border-top: 1px solid var(--line);
+}
+
+.app .emoji button {
+  width: 26px;
+  font-size: 25px;
+  line-height: 1;
+}
+
+/* Composer: 42 pt avatar at x 16, field x 72–378, 10 pt above the bottom edge. */
+.form {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 13.7px;
+  margin-top: 4px;
+  padding: 0 12px 10px 16px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  height: 42px;
+  flex: 1;
+  align-items: center;
+  border: 1.5px solid #dbdee3;
+  border-radius: 21px;
+  padding: 0 9px 0 10px;
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 16px/20px var(--ios-font);
+  outline: none;
+  caret-color: var(--blue);
+}
+
+.field input::placeholder { color: var(--muted); }
+
+.sticker {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+
+.app .postButton {
+  padding: 0 3px;
+  color: var(--blue);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; }
+  .preview[data-arriving],
+  .comment[data-arriving] { animation: none; }
+}

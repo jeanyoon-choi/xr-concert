@@ -1,194 +1,349 @@
-/* A six-column broadsheet front page sized by the viewport's width (cqw). */
+/* nytimes.com desktop homepage. Every value is the computed style measured on
+   the live page at a 1322 px viewport; the page is zoomed to the viewport as
+   one fixed-format artifact. Font stacks are the site's own; the
+   faces below are the woff2 files nytimes.com serves, kept locally in the
+   git-ignored public/fonts/nyt for this private study. */
+
+@font-face {
+  font-family: "nyt-cheltenham";
+  font-weight: 300;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/cheltenham-normal-300.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-cheltenham";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/cheltenham-normal-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-cheltenham";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/cheltenham-normal-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-franklin";
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/franklin-normal-500.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-franklin";
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/franklin-normal-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-franklin";
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/franklin-normal-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-franklin";
+  font-weight: 800;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/franklin-normal-800.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "nyt-imperial";
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  src: url("/fonts/nyt/imperial-normal-400.woff2") format("woff2");
+}
+
 .page {
-  --headline: "Times New Roman", Times, serif;
-  --text: Georgia, "Times New Roman", serif;
-  --label: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --cheltenham: nyt-cheltenham, cheltenham-fallback-georgia, georgia, "times new roman", times, serif;
+  --franklin: nyt-franklin, helvetica, arial, sans-serif;
+  --imperial: nyt-imperial, georgia, "times new roman", times, serif;
   --ink: #121212;
-  --rule: #b9b6ae;
+  --secondary: #5a5a5a;
+  --tertiary: #727272;
+  --hairline: #dfdfdf;
+  --placeholder: #ebebeb;
   position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  top: 0;
+  left: 0;
+  width: 1322px;
+  height: 100vh;
   overflow: hidden;
-  container-type: size;
-  padding: 1.4cqw 2.4cqw 0;
-  background: #f7f5f0;
+  background: #fff;
   color: var(--ink);
-  font: 1cqw/1.38 var(--text);
+  font-family: var(--franklin);
+  -webkit-font-smoothing: antialiased;
 }
 
 .page *,
 .page *::before,
 .page *::after { box-sizing: border-box; }
 
-.page p,
-.page h1,
-.page h2,
-.page h3 { margin: 0; }
+:where(.page) p,
+:where(.page) ul { margin: 0; padding: 0; }
 
-/* Masthead with its two ears. */
-.masthead {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 2cqw;
-  padding-bottom: 0.8cqw;
+.shell {
+  width: 1200px;
+  margin: 0 auto;
 }
 
-.name {
-  font: 700 5.8cqw/1 var(--headline);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+/* Top bar: search, editions, log in. */
+/* Search, editions and log in are hidden; the bar keeps its height so the
+   masthead stays where the site sets it. */
+.topBar {
+  position: relative;
+  height: 36px;
+  visibility: hidden;
 }
 
-.earLeft,
-.earRight {
-  font: 0.82cqw/1.3 var(--text);
+.search {
+  position: absolute;
+  top: 12px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
 }
 
-.earLeft {
-  justify-self: start;
-  font-style: italic;
-  text-align: center;
-}
-
-.earRight {
-  justify-self: end;
-  display: grid;
-  gap: 0.25cqw;
-  max-width: 15cqw;
-  padding: 0.5cqw 0.7cqw;
-  border: 1px solid var(--ink);
-}
-
-.edition {
-  font: 700 1.05cqw/1.1 var(--headline);
-}
-
-/* Volume, copyright, date and price between two rules. */
-.folio {
+.editions {
+  position: absolute;
+  top: 7px;
+  left: 50%;
   display: flex;
-  justify-content: space-between;
-  gap: 2cqw;
-  padding: 0.35cqw 0;
-  border-top: 1px solid var(--ink);
-  border-bottom: 3px double var(--ink);
-  font: 700 0.78cqw/1.2 var(--label);
-  letter-spacing: 0.04em;
+  transform: translateX(-50%);
+  list-style: none;
+}
+
+.editions li {
+  padding: 6px 8px 7px;
+  color: var(--secondary);
+  font: 500 11px/11px var(--franklin);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.editions li[data-active] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.login {
+  position: absolute;
+  top: 4px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 63px;
+  height: 29px;
+  border: 1px solid #326891;
+  border-radius: 3px;
+  background: #567b95;
+  color: #fff;
+  font: 700 11px/11px var(--franklin);
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+/* Date, masthead. */
+.mastheadRow {
+  display: grid;
+  grid-template-columns: 1fr 485px 1fr;
+  height: 79px;
+}
+
+.dateBlock {
+  display: grid;
+  align-content: start;
+  padding-top: 14px;
+  font: 400 14px/20px var(--franklin);
+  letter-spacing: 0.1px;
+}
+
+.dateBlock span + span { margin-top: 2px; }
+
+.masthead {
+  display: block;
+  width: 485px;
+  height: 66px;
+  margin-top: 7px;
+}
+
+/* Section navigation and the double rule beneath it. */
+.sections {
+  display: flex;
+  justify-content: center;
+  height: 46px;
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font: 500 14px/14px var(--franklin);
+  letter-spacing: 0.1px;
   white-space: nowrap;
 }
 
-/* The six columns. */
+.chevron {
+  width: 8px;
+  height: 5px;
+  fill: var(--secondary);
+}
+
+.doubleRule {
+  height: 5px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+/* The package: an 830 px block and a 337 px column, split by a hairline. */
 .front {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: 13.4cqw minmax(0, 1fr);
-  column-gap: 1.5cqw;
-  min-height: 0;
-  padding-top: 1cqw;
+  grid-template-columns: 830px 337px;
+  column-gap: 33px;
 }
 
-/* The banner is fitted to its line: shorter lines set larger. */
-.banner {
-  grid-column: 1 / 5;
-  grid-row: 1;
-  align-self: start;
-  overflow: hidden;
-  font: 700 clamp(3.4cqw, calc(230cqw / var(--chars)), 6.2cqw) / 1.02 var(--headline);
-  letter-spacing: -0.015em;
-  text-wrap: balance;
+.topStories,
+.rightColumn {
+  margin-top: 20px;
 }
 
-.word[data-unsung] { visibility: hidden; }
-
-.story {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55cqw;
-  min-height: 0;
-  overflow: hidden;
-  padding-bottom: 1cqw;
-}
-
-.lead {
-  grid-column: 1 / 3;
-  grid-row: 2;
-}
-
-.second {
-  grid-column: 3 / 5;
-  grid-row: 2;
-  padding-left: 1.5cqw;
-  margin-left: -0.75cqw;
-  border-left: 1px solid var(--rule);
-}
-
-.column {
-  grid-column: 5 / 7;
-  grid-row: 1 / 3;
+.topStories {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.7fr);
-  column-gap: 1.5cqw;
-  min-height: 0;
-  padding-left: 1.5cqw;
-  margin-left: -0.75cqw;
-  border-left: 1px solid var(--rule);
+  grid-template-columns: 275px 522px;
+  column-gap: 33px;
+  align-items: start;
 }
 
-.third,
-.column > .brief:last-child { grid-column: 1 / 3; }
-
-.column > .story + .story {
-  padding-top: 0.9cqw;
-  border-top: 1px solid var(--rule);
+.rightColumn {
+  position: relative;
 }
 
-.secondHeadline {
-  font: 700 2.3cqw/1.06 var(--headline);
-  letter-spacing: -0.01em;
-  text-wrap: balance;
+.rightColumn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -2000px;
+  left: -17px;
+  border-left: 1px solid var(--hairline);
 }
 
-.thirdHeadline {
-  font: 700 1.9cqw/1.08 var(--headline);
-  text-wrap: balance;
+.story + .story {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
 }
 
-.briefHeadline {
-  font: 700 1.35cqw/1.12 var(--headline);
-  text-wrap: balance;
+.pictureColumn {
+  position: relative;
 }
 
-.byline {
-  font: 700 0.74cqw/1.2 var(--label);
-  letter-spacing: 0.05em;
+.pictureColumn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -17px;
+  border-left: 1px solid var(--hairline);
 }
 
-/* Justified body text, clipped where the story jumps inside. */
-.body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  column-gap: 1.5cqw;
-  column-rule: 1px solid var(--rule);
-  column-fill: auto;
-  text-align: justify;
-  hyphens: auto;
+.image {
+  background: var(--placeholder) center / cover no-repeat;
+}
+.pictureImage { height: 347px; margin-bottom: 24px; }
+.featureImage { height: 224px; margin-bottom: 8px; }
+.tileImage { height: 151px; margin-bottom: 10px; }
+.rowImage { flex: 0 0 103px; height: 103px; }
+
+/* Headline and text styles. */
+.leadHeadline {
+  font: 700 22px/25.3px var(--cheltenham);
 }
 
-.lead .body,
-.second .body,
-.third .body { column-count: 2; }
-
-.body p + p { text-indent: 1.2em; }
-
-.dateline {
-  font: 700 0.86cqw/1 var(--label);
-  letter-spacing: 0.03em;
+.headline {
+  font: 700 18px/21.6px var(--cheltenham);
+  letter-spacing: 0.18px;
 }
 
-.jump {
-  font: italic 0.86cqw/1.2 var(--text);
-  text-align: right;
+.featureHeadline {
+  font: 300 24px/27.6px var(--cheltenham);
+}
+
+.smallHeadline {
+  font: 700 16px/19.2px var(--cheltenham);
+  letter-spacing: 0.16px;
+}
+
+.summary {
+  margin-top: 8px;
+  color: var(--secondary);
+  font: 400 14px/19px var(--imperial);
+  letter-spacing: 0.1px;
+}
+
+.readTime {
+  margin-top: 4px;
+  color: var(--tertiary);
+  font: 500 10px/12.5px var(--franklin);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* The row beneath the package. */
+.row {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 33px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.rowStory {
+  position: relative;
+  display: flex;
+  gap: 15px;
+}
+
+.rowStory + .rowStory::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -17px;
+  border-left: 1px solid var(--hairline);
+}
+
+.tiles {
+  position: relative;
+  display: grid;
+  grid-template-columns: 151px 151px;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+
+.tiles::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  bottom: 0;
+  left: 50%;
+  border-left: 1px solid var(--hairline);
 }

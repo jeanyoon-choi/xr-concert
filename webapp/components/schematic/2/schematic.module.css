@@ -3,9 +3,6 @@
   --schematic-wire: #4a5759;
   --schematic-chalk: #f2f0e7;
   --schematic-active: #c46a3e;
-  --schematic-local: #c46a3e;
-  --schematic-remote: #c9a640;
-  --schematic-phone: #5f9aa2;
   --schematic-mono: ui-monospace, "SF Mono", "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
 
   position: relative;
@@ -31,12 +28,8 @@
 .wire {
   fill: none;
   stroke: var(--schematic-wire);
-  stroke-width: 2;
+  stroke-width: 1.25;
   stroke-linejoin: round;
-}
-
-.junction {
-  fill: var(--schematic-wire);
 }
 
 .stroke,
@@ -52,26 +45,45 @@
 .line {
   fill: none;
   stroke-width: 1.5;
-  stroke-opacity: 0.4;
 }
 
 .flow {
   fill: none;
-  stroke-width: 5;
+  stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 0 24;
   animation: flow 0.12s linear infinite;
 }
 
 @keyframes flow {
+  from {
+    stroke-dashoffset: var(--tail, 0px);
+  }
   to {
-    stroke-dashoffset: -24;
+    stroke-dashoffset: calc(var(--tail, 0px) - 24px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .flow {
     animation: none;
+  }
+}
+
+.rings,
+.ringsIn {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.ringsIn {
+  stroke-dasharray: 3 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rings,
+  .ringsIn {
+    display: none;
   }
 }
 

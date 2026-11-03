@@ -1,0 +1,347 @@
+/* Instagram iOS Direct thread, light, at native points on the 390 × 844 glass.
+   Values measured from the US App Store "Messages" frame at 2.351 px/pt; see index.tsx. */
+.app {
+  --ink: #0c1014;
+  --muted: #6a717b;
+  --line: #e4e7ec;
+  --received: #f4f5f7;
+  --field: #f6f7f9;
+  --accent: #4a5df9;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding-top: 54px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app * { box-sizing: border-box; }
+
+/* Header: 52 pt plus a 1 pt rule; back glyph centred at x 27, avatar at x 49, call/video centred at x 314 / 362. */
+.header {
+  display: flex;
+  height: 53px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 5px;
+  border-bottom: 1px solid var(--line);
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  color: var(--ink);
+}
+
+.who {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 11px;
+  margin-left: -4px;
+}
+
+.headerAvatar,
+.monogram,
+.identityAvatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-family: var(--ios-display);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.headerAvatar { width: 32px; height: 32px; font-size: 14px; }
+
+.names {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.names strong {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.names small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Thread: the offsetParent of every bubble, so the sent gradient can be sliced by scroll position. */
+.thread {
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.rows {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 8px 10px 16px;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px 12px 24px;
+}
+
+.identityAvatar {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 8px;
+  font-size: 36px;
+}
+
+.identity strong { font-size: 20px; font-weight: 700; line-height: 24px; }
+.identity small { color: var(--muted); font-size: 14px; line-height: 18px; }
+
+.viewProfile {
+  margin-top: 12px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #eff1f4;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.stamp {
+  margin: 18px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Rows: received bubbles from x 56 (28 pt avatar at x 16, 12 pt gap); 1 pt apart in a group, 20 pt between groups. */
+.inRow,
+.outGroup { margin-top: 1px; }
+
+.inRow[data-gap],
+.outGroup[data-gap] { margin-top: 20px; }
+
+.stamp + .inRow,
+.stamp + .outRow,
+.stamp + .outGroup,
+.storyQuote + .inRow,
+.storyQuote + .outGroup { margin-top: 0; }
+
+.inRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.outRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.outGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.rowAvatar {
+  width: 28px;
+  flex: none;
+  align-self: flex-end;
+}
+
+.monogram { width: 28px; height: 28px; font-size: 12px; }
+
+.bubble {
+  position: relative;
+  max-width: 262px;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 19px;
+  font-size: 16px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bubble[data-side="in"] { background: var(--received); color: var(--ink); }
+.bubble[data-side="in"]:not([data-last]) { border-bottom-left-radius: 4px; }
+.bubble[data-side="in"]:not([data-first]) { border-top-left-radius: 4px; }
+
+/* Sent: one gradient across the thread viewport (#424fff upper, #4a5df9 lower in the frame). */
+.bubble[data-side="out"] {
+  background-color: #424fff;
+  background-image: linear-gradient(180deg, #3b38ff 0%, #424fff 65%, #4b62f8 100%);
+  background-repeat: no-repeat;
+  color: #fff;
+}
+
+.bubble[data-side="out"]:not([data-last]) { border-bottom-right-radius: 4px; }
+.bubble[data-side="out"]:not([data-first]) { border-top-right-radius: 4px; }
+
+.bubble[data-reacted] { margin-bottom: 18px; }
+
+.reaction {
+  position: absolute;
+  bottom: -20px;
+  left: 10px;
+  height: 26px;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  border-radius: 13px;
+  background: #eff1f4;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+.bubble[data-arriving] {
+  transform-origin: 0 100%;
+  animation: arrive 240ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(8px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+.seen {
+  align-self: flex-end;
+  margin: 5px 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Story reply: label, then the replied story as a quoted 9:16 thumbnail, aligned with the bubbles. */
+.storyLabel {
+  margin: 0 0 6px 40px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.storyQuote {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 6px 40px;
+}
+
+.storyBar {
+  width: 3px;
+  border-radius: 1.5px;
+  background: #dbdee3;
+}
+
+.story {
+  display: grid;
+  width: 96px;
+  height: 170px;
+  padding: 10px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #2f5547;
+  color: #fff;
+  font-family: var(--ios-display);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  text-align: center;
+}
+
+.story span {
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+/* Composer: 42 pt pill from x 8 to 382, 41 pt above the bottom edge; 32 pt camera disc inset 5 pt. */
+.composer {
+  display: flex;
+  height: 42px;
+  align-items: center;
+  margin: 6px 8px 41px;
+  padding: 0 8px 0 5px;
+  border-radius: 21px;
+  background: var(--field);
+}
+
+.camera {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+
+.composer input {
+  min-width: 0;
+  flex: 1;
+  height: 40px;
+  margin-left: 10px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 16px/20px var(--ios-font);
+  outline: none;
+  caret-color: var(--accent);
+}
+
+.composer input::placeholder { color: var(--muted); }
+
+.tools {
+  display: flex;
+  flex: none;
+  color: var(--ink);
+}
+
+.tools span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+}
+
+.sendText {
+  height: 40px;
+  flex: none;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 600 16px/20px var(--ios-font);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble[data-arriving] { animation: none; }
+}

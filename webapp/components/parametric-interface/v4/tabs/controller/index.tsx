@@ -4,13 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ClockAnchor } from "../../clock";
 import { AudioSongClock, useSongTransport } from "../../clock/audio";
-import { formatSongClock } from "../../model/clock-face";
+import { INTERFACES } from "../../interfaces/registry";
 import { roseScore, sectionAt } from "../../model/score";
 import { useLyricCue } from "../../timeline/use-lyric-cue";
-import { useSungLines } from "../../timeline/use-sung-lines";
-import { Desk, DeskWindow } from "../desk";
-import { BrowserFrame, tabTitle } from "../frame";
-import { PAGE_HISTORY } from "../pages/types";
 import { createRoster, openTabChannel, TAB_HEARTBEAT_MS, type TabMessage } from "../channel";
 import {
   closeWindows,
@@ -26,11 +22,13 @@ import styles from "./controller.module.css";
 
 // v4 multi-tab controller (/parametric-interface/v4/tabs). It owns the audio
 // and the roster of lyric tabs, opens the windows from one click (after
-// SCC desktop-collage), and mirrors what every seat shows: each planned
-// window drawn at real size with the page the score gives its seat. The windows follow
+// SCC desktop-collage). Its preview is desktop-collage's: the plan on the
+// measured screen, each window labelled with its seat and the v2 interface
+// the score gives it now. The windows themselves are the work. The windows follow
 // its clock over a BroadcastChannel; nothing passes through a server.
 
 const COUNT_RANGE = { min: 1, max: 16 } as const;
+const TITLE_BAR = 28;
 const FALLBACK_SCREEN: ScreenRect = { x: 0, y: 0, width: 1440, height: 900 };
 
 const noSubscription = () => () => {};
@@ -111,10 +109,8 @@ function Controller({
 
   const seats = following > 0 ? following : count;
   const plan = planWindows(layout, seats, screen);
-  const lines = useSungLines(cue, PAGE_HISTORY);
   const section = sectionAt(roseScore, cue.currentTimeMs);
-  const clock = formatSongClock(cue.currentTimeMs);
-  const states = Array.from({ length: seats }, (_, seat) => section.tab(seat, seats));
+  const names = Array.from({ length: seats }, (_, seat) => INTERFACES[section.tab(seat, seats)].name);
 
   const open = () => {
     setBlocked(openWindows(layout, count));
@@ -141,28 +137,43 @@ function Controller({
 
       <div className={styles.body}>
         <section className={styles.previewArea} aria-label="Windows on this screen">
-          <Desk screen={screen} className={styles.screen}>
+          <svg
+            className={styles.screen}
+            viewBox={`${screen.x} ${screen.y} ${screen.width} ${screen.height}`}
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={`${seats} ${layout === "tabs" ? "tabs" : "windows"} on this screen`}
+          >
+            <rect x={screen.x} y={screen.y} width={screen.width} height={screen.height} className={styles.desktop} />
             {layout === "tabs" ? (
-              <DeskWindow screen={screen} rect={screen}>
-                <BrowserFrame
-                  seat={0}
-                  state={states[0]!}
-                  lines={lines}
-                  clock={clock}
-                  focused
-                  strip={states.slice(1).map((state) => ({ state, title: tabTitle(lines, state) }))}
-                />
-              </DeskWindow>
+              <g>
+                <rect x={screen.x} y={screen.y} width={screen.width} height={screen.height} className={styles.plan} />
+                {names.map((name, seat) => {
+                  const width = screen.width / seats;
+                  return (
+                    <g key={seat}>
+                      <rect x={screen.x + seat * width} y={screen.y} width={width} height={TITLE_BAR} className={styles.bar} />
+                      <text x={screen.x + seat * width + 10} y={screen.y + 19} className={styles.label}>
+                        {seat + 1} · {name}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
             ) : (
               plan.map((rect, seat) =>
                 rect ? (
-                  <DeskWindow key={seat} screen={screen} rect={rect}>
-                    <BrowserFrame seat={seat} state={states[seat]!} lines={lines} clock={clock} focused={seat === seats - 1} />
-                  </DeskWindow>
+                  <g key={seat}>
+                    <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} className={styles.plan} />
+                    <rect x={rect.x} y={rect.y} width={rect.width} height={TITLE_BAR} className={styles.bar} />
+                    <text x={rect.x + 10} y={rect.y + 19} className={styles.label}>
+                      {seat + 1} · {names[seat]}
+                    </text>
+                  </g>
                 ) : null,
               )
             )}
-          </Desk>
+          </svg>
           <p className={styles.section}>{section.label}</p>
           <p className={styles.lyric} aria-live="off">
             {cue.lyric.map((word, position) => (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ComponentType, type MouseEvent } from "react";
 import ParametricInterfaceOne from "../1_airport";
 import ParametricInterfaceTwo from "../2_street";
+import ParametricInterfaceThree from "../3_daechi";
 import type { ParametricSong } from "../model/song";
 import { SongPlayback } from "../playback";
 
@@ -10,6 +11,7 @@ import { SongPlayback } from "../playback";
 const wrapperCycle: readonly { id: string; Component: ComponentType }[] = [
   { id: "1", Component: ParametricInterfaceOne },
   { id: "2", Component: ParametricInterfaceTwo },
+  { id: "3", Component: ParametricInterfaceThree },
 ];
 
 export default function ParametricInterfaceWhole({ song }: { song?: ParametricSong }) {

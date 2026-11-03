@@ -15,5 +15,9 @@ export const parametricInterfaceV3 = {
       key: "2",
       load: (): Promise<{ default: ComponentType }> => import("./2_street"),
     },
+    {
+      key: "3",
+      load: (): Promise<{ default: ComponentType }> => import("./3_daechi"),
+    },
   ],
 } as const;

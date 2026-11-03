@@ -1,148 +1,232 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useState } from "react";
 import type { ParametricSong, TimedLyricLine } from "../model/song";
 import { SongPlayback } from "../playback";
 import { LYRIC_LEAD_MS, useLyricCue } from "../timeline/use-lyric-cue";
 import {
-  EDITION,
-  frontPageStories,
+  EDITIONS,
   headlineCase,
-  type FrontPageStory,
+  homepageStories,
+  SECTIONS,
+  TODAY,
+  type HomepageStory,
 } from "./model/front-page";
+import { CHEVRON_POINTS, MASTHEAD_PATH, MASTHEAD_VIEWBOX, SEARCH_PATH } from "./model/masthead";
 import styles from "./front-page.module.css";
 
-// A broadsheet front page. The line being sung is set as the banner headline,
-// word by word at each onset; every earlier line steps down one headline slot
-// (banner → second story → the right-hand column). A slot keeps its own
-// ordinary headline until a line reaches it. Bodies, bylines and jumps never
-// change, so only the headline slots carry the lyric. Everything derives from
-// the audio clock, so a seek rebuilds the same page.
+// The nytimes.com desktop homepage, measured from the live page at 1322 px
+// wide (2026-11-03) and scaled as one fixed-format page to the viewport.
+// Every headline on the page is the line being sung, set word by word at
+// each onset, all at once; every summary is the line before it. Before the
+// first sung word each slot keeps its own copy. Read times and photos never
+// change. Everything derives from the audio clock, so a seek rebuilds the
+// same page.
 
-const SLOT_COUNT = frontPageStories.length;
+const DESIGN_WIDTH = 1322;
 
 type Headline =
   | { kind: "story"; text: string }
-  | { kind: "lyric"; line: TimedLyricLine; sungUntilMs: number };
+  | { kind: "lyric"; line: TimedLyricLine; sungUntilMs: number; titleCase: boolean };
 
-function headlinesAt(
+type TextField = "headline" | "summary";
+
+function textAt(
+  storyIndex: number,
+  field: TextField,
   lines: readonly TimedLyricLine[],
   cueIndex: number,
   clockMs: number,
   hasBegun: boolean,
-): Headline[] {
-  return frontPageStories.map((story, slot) => {
-    const lineIndex = cueIndex - slot;
-    if (!hasBegun || lineIndex < 0) return { kind: "story", text: story.headline };
+): Headline {
+  const story = homepageStories[storyIndex]!;
+  const own = { kind: "story", text: field === "headline" ? story.headline : story.summary ?? "" } as const;
+  if (!hasBegun) return own;
 
-    return {
-      kind: "lyric",
-      line: lines[lineIndex]!,
-      // Older lines are complete; only the banner is still being set.
-      sungUntilMs: slot === 0 ? clockMs : Number.POSITIVE_INFINITY,
-    };
-  });
+  if (field === "headline") {
+    return { kind: "lyric", line: lines[cueIndex]!, sungUntilMs: clockMs, titleCase: true };
+  }
+
+  const previous = lines[cueIndex - 1];
+  return previous
+    ? { kind: "lyric", line: previous, sungUntilMs: Number.POSITIVE_INFINITY, titleCase: false }
+    : own;
 }
 
 function HeadlineText({ headline }: { headline: Headline }) {
   if (headline.kind === "story") return headline.text;
 
-  // Every word is laid out from the start so the banner never reflows; unsung
-  // words hold their place invisibly.
-  return headline.line.words.map((word, index) => (
-    <span
-      className={styles.word}
-      data-unsung={word.startMs > headline.sungUntilMs || undefined}
-      key={`${headline.line.id}-${index}`}
-    >
-      {headlineCase(word.text, index === 0)}
-      {index < headline.line.words.length - 1 ? " " : ""}
-    </span>
-  ));
+  // The lead holds only the words sung so far; the story below moves down as
+  // the headline grows, as a live homepage update does.
+  const sung = headline.line.words.filter((word) => word.startMs <= headline.sungUntilMs);
+  return sung
+    .map((word, index) => (headline.titleCase ? headlineCase(word.text, index === 0) : word.text))
+    .join(" ")
+    // The homepage sets typographic quotes and apostrophes.
+    .replace(/(^|\s)"/g, "$1“")
+    .replace(/"/g, "”")
+    .replace(/'/g, "’");
 }
 
-function headlineLength(headline: Headline) {
-  return headline.kind === "story" ? headline.text.length : headline.line.text.length;
-}
-
-function StoryBody({ story }: { story: FrontPageStory }) {
+function Story({
+  story,
+  headline,
+  summary,
+  headlineClass,
+}: {
+  story: HomepageStory;
+  headline: Headline;
+  summary: Headline;
+  headlineClass: string;
+}) {
   return (
     <>
-      <p className={styles.byline}>{story.byline}</p>
-      <div className={styles.body}>
-        {story.paragraphs.map((paragraph, index) => (
-          <p key={index}>
-            {index === 0 && story.dateline ? (
-              <span className={styles.dateline}>{story.dateline} </span>
-            ) : null}
-            {paragraph}
-          </p>
-        ))}
-      </div>
-      <p className={styles.jump}>{story.jump}</p>
+      <p className={headlineClass}><HeadlineText headline={headline} /></p>
+      {story.summary ? <p className={styles.summary}><HeadlineText headline={summary} /></p> : null}
+      <p className={styles.readTime}>{story.readMinutes} min read</p>
     </>
   );
+}
+
+function Photo({ story, className }: { story: HomepageStory; className: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`${styles.image} ${className}`}
+      style={story.image ? { backgroundImage: `url(${story.image})` } : undefined}
+    />
+  );
+}
+
+function usePageZoom() {
+  const [frame, setFrame] = useState({ zoom: 1, height: 0 });
+
+  useLayoutEffect(() => {
+    const update = () => {
+      const zoom = window.innerWidth / DESIGN_WIDTH;
+      setFrame({ zoom, height: window.innerHeight / zoom });
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return frame;
 }
 
 export default function ParametricInterfaceNine({ song }: { song?: ParametricSong }) {
   return (
     <SongPlayback song={song}>
-      <FrontPage />
+      <Homepage />
     </SongPlayback>
   );
 }
 
-function FrontPage() {
+function Homepage() {
   const { cueIndex, currentTimeMs, hasStarted, song } = useLyricCue();
+  const { zoom, height } = usePageZoom();
   const clockMs = currentTimeMs + LYRIC_LEAD_MS;
   const firstOnsetMs = song.lyrics[0]?.startMs ?? 0;
-  const headlines = headlinesAt(song.lyrics, cueIndex, clockMs, hasStarted && clockMs >= firstOnsetMs);
-  const banner = headlines[0]!;
-  const bannerStyle = { "--chars": headlineLength(banner) } as CSSProperties;
+  const hasBegun = hasStarted && clockMs >= firstOnsetMs;
+  const [lead, picture, second, third, feature, tileLeft, tileRight, rowLeft, rowRight] = homepageStories;
+  const text = (storyIndex: number) => ({
+    headline: textAt(storyIndex, "headline", song.lyrics, cueIndex, clockMs, hasBegun),
+    summary: textAt(storyIndex, "summary", song.lyrics, cueIndex, clockMs, hasBegun),
+  });
 
   return (
-    <main className={styles.page}>
-      <header className={styles.masthead}>
-        <p className={styles.earLeft}>“All the News<br />That’s Fit to Print”</p>
-        <h1 className={styles.name}>The New York Times</h1>
-        <div className={styles.earRight}>
-          <p className={styles.edition}>Late Edition</p>
-          {EDITION.weather.map((sentence) => <p key={sentence}>{sentence}</p>)}
-        </div>
-      </header>
+    <main className={styles.page} style={{ zoom, height: height || undefined }}>
+      <div className={styles.shell}>
+        <header className={styles.header}>
+          <div aria-hidden="true" className={styles.topBar}>
+            <svg aria-hidden="true" className={styles.search} viewBox="0 0 16 16">
+              <path d={SEARCH_PATH} fill="#333" />
+            </svg>
+            <ul className={styles.editions}>
+              {EDITIONS.map((edition, index) => (
+                <li data-active={index === 0 || undefined} key={edition}>{edition}</li>
+              ))}
+            </ul>
+            <span className={styles.login}>Log in</span>
+          </div>
 
-      <div className={styles.folio}>
-        <span>{EDITION.volume}</span>
-        <span>{EDITION.copyright}</span>
-        <span>{EDITION.date}</span>
-        <span>{EDITION.price}</span>
-      </div>
+          <div className={styles.mastheadRow}>
+            <div className={styles.dateBlock}>
+              <span>{TODAY}</span>
+              <span>Today’s Paper</span>
+            </div>
+            <svg aria-label="The New York Times" className={styles.masthead} role="img" viewBox={MASTHEAD_VIEWBOX}>
+              <path d={MASTHEAD_PATH} fill="#000" />
+            </svg>
+            <span />
+          </div>
 
-      <div className={styles.front}>
-        <h2 className={styles.banner} style={bannerStyle}>
-          <HeadlineText headline={banner} />
-        </h2>
+          <nav aria-label="Sections" className={styles.sections}>
+            {SECTIONS.map((section) => (
+              <span className={styles.section} key={section}>
+                {section}
+                <svg aria-hidden="true" className={styles.chevron} viewBox="0 0 13 8">
+                  <polygon points={CHEVRON_POINTS} />
+                </svg>
+              </span>
+            ))}
+          </nav>
+          <div aria-hidden="true" className={styles.doubleRule} />
 
-        <article className={`${styles.story} ${styles.lead}`}>
-          <StoryBody story={frontPageStories[0]!} />
-        </article>
+        </header>
 
-        <article className={`${styles.story} ${styles.second}`}>
-          <h3 className={styles.secondHeadline}><HeadlineText headline={headlines[1]!} /></h3>
-          <StoryBody story={frontPageStories[1]!} />
-        </article>
+        <div className={styles.front}>
+          <section className={styles.topStories}>
+            <div className={styles.leftColumn}>
+              <article className={styles.story}>
+                <Story {...text(0)} headlineClass={styles.leadHeadline} story={lead!} />
+              </article>
+              <article className={styles.story}>
+                <Story {...text(2)} headlineClass={styles.headline} story={second!} />
+              </article>
+              <article className={styles.story}>
+                <Story {...text(3)} headlineClass={styles.headline} story={third!} />
+              </article>
+            </div>
 
-        <div className={styles.column}>
-          <article className={`${styles.story} ${styles.third}`}>
-            <h3 className={styles.thirdHeadline}><HeadlineText headline={headlines[2]!} /></h3>
-            <StoryBody story={frontPageStories[2]!} />
-          </article>
-          {headlines.slice(3, SLOT_COUNT).map((headline, offset) => (
-            <article className={`${styles.story} ${styles.brief}`} key={offset}>
-              <h3 className={styles.briefHeadline}><HeadlineText headline={headline} /></h3>
-              <StoryBody story={frontPageStories[3 + offset]!} />
+            <article className={styles.pictureColumn}>
+              <Photo className={styles.pictureImage} story={picture!} />
+              <Story {...text(1)} headlineClass={styles.headline} story={picture!} />
             </article>
-          ))}
+
+            <div className={styles.row}>
+              <article className={styles.rowStory}>
+                <Photo className={styles.rowImage} story={rowLeft!} />
+                <div>
+                  <Story {...text(7)} headlineClass={styles.smallHeadline} story={rowLeft!} />
+                </div>
+              </article>
+              <article className={styles.rowStory}>
+                <Photo className={styles.rowImage} story={rowRight!} />
+                <div>
+                  <Story {...text(8)} headlineClass={styles.smallHeadline} story={rowRight!} />
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <aside className={styles.rightColumn}>
+            <article className={styles.story}>
+              <Photo className={styles.featureImage} story={feature!} />
+              <Story {...text(4)} headlineClass={styles.featureHeadline} story={feature!} />
+            </article>
+            <div className={styles.tiles}>
+              <article>
+                <Photo className={styles.tileImage} story={tileLeft!} />
+                <Story {...text(5)} headlineClass={styles.smallHeadline} story={tileLeft!} />
+              </article>
+              <article>
+                <Photo className={styles.tileImage} story={tileRight!} />
+                <Story {...text(6)} headlineClass={styles.smallHeadline} story={tileRight!} />
+              </article>
+            </div>
+          </aside>
         </div>
       </div>
     </main>

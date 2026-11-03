@@ -1,0 +1,252 @@
+/*
+ * iOS at native points (1 CSS px = 1 pt), after goldfishes pc/mobiles/1
+ * phone.module.css: a 404 × 858 frame with a 7 pt bezel, so the glass is
+ * exactly 390 × 844.
+ */
+.phone {
+  --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ios-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 404px;
+  height: 858px;
+  box-sizing: border-box;
+  padding: 7px;
+  border-radius: 62px;
+  background: #0b0b0c;
+  box-shadow: inset 0 0 0 1.5px #3a3a3c, inset 0 0 0 3px #0b0b0c;
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+}
+
+.phone *,
+.phone *::before,
+.phone *::after { box-sizing: border-box; }
+
+.glass {
+  contain: strict;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 55px;
+  background: #000;
+  color: #000;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.41px;
+}
+
+/*
+ * The app layer: under the lock screen it settles back, as iOS does when
+ * the phone locks; it returns when the lock screen goes up.
+ */
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.layer:not([data-shown]) { transform: scale(0.94); }
+
+/* The lock screen comes down over the app on a lock line and goes back up after. */
+.lockLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 560ms;
+}
+
+.lockLayer[data-shown] {
+  transform: none;
+  visibility: visible;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+}
+
+/*
+ * Hops between apps (goldfishes pc/mobiles/1 phone.module.css): the new app
+ * comes in over the old, which stays opaque beneath until covered.
+ */
+.hopLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  animation-duration: 560ms;
+  animation-fill-mode: both;
+  backface-visibility: hidden;
+}
+
+.hopLayer:not([data-hop]) { animation: none; }
+.hopLayer[data-phase="in"] { z-index: 2; }
+.hopLayer[data-phase="out"] { z-index: 1; pointer-events: none; }
+
+/* A tapped notification: the app opens out of the banner's place; the app before settles back beneath. */
+.hopLayer[data-hop="open"][data-phase="in"] { animation-name: hop-open-in; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-delay: 380ms; }
+.hopLayer[data-hop="open"][data-phase="out"] { animation-name: hop-open-under; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-delay: 380ms; }
+@keyframes hop-open-in {
+  from { clip-path: inset(10px 8px 734px 8px round 22px); transform: translateY(54px); }
+  to { clip-path: inset(0 0 0 0 round 0); transform: none; }
+}
+@keyframes hop-open-under { from { transform: none; } to { transform: scale(0.9); } }
+
+/* The swipe along the home bar to the next app. */
+.hopLayer[data-hop="slide"][data-phase="in"] { animation-name: hop-slide-in; animation-timing-function: cubic-bezier(0.3, 0.8, 0.25, 1); }
+.hopLayer[data-hop="slide"][data-phase="out"] { animation-name: hop-slide-out; animation-timing-function: cubic-bezier(0.3, 0.8, 0.25, 1); }
+@keyframes hop-slide-in { from { transform: translateX(102%) scale(0.9); border-radius: 48px; } 55% { transform: translateX(8%) scale(0.93); border-radius: 48px; } to { transform: none; border-radius: 0; } }
+@keyframes hop-slide-out { from { transform: none; } 55% { transform: translateX(-96%) scale(0.93); border-radius: 48px; } to { transform: translateX(-104%) scale(0.9); border-radius: 48px; } }
+
+/* The app switcher: the cards shrink, slide, and the chosen one opens. */
+.hopLayer[data-hop="switcher"][data-phase="in"] { animation-name: hop-switch-in; animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1); animation-duration: 760ms; }
+.hopLayer[data-hop="switcher"][data-phase="out"] { animation-name: hop-switch-out; animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1); animation-duration: 760ms; }
+@keyframes hop-switch-in { from { transform: translateX(112%) scale(0.74); border-radius: 48px; } 62% { transform: scale(0.74); border-radius: 48px; } to { transform: none; border-radius: 0; } }
+@keyframes hop-switch-out { from { transform: none; } 30% { transform: scale(0.74); border-radius: 48px; } to { transform: translateX(-112%) scale(0.74); border-radius: 48px; } }
+
+/* The iOS banner a tapped hop comes from: in from above, then opened (it fades into the app). */
+.banner {
+  position: absolute;
+  z-index: 8;
+  top: 10px;
+  left: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: start;
+  padding: 12px 14px 13px 12px;
+  border-radius: 22px;
+  background: rgb(246 246 246 / 86%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
+  color: #000;
+  font: 400 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+  pointer-events: none;
+  animation: banner 940ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+@keyframes banner {
+  0% { transform: translateY(-150px) scale(0.96); opacity: 1; }
+  40% { transform: none; opacity: 1; }
+  62% { transform: scale(1.03); opacity: 0; }
+  100% { transform: scale(1.03); opacity: 0; }
+}
+
+.bannerIcon {
+  grid-row: span 2;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.bannerIcon img { display: block; width: 100%; height: 100%; }
+.bannerTitle { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.bannerAge { color: rgb(60 60 67 / 60%); font-size: 13px; }
+.bannerBody { grid-column: 2 / 4; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+.phone[data-reduced-motion] .layer,
+.phone[data-reduced-motion] .lockLayer { transition: none; }
+
+.phone[data-reduced-motion] .hopLayer,
+.phone[data-reduced-motion] .banner { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+
+.statusBar {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: grid;
+  grid-template-columns: 1fr 126px 1fr;
+  align-items: center;
+  pointer-events: none;
+  color: #000;
+  transition: color 300ms;
+}
+
+.statusBar[data-tone="light"] { color: #fff; }
+
+.statusTime {
+  justify-self: center;
+  padding-left: 14px;
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusRight {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.battery {
+  position: relative;
+  width: 27px;
+  height: 13px;
+  padding: 1.5px;
+  border: 1.2px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.95;
+}
+
+.battery::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: -3.5px;
+  width: 1.6px;
+  height: 4.5px;
+  border-radius: 0 1px 1px 0;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.battery[data-low] .batteryLevel { background: #ff3b30; }
+
+.batteryLevel {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.island {
+  position: absolute;
+  z-index: 30;
+  top: 11px;
+  left: 50%;
+  width: 126px;
+  height: 37px;
+  margin-left: -63px;
+  border-radius: 20px;
+  background: #000;
+  pointer-events: none;
+}
+
+.homeIndicator {
+  position: absolute;
+  z-index: 20;
+  bottom: 8px;
+  left: 50%;
+  width: 139px;
+  height: 5px;
+  margin-left: -69.5px;
+  border-radius: 3px;
+  background: #000;
+  pointer-events: none;
+  transition: background-color 300ms;
+}
+
+.homeIndicator[data-tone="light"] { background: #fff; }

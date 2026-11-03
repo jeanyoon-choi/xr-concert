@@ -11,9 +11,9 @@ export type SungLine = {
   readonly cueIndex: number;
   /** Every word of the line. */
   readonly words: readonly string[];
-  /** Words sung so far (all of them once the line is past). */
+  /** Words begun so far (all of them once the line is past). */
   readonly sung: number;
-  /** The sung words, joined. */
+  /** The line as typed so far: the begun words, the newest one only up to the characters typed. */
   readonly text: string;
   /** The whole line, joined. */
   readonly full: string;
@@ -22,12 +22,17 @@ export type SungLine = {
   readonly current: boolean;
 };
 
-/** The arrived lines, oldest first, at most `limit`; the last one may be partial. */
+/**
+ * The arrived lines, oldest first, at most `limit`; the last one may be
+ * partial. `typed` is how many characters of the newest word are typed
+ * (default: all of it), so a line grows character by character.
+ */
 export function sungLines(
   cues: readonly (readonly string[])[],
   timings: readonly LyricWordTiming[],
   wordIndex: number,
   limit: number,
+  typed = Infinity,
 ): SungLine[] {
   if (wordIndex < 0 || limit < 1) return [];
   const now = timings[wordIndex]!;
@@ -44,11 +49,13 @@ export function sungLines(
     const words = cues[cueIndex]!;
     const current = cueIndex === now.cueIndex;
     const sung = current ? now.wordIndex + 1 : words.length;
+    const begun = words.slice(0, sung);
+    if (current) begun[sung - 1] = begun[sung - 1]!.slice(0, Math.max(1, typed));
     lines.push({
       cueIndex,
       words,
       sung,
-      text: words.slice(0, sung).join(" "),
+      text: begun.join(" "),
       full: words.join(" "),
       startMs: starts.get(cueIndex) ?? now.startMs,
       current,

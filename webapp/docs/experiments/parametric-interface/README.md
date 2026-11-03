@@ -11,15 +11,16 @@ A standalone import of the SCC `parametric-interface` archive, now organised by 
 | `/parametric-interface/v0/1`–`/6` | Standalone interface studies for v0 (formerly `/1`–`/6`, then `/v1/1`–`/6`) |
 | `/parametric-interface/v1` | Frozen copy of v2 as it stood on 2026-11-03, before the newspaper rework: ROSÉ cycling through 7–8, then 3, 4, 5, 6, 1, 2 |
 | `/parametric-interface/v1/1`–`/8` | The same studies as v2/1–/8 at that date (v1-owned copies) |
-| `/parametric-interface/v2` | ROSÉ — “toxic till the end” cycling through interface 9, then 7–8, 3, 4, 5, 6, 1, 2. v2 is the version being reworked |
+| `/parametric-interface/v2` | ROSÉ — “toxic till the end” cycling through interfaces 9, 10, then 7–8, 3, 4, 5, 6, 1, 2. v2 is the version being reworked |
 | `/parametric-interface/v2/1`–`/6` | v0’s interfaces running on the ROSÉ song (v2-owned copies) |
-| `/parametric-interface/v2/7`–`/9` | ROSÉ-specific studies (below) |
+| `/parametric-interface/v2/7`–`/10` | ROSÉ-specific studies (below) |
 | `/parametric-interface/v3` | ROSÉ — interfaces placed inside 3D scenes |
 | `/parametric-interface/v3/1` | `1_airport`: the v2/4 departures display on a TV in a departures hall (below) |
 | `/parametric-interface/v3/2` | `2_street`: an Euljiro back alley whose projecting signs all show the sung word (below) |
-| `/parametric-interface/v4` | ROSÉ — one compositional state: six browser windows and six phones, each taking the sung line into its own interface ([v4](./v4.md)) |
-| `/parametric-interface/v4/mobiles` | Phone grid: Messages, an assistant chat or the lock screen per seat, as the score assigns ([v4](./v4.md)) |
-| `/parametric-interface/v4/tabs` → `/v4/tab` | Controller that opens real browser windows (search, news, street poster), each following the song ([v4](./v4.md)) |
+| `/parametric-interface/v3/3` | `3_daechi`: the experiments-jyc Daechi-dong street, its academy signs taking the sung line one word per sign (below) |
+| `/parametric-interface/v4`, `/v4/1` | ROSÉ — a grid of phones: seventeen chat and social apps (KakaoTalk, WhatsApp, Instagram, X, TikTok, …), each taking the sung line ([v4](./v4.md)) |
+| `/parametric-interface/v4/2` | A copy of `/v4/1` (2_mobiles), adjusted on its own from here ([v4](./v4.md)) |
+| `/parametric-interface/v4/tabs` → `/v4/tab` | Controller that opens real browser windows, each running one of v2's interfaces on its clock ([v4](./v4.md)) |
 
 The former `/7` lecture-note study was removed. Legacy `/whole` and `/1`–`/6` redirect (308) to their `v0` equivalents. On 2026-11-03 the U2 version was renamed `v1` → `v0`, and the ROSÉ v2 was copied to `v1` so that v2 can change; old `/v1` links now open the ROSÉ copy.
 
@@ -38,16 +39,36 @@ Observed in the browser at 1470 × 703 (2026-10-27): both render at full viewpor
 
 Unresolved: whether the CSS-3D map holds frame rate on the venue machine; whether a single fictional contact name is the right cast.
 
-## v2/9: newspaper front page (2026-11-03)
+## v2/9: nytimes.com homepage (2026-11-03)
 
-The first step of the v2 rework. The host is a broadsheet front page in the grammar of The New York Times: masthead with its two ears, volume/date/price folio between rules, six justified columns with hairline column rules, and stories that jump inside (“Continued on Page A16”). There are no photographs. The masthead is set in Times New Roman because no blackletter face is installed locally.
+The first step of the v2 rework. The host is the current nytimes.com desktop homepage, rebuilt from values measured on the live page in the browser at a 1322 px viewport, then zoomed to fit the viewport as one fixed-format page.
+- **Measured from the live page:** masthead wordmark SVG path (verified against the page by hash), search glyph, section chevron, the 1200 px grid (275 / 522 / 337 columns, 33 px gutters, hairline rules), every type size, weight, line height, tracking and colour.
+- **Fonts:** the site's own woff2 files (`nyt-cheltenham` 300/400/700, `nyt-franklin` 500–800, `nyt-imperial` 400), kept in `public/fonts/nyt/`, which its own `.gitignore` keeps out of git. They are proprietary: this study is for private rehearsal only, and is not for deployment.
+- **Photos:** Unsplash (free license) photos with no identifiable people, cropped to each slot in `public/images/parametric-v2-9/`. Unsplash ids: picture `photo-1700716465891-9e5e9f501d7d`, feature `photo-1729673284889-6156ca7d5eed`, tiles `photo-1632973541997-971a2eb8331d` and `photo-1476718406336-bb5a9690ee2a`, row `photo-1761700971222-7b044dcd9827` and `photo-1678666716714-e5f095f0ae4a`. Real people were avoided because they would sit under lyric headlines.
+- **Hidden chrome:** the search glyph, edition links and Log in button are hidden. The top bar keeps its height, so the masthead stays where the site sets it.
+- **Lyric slots:** every headline on the page is the line being sung, set word by word at each onset, all at once. Every summary is the line before it.
+  - Headlines take the homepage's headline case; summaries keep sentence case. Both use typographic quotes.
+  - Before the first sung word, each slot keeps its own copy.
+  - An earlier version stepped one line down one slot at a time. The user rejected it because the titles did not all change with the lyric.
+- **Unchanged:** read times and photos.
+- **Clock:** every slot comes from the audio clock, so seeking rebuilds the same page.
 
-- **Lyric slot.** Only the headlines. The line being sung is the banner across columns 1–4, set word by word at each onset (unsung words keep their space but are hidden, so the banner never reflows). The banner size comes from the line's length (`clamp(3.4cqw, 230cqw / chars, 6.2cqw)`), so short lines run larger. Each earlier line moves down one headline slot: banner → second story → the right-hand column's lead → three briefs. A slot keeps its own headline until a line reaches it. Lyric headlines take the paper's headline case (minor words lowercase).
-- **Unchanged.** Bodies, bylines, datelines and jumps stay the page's own invented city news, kept neutral so no headline puns on the song (see the failure record).
-- **Clock.** Every slot comes from `cueIndex` and the audio clock, so seeking backward rebuilds the same page.
-- **Removal test.** Without the lyric: an ordinary front page with six stories.
+Observed in the browser on 2026-11-03, next to nytimes.com at the same window size.
+- The first trial, a print broadsheet on a cream background, was rejected as "not NYT". The user's rule: rebuild the service's actual online interface from its served assets, not an imitation.
+- A later "LIVE" bar was removed because the reference page that day had none.
 
-Not yet observed in a browser.
+## v2/10: integrated plan chart (2026-11-03, rebuilt)
+
+The grammar of the 1989 Rockwell *Integrated Space Plan* poster (grammar only; no wording reused), packed as densely as the poster and fitted to fill the whole screen. Nothing scrolls. The sheet is 1920 px wide, as tall as the viewport's aspect ratio requires, and its layout is seeded.
+- **Sheet:** year scale and rules down both margins; 15 lanes of tightly stacked program elements (around 500 boxes); dependency lines (solid, dashed, double, heavy); five circled era statements over the lines; header with organisation block, about paragraph, critical-path root, title block and legend; a full-height definitions column.
+- **Lyric slot, the same grammar as /1:**
+  - Every program element is labelled with a word of the line being sung, tiled lane by lane.
+  - Every element holding the sung word becomes a critical-path element: the poster's double rule, in bold.
+  - The critical-path root and all five era circles carry the whole line.
+  - The definitions column lists every distinct word of the song beside the line it first appears in.
+- **Removal test:** without the lyric, an ordinary program plan.
+
+**Rejected first build (same day).** A tall poster that scrolled to follow the current line. The lyric sat in one critical-path element per line, and seven sparse lanes held invented program names. The user rejected it as empty and vague, nothing like the poster's density. It was also measured against the bar set by /1–/6: the lyric must be the sheet's repeated unit, and the sung word must drive the host's own selection state.
 
 ## v3: interfaces inside 3D scenes (2026-11-03)
 
@@ -61,6 +82,15 @@ Direction from the NOTES doc, tab “1031_NRF XR Idea”: put the existing param
 - **Lyric slot.** The shop name on the projecting lightboxes. While the song plays, every lightbox takes the sung word at once; trade lines, phone numbers and palettes stay the shops’ own, and the fascias along the walls keep their names. Before playback the lightboxes show their own names. (First built as one word per sign, nearest first, like the departures display; changed because the far signs were too small to read, so the line was never seen whole.)
 - **Performance.** All lightbox faces share one canvas atlas (resolution falling off with distance) and one merged mesh; each name change redraws only the names over cached sign bases and uploads once. Every other surface that shares a material is merged per material, matte surfaces use Lambert, and only 13 point lights remain. Measured headless at 1600 × 900, DPR 2: 81 draw calls, about 15 k triangles, under 2 ms per render.
 - The scene is redrawn only when a sign changes or the frame resizes.
+
+**`3_daechi` (`/v3/3`).** A port of experiments-jyc `apps/scc/components/mobile/daechi/1` (2026-11-02): the shader-lit academy street at 10 p.m., goldfish students and traffic, from the press photo’s raised view down the street. The fling-and-smash play is removed.
+- **Lyric slot.** The academy name on every academy sign: projecting vertical stacks, floor signs, shop fascias, rooftop boards, and sidewalk stands (입간판, added outside shop doors). LED tickers and the far apartment boards keep their own text.
+- **Reading order.** Signs are grouped into rows: one side of the street and one height — each floor band, the fascias, each level of the projecting stacks, the stands, the rooftops. Along a row, nearest the opening view first, sign k shows word k mod n of the current line, so every row reads the line into the street, repeated. When a word is sung its signs switch one repetition after another down the row (90 ms apart) and come up to full brightness over 0.25 s; a new line re-deals every row at once. (Earlier the signs were ranked across both sides and all kinds, which scattered the line; corrected after review.)
+- **Light.** Only signs carrying a sung word burn at full brightness and glow; every other sign — lyric signs still showing their academy name, LED tickers, apartment boards — is dimmed to 24 % with no glow. All signs burn steadily: the original’s blinking, pulsing, faulty flicker and running rooftop bulbs were removed as cheap-looking (user review, 2026-11-03).
+- **Lettering.** Twelve sign faces, self-hosted through `next/font` and loaded before any sign is painted: heavy and condensed gothics (Black Han Sans, Do Hyeon, Gothic A1, Noto Sans KR, Nanum Gothic, IBM Plex Sans KR), rounded (Jua, Sunflower), myeongjo serifs (Nanum Myeongjo, Noto Serif KR, Hahmlet), and a black display face (Gasoek One). Each sign’s cell has its own face and finish (plain, outlined, drop-shadowed, condensed), and neighbouring signs in a row never share a face. Latin words are set in capitals, as on Korean signage.
+- **Rendering.** Lyric signs are colourless masks (red lettering, green accent, blue knockout) with one cell per kind and word position; `LYRIC_ROW_SIGN_FRAG` colours them per sign and picks the cell from the sign’s row order and the line length, so a new line touches no geometry. A word change redraws only its cells; the previous faces stay in a second texture until the ripple reaches each sign.
+
+**Camera (`/v3/2`, `/v3/3`).** Each study carries its own `scene/viewpoint.ts`: drag to look, wheel or pinch to walk forward and back, W A S D / arrows to walk, Q / E to lower and raise, double-click to return to the opening view; the camera stays inside the street. A drag never reaches the whole cycle’s click-to-advance, and the arrow keys are taken before its → handler.
 
 **Corrections during review (2026-11-03).** The first `1_airport` hung a 19 m board high on a wall and looked down on it from 46 m with a slow dolly. The user rejected it: a departures screen is met at human height, the camera must stand at human height, and the display must not move. Lens blur on the hall and a camera sway were also tried and removed (a Gursky still is sharp throughout and static), as was a “Departures 출발” totem header (read as provincial; the TV is now plain).
 

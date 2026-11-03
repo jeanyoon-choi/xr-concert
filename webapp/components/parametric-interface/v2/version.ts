@@ -42,5 +42,9 @@ export const parametricInterfaceV2 = {
       key: "9",
       load: (): Promise<{ default: ComponentType }> => import("./9"),
     },
+    {
+      key: "10",
+      load: (): Promise<{ default: ComponentType }> => import("./10"),
+    },
   ],
 } as const;
