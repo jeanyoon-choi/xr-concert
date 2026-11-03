@@ -1,0 +1,209 @@
+/* The controller in the shared navigation's grammar: plain black and white,
+   colour mode from the system, spacing and type for hierarchy. */
+.root {
+  --fg: #0a0a0a;
+  --bg: #ffffff;
+  --fg-rgb: 10 10 10;
+  --bg-rgb: 255 255 255;
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .root {
+    --fg: #ffffff;
+    --bg: #000000;
+    --fg-rgb: 255 255 255;
+    --bg-rgb: 0 0 0;
+  }
+}
+
+.root * { box-sizing: border-box; }
+
+.header {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.crumbs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.crumbs a {
+  color: rgb(var(--fg-rgb) / 0.55);
+  text-decoration: none;
+}
+
+.crumbs a:hover,
+.crumbs a:focus-visible { color: var(--fg); }
+
+.crumbs [aria-hidden] { color: rgb(var(--fg-rgb) / 0.25); }
+
+.body {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+@media (min-width: 960px) {
+  .body { grid-template-columns: minmax(0, 1fr) 22rem; }
+}
+
+.previewArea {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* The plan on this screen, as desktop-collage's previews draw it. */
+.screen {
+  width: 100%;
+  height: calc(100svh - 200px);
+  min-height: 280px;
+}
+
+.desktop { fill: rgb(var(--fg-rgb) / 0.06); }
+
+.plan {
+  fill: rgb(var(--fg-rgb) / 0.1);
+  stroke: rgb(var(--fg-rgb) / 0.55);
+  vector-effect: non-scaling-stroke;
+}
+
+.bar { fill: rgb(var(--fg-rgb) / 0.12); }
+
+.label {
+  fill: rgb(var(--fg-rgb) / 0.7);
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.section {
+  margin: 0;
+  color: rgb(var(--fg-rgb) / 0.55);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lyric {
+  display: flex;
+  min-height: 1.4em;
+  flex-wrap: wrap;
+  gap: 0 0.3em;
+  margin: 0;
+  color: rgb(var(--fg-rgb) / 0.35);
+  font-size: 20px;
+}
+
+.lyric [data-sung] { color: var(--fg); }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+.row {
+  display: grid;
+  gap: 8px;
+}
+
+.label { color: rgb(var(--fg-rgb) / 0.55); }
+
+.stepper {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  border: 1px solid rgb(var(--fg-rgb) / 0.18);
+}
+
+.stepper output {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.panel button {
+  min-height: 44px;
+  border: 0;
+  padding: 0 12px;
+  background: rgb(var(--fg-rgb) / 0.07);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.panel button:hover:not(:disabled) { background: rgb(var(--fg-rgb) / 0.13); }
+
+.panel button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.panel button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.stepper button {
+  background: none;
+  font-size: 20px;
+}
+
+.chips button[aria-pressed="true"],
+.panel .primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.chips button[aria-pressed="true"]:hover,
+.panel .primary:hover:not(:disabled) {
+  background: var(--fg);
+  opacity: 0.85;
+}
+
+.actions {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.primary { font-weight: 600; }
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.status {
+  min-height: 3em;
+  margin: 0;
+  color: rgb(var(--fg-rgb) / 0.55);
+}

@@ -1,0 +1,12 @@
+.idle {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  padding: 24px;
+  background: #fff;
+  color: #6b6b6b;
+  font: 16px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.idle p { margin: 0; }

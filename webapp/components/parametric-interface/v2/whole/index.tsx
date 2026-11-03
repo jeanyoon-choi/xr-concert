@@ -9,11 +9,14 @@ import ParametricInterfaceFive from "../5";
 import ParametricInterfaceSix from "../6";
 import ParametricInterfaceSeven from "../7";
 import ParametricInterfaceEight from "../8";
+import ParametricInterfaceNine from "../9";
 import type { ParametricSong } from "../model/song";
 import { SongPlayback } from "../playback";
 
-// The ROSÉ studies 7–8 lead; the inherited v1 wrappers follow.
+// The newspaper front page leads, then the ROSÉ studies 7–8; the inherited
+// v0 wrappers follow.
 const wrapperCycle: readonly { id: string; Component: ComponentType }[] = [
+  { id: "9", Component: ParametricInterfaceNine },
   { id: "7", Component: ParametricInterfaceSeven },
   { id: "8", Component: ParametricInterfaceEight },
   { id: "3", Component: ParametricInterfaceThree },

@@ -1,0 +1,96 @@
+/* The screen and the phones side by side on one dark field. */
+.field {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px;
+  overflow: hidden;
+  background: #050505;
+  color: #f2f2f2;
+  font: 14px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .field {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
+
+.screenPane {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  align-content: center;
+  gap: 14px;
+}
+
+/* The desk keeps the screen's shape, as large as the pane allows. */
+.desk {
+  width: min(100%, calc((100svh - 96px) * 1512 / 945));
+  aspect-ratio: 1512 / 945;
+  justify-self: center;
+}
+
+.menuBar {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgb(30 30 34 / 0.72);
+  color: #f2f2f2;
+  font: 13px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  word-spacing: 12px;
+}
+
+.menuBar b { font-weight: 700; }
+
+.menuBar span:last-child { word-spacing: 6px; }
+
+.caption {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.section {
+  color: rgb(255 255 255 / 0.5);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.line {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  gap: 16px;
+}
+
+.links a {
+  color: rgb(255 255 255 / 0.55);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.links a:hover,
+.links a:focus-visible { color: #fff; }
+
+.phonePane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}

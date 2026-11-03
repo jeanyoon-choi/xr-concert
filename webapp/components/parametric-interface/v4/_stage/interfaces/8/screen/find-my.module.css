@@ -1,0 +1,591 @@
+.window {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  min-width: 320px;
+  grid-template-columns: clamp(15rem, 22vw, 23em) minmax(0, 1fr);
+  overflow: hidden;
+  background: #ffffff;
+  color: #1d1d1f;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-size: clamp(12px, 0.94vw, 19px);
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+  letter-spacing: -0.008em;
+}
+
+/* Sidebar */
+
+.sidebar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 1px solid #d3d3d6;
+  background: #ececee;
+}
+
+.titlebar {
+  display: flex;
+  height: 3.2em;
+  flex: 0 0 auto;
+  align-items: center;
+  padding-left: 1.3em;
+}
+
+.trafficLights {
+  display: flex;
+  gap: 0.62em;
+}
+
+.trafficLights i {
+  display: block;
+  width: 0.86em;
+  height: 0.86em;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 18%);
+}
+
+.trafficLights i[data-light="close"] {
+  background: #ff5f57;
+}
+
+.trafficLights i[data-light="minimize"] {
+  background: #febc2e;
+}
+
+.trafficLights i[data-light="zoom"] {
+  background: #28c840;
+}
+
+.tabs {
+  display: grid;
+  margin: 0.15em 0.95em 0.85em;
+  padding: 0.14em;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-radius: 0.55em;
+  background: rgb(0 0 0 / 7%);
+}
+
+.tab {
+  height: 1.8em;
+  border: 0;
+  border-radius: 0.45em;
+  background: transparent;
+  color: #1d1d1f;
+  cursor: default;
+  font: inherit;
+  font-size: 0.92em;
+  font-weight: 500;
+  outline: none;
+}
+
+.tab[aria-selected="true"] {
+  background: #ffffff;
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 6%),
+    0 0.5px 1.5px rgb(0 0 0 / 22%);
+}
+
+.tab:focus-visible {
+  box-shadow: 0 0 0 2px rgb(10 124 255 / 55%);
+}
+
+.list {
+  display: grid;
+  margin: 0;
+  padding: 0 0.6em;
+  align-content: start;
+  gap: 0.1em;
+  list-style: none;
+  overflow: hidden;
+}
+
+.row {
+  display: grid;
+  min-height: 3.7em;
+  grid-template-columns: 2.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.45em 0.6em;
+  border-radius: 0.55em;
+}
+
+.row[aria-selected="true"] {
+  background: #0a7cff;
+  color: #ffffff;
+}
+
+.avatar {
+  display: grid;
+  width: 2.5em;
+  height: 2.5em;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(#b2b6be, #878c95);
+  color: #ffffff;
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.avatar[data-glyph] {
+  background: #dcdce1;
+  color: #3a3a3c;
+}
+
+.avatar svg {
+  width: 1.45em;
+  height: 1.45em;
+  fill: currentColor;
+}
+
+.rowText {
+  display: grid;
+  min-width: 0;
+  gap: 0.18em;
+}
+
+.rowText strong,
+.rowText span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowText strong {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.rowText span {
+  color: #6e6e73;
+  font-size: 0.86em;
+}
+
+.rowTrailing {
+  color: #8a8a8e;
+  font-size: 0.84em;
+  font-variant-numeric: tabular-nums;
+}
+
+.row[aria-selected="true"] .rowText span,
+.row[aria-selected="true"] .rowTrailing {
+  color: rgb(255 255 255 / 84%);
+}
+
+.empty {
+  margin: 4em 0 0;
+  color: #8a8a8e;
+  font-size: 1.05em;
+  text-align: center;
+}
+
+/* Map */
+
+.map {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(#dfe6ee, #edf0f2 38%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.perspective {
+  position: absolute;
+  inset: 0;
+}
+
+.plane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+.ground,
+.trail,
+.buildings {
+  position: absolute;
+  inset: 0;
+}
+
+.trail {
+  overflow: visible;
+  transform: translateZ(1px);
+}
+
+.trailCasing,
+.trailLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trailCasing {
+  stroke: #ffffff;
+  stroke-width: 15;
+}
+
+.trailLine {
+  stroke: #0a7cff;
+  stroke-width: 8;
+}
+
+.trailStop {
+  fill: #ffffff;
+  stroke: #0a7cff;
+  stroke-width: 4;
+}
+
+.roadName {
+  fill: #6f6b63;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-linejoin: round;
+  stroke-width: 4px;
+}
+
+.buildings {
+  transform-style: preserve-3d;
+}
+
+.building {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.roof,
+.faceSouth,
+.faceEast,
+.faceWest {
+  position: absolute;
+  display: block;
+}
+
+.roof {
+  inset: 0;
+  background: #f1efeb;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%);
+  transform: translateZ(var(--height));
+}
+
+.faceSouth {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--height);
+  background: linear-gradient(#d9d5cf, #cdc9c2);
+  transform: rotateX(-90deg);
+  transform-origin: 50% 100%;
+}
+
+.faceEast {
+  top: 0;
+  right: 0;
+  width: var(--height);
+  height: 100%;
+  background: linear-gradient(to left, #e4e1dc, #d8d4ce);
+  transform: rotateY(90deg);
+  transform-origin: 100% 50%;
+}
+
+.faceWest {
+  top: 0;
+  left: 0;
+  width: var(--height);
+  height: 100%;
+  background: linear-gradient(to right, #c9c5be, #bfbbb4);
+  transform: rotateY(-90deg);
+  transform-origin: 0 50%;
+}
+
+/* Labels projected from the 3D ground into screen space */
+
+.labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.place {
+  --category: #8a63d2;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 12em;
+  margin: -0.98em 0 0 -6em;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22em;
+}
+
+.place[data-category="cafe"] {
+  --category: #c56d27;
+}
+
+.place[data-category="restaurant"] {
+  --category: #ef8019;
+}
+
+.place[data-category="shopping"] {
+  --category: #e2457f;
+}
+
+.place[data-category="park"] {
+  --category: #2f9a4a;
+}
+
+.place[data-category="transit"] {
+  --category: #3576e0;
+}
+
+.placeBadge {
+  display: grid;
+  width: 1.96em;
+  height: 1.96em;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--category);
+  box-shadow:
+    0 0 0 0.11em #ffffff,
+    0 0.12em 0.4em rgb(0 0 0 / 28%);
+  color: #ffffff;
+}
+
+.place[data-current="true"] .placeBadge {
+  transform: scale(1.22);
+}
+
+.placeGlyph {
+  width: 1.18em;
+  height: 1.18em;
+}
+
+.placeName {
+  max-width: 100%;
+  color: color-mix(in srgb, var(--category) 80%, #000000);
+  font-size: 0.98em;
+  font-weight: 650;
+  line-height: 1.12;
+  text-align: center;
+  text-shadow:
+    0 0 0.12em #ffffff,
+    0 0 0.12em #ffffff,
+    0 0 0.22em #ffffff,
+    0 0 0.3em #ffffff;
+}
+
+.personPin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+
+.personPin::before {
+  position: absolute;
+  top: -0.22em;
+  left: -0.9em;
+  width: 1.8em;
+  height: 0.44em;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 22%);
+  content: "";
+  filter: blur(0.08em);
+}
+
+.personPin::after {
+  position: absolute;
+  bottom: 0.1em;
+  left: -0.42em;
+  width: 0.84em;
+  height: 0.6em;
+  background: #ffffff;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  content: "";
+}
+
+.personAvatar {
+  position: absolute;
+  bottom: 0.6em;
+  left: -1.6em;
+  display: grid;
+  width: 3.2em;
+  height: 3.2em;
+  box-sizing: border-box;
+  place-items: center;
+  border: 0.2em solid #ffffff;
+  border-radius: 50%;
+  background: linear-gradient(#b2b6be, #878c95);
+  box-shadow: 0 0.2em 0.6em rgb(0 0 0 / 32%);
+  color: #ffffff;
+  font-size: 1.12em;
+  font-weight: 600;
+}
+
+/* Native map controls */
+
+.topControls,
+.bottomControls {
+  position: absolute;
+  right: 1em;
+  display: grid;
+  justify-items: end;
+  gap: 0.7em;
+}
+
+.topControls {
+  top: 1em;
+}
+
+.bottomControls {
+  bottom: 1.4em;
+}
+
+.mapButton,
+.zoomButton,
+.compass {
+  border: 0;
+  background: rgb(255 255 255 / 94%);
+  color: #3a3a3c;
+  cursor: default;
+  font: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.mapButton {
+  width: 2.5em;
+  height: 2.2em;
+  border-radius: 0.5em;
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 8%),
+    0 0.1em 0.45em rgb(0 0 0 / 18%);
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.mapButton[aria-pressed="true"] {
+  color: #0a7cff;
+}
+
+.zoomControls {
+  display: grid;
+  overflow: hidden;
+  border-radius: 0.5em;
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 8%),
+    0 0.1em 0.45em rgb(0 0 0 / 18%);
+}
+
+.zoomButton {
+  width: 2.4em;
+  height: 2.2em;
+  font-size: 1.05em;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.zoomButton + .zoomButton {
+  border-top: 1px solid rgb(0 0 0 / 10%);
+}
+
+.zoomButton:disabled {
+  color: #b9b9be;
+}
+
+.mapButton:focus-visible,
+.zoomButton:focus-visible,
+.compass:focus-visible {
+  box-shadow: 0 0 0 2px rgb(10 124 255 / 60%);
+}
+
+.compass {
+  display: grid;
+  width: 2.6em;
+  height: 2.6em;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 8%),
+    0 0.1em 0.45em rgb(0 0 0 / 18%);
+}
+
+.compassDial {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.compassNeedle {
+  display: block;
+  width: 0.5em;
+  height: 1.6em;
+  background: linear-gradient(#ff3b30 50%, #8e8e93 50%);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.compassDial b {
+  position: absolute;
+  top: -0.05em;
+  color: #ff3b30;
+  font-size: 0.6em;
+  font-weight: 700;
+}
+
+.attribution {
+  position: absolute;
+  bottom: 0.9em;
+  left: 1em;
+  display: flex;
+  margin: 0;
+  align-items: center;
+  gap: 0.22em;
+  color: #4b4b4f;
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.attributionMark {
+  width: 0.92em;
+  height: 1.1em;
+  fill: currentColor;
+  transform: translateY(-0.06em);
+}
+
+.legal {
+  margin-left: 0.8em;
+  color: #6e6e73;
+  font-weight: 400;
+}
+
+@media (max-width: 720px) {
+  .window {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #d3d3d6;
+  }
+
+  .list {
+    max-height: 9.6em;
+  }
+}

@@ -8,15 +8,23 @@ import {
 
 export const dynamicParams = false;
 
-// Pre-version paths now live under v1.
+// Pre-version paths (the U2 song) now live under v0.
 const legacyRedirects: Readonly<Record<string, string>> = {
-  whole: "/parametric-interface/v1",
+  whole: "/parametric-interface/v0",
   ...Object.fromEntries(
-    ["1", "2", "3", "4", "5", "6"].map((key) => [key, `/parametric-interface/v1/${key}`]),
+    ["1", "2", "3", "4", "5", "6"].map((key) => [key, `/parametric-interface/v0/${key}`]),
   ),
 };
 
-export const metadata: Metadata = { title: "parametric-interface" };
+// The version path leads the title so open tabs read "v2/9 · …" first.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ experiment: string[] }>;
+}): Promise<Metadata> {
+  const { experiment: path } = await params;
+  return { title: `${path.join("/")} · parametric-interface` };
+}
 
 export function generateStaticParams() {
   return [

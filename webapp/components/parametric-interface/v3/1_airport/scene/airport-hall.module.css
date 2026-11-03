@@ -1,0 +1,24 @@
+.hall {
+  background: #d3d6d8;
+  inset: 0;
+  overflow: hidden;
+  position: fixed;
+}
+
+.background,
+.displayLayer,
+.foreground {
+  inset: 0;
+  position: absolute;
+}
+
+/* The monitor canvas sits over the DOM display and is cut open where it shows. */
+.foreground {
+  pointer-events: none;
+}
+
+.display {
+  background: #2811e2;
+  contain: layout paint;
+  overflow: hidden;
+}
