@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./discord.module.css";
+import { follow } from "../follow";
 
 // Discord for iOS, a friend server's #general (dark). The lyric is a member
 // posting in the group: while a line is being sung, “<name> is typing…” sits
@@ -134,7 +135,7 @@ function DiscordState({ seat, lines, replies, shown, reducedMotion, act }: Phone
   useLayoutEffect(() => {
     const feed = feedRef.current;
     if (!feed || !shown) return;
-    feed.scrollTo({ top: feed.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(feed, feed.scrollHeight, reducedMotion);
   }, [posts, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

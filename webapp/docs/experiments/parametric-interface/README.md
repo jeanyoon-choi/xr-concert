@@ -18,8 +18,8 @@ A standalone import of the SCC `parametric-interface` archive, now organised by 
 | `/parametric-interface/v3/1` | `1_airport`: the v2/4 departures display on a TV in a departures hall (below) |
 | `/parametric-interface/v3/2` | `2_street`: an Euljiro back alley whose projecting signs all show the sung word (below) |
 | `/parametric-interface/v3/3` | `3_daechi`: the experiments-jyc Daechi-dong street, its academy signs taking the sung line one word per sign (below) |
-| `/parametric-interface/v4`, `/v4/1` | ROSÉ — a grid of phones: seventeen chat and social apps (KakaoTalk, WhatsApp, Instagram, X, TikTok, …), each taking the sung line ([v4](./v4.md)) |
-| `/parametric-interface/v4/2` | A copy of `/v4/1` (2_mobiles), adjusted on its own from here ([v4](./v4.md)) |
+| `/parametric-interface/v4/1` | ROSÉ — a grid of phones: seventeen chat and social apps (KakaoTalk, WhatsApp, Instagram, X, TikTok, …), each taking the sung line ([v4](./v4.md)) |
+| `/parametric-interface/v4`, `/v4/2` | Default: the phones of `/v4/1` moving between apps on their own at line ends, notifications from each app on the lock lines ([v4](./v4.md)) |
 | `/parametric-interface/v4/tabs` → `/v4/tab` | Controller that opens real browser windows, each running one of v2's interfaces on its clock ([v4](./v4.md)) |
 
 The former `/7` lecture-note study was removed. Legacy `/whole` and `/1`–`/6` redirect (308) to their `v0` equivalents. On 2026-11-03 the U2 version was renamed `v1` → `v0`, and the ROSÉ v2 was copied to `v1` so that v2 can change; old `/v1` links now open the ROSÉ copy.
@@ -34,6 +34,12 @@ The inherited interfaces 1–6 are office and information systems; they suit U2�
 | --- | --- | --- | --- |
 | `v2/7` | macOS Messages, light | Each word arrives at its onset as its own incoming bubble from “Daniel” — double texting — with the typing indicator between words and his sidebar preview showing the latest word. One timestamp precedes the lyric; runs are separated by iMessage’s tail-and-gap grouping. | Without lyric bubbles: an ordinary Messages window ending on her “Read” receipt. |
 | `v2/8` | macOS Find My, People, 3D map (2D sidebar and labels) | Cue words become place labels along a seeded route; Daniel’s pin reaches each place at its word onset and the sidebar reads “Near <word> · Now”. The camera leans toward the pin and pans ahead to the next route during a cue’s last word. 3D is earned by Find My’s own tilted city view. | Without lyric places: a contact moving on an ordinary 3D map. |
+
+**Replaced 2026-11-03.** On the user's direction, three studies were replaced with hyper-real clones of the real services, each measured in the browser, with lyrics added afterwards on instruction:
+- `v2/7`: Slack, a fictional "Fieldwork" workspace at native 1:1 size. Each sung line is posted to #production at its onset by one member, words appearing as sung. Slack's own "… is typing" shows before the next line, and the DM unread badge counts the lines.
+- `v2/8`: Google Maps, Midtown Manhattan, rendered with MapLibre from OpenFreeMap (OSM) vector tiles in Google's palette.
+- `v2/9`: a single New York Times article page.
+The Messages and Find My builds described above are history.
 
 Observed in the browser at 1470 × 703 (2026-10-27): both render at full viewport; `v2/8` holds 60 fps with ~470 CSS-3D faces. Corrections during review: per-cue timestamps removed from `v2/7` (Messages only stamps after long silences); `v2/8` camera made to follow the pin and pan ahead of cue changes. Find My was first built as `v2/9` and renumbered to `v2/8` after the failures below were removed.
 
@@ -57,18 +63,25 @@ Observed in the browser on 2026-11-03, next to nytimes.com at the same window si
 - The first trial, a print broadsheet on a cream background, was rejected as "not NYT". The user's rule: rebuild the service's actual online interface from its served assets, not an imitation.
 - A later "LIVE" bar was removed because the reference page that day had none.
 
-## v2/10: integrated plan chart (2026-11-03, rebuilt)
+## v2/10: integrated plan chart (2026-11-03, fourth build)
 
-The grammar of the 1989 Rockwell *Integrated Space Plan* poster (grammar only; no wording reused), packed as densely as the poster and fitted to fill the whole screen. Nothing scrolls. The sheet is 1920 px wide, as tall as the viewport's aspect ratio requires, and its layout is seeded.
-- **Sheet:** year scale and rules down both margins; 15 lanes of tightly stacked program elements (around 500 boxes); dependency lines (solid, dashed, double, heavy); five circled era statements over the lines; header with organisation block, about paragraph, critical-path root, title block and legend; a full-height definitions column.
-- **Lyric slot, the same grammar as /1:**
-  - Every program element is labelled with a word of the line being sung, tiled lane by lane.
-  - Every element holding the sung word becomes a critical-path element: the poster's double rule, in bold.
-  - The critical-path root and all five era circles carry the whole line.
-  - The definitions column lists every distinct word of the song beside the line it first appears in.
-- **Removal test:** without the lyric, an ordinary program plan.
+The grammar of the 1989 Rockwell *Integrated Space Plan* poster (grammar only; no wording reused), organised the way the poster is, and filling the screen with nothing scrolling.
+- **Time runs down the sheet.** The song clock is labelled as years in both margins. Every lyric line is an element at its own start time.
+- **Lanes are program areas: the song's parts.** Each has a bold heading: VERSE PROGRAMS, PRE-CHORUS TRANSITION, CHORUS — CRITICAL PATH (the central spine, heavier double-ruled elements), BRIDGE, and LEXICON (every word at its first use, in the vehicle-list grammar).
+- **Connections have a reason:**
+  - Each line depends on the line before it.
+  - A repeated line keeps its first lane, and its occurrences are tied along a dashed recurrence rail with a rotated label. Verse rails run in the left margin, so they never cross a statement.
+- **Era statements:** one per section (a pre-chorus shares its chorus's). Each is set at its section's time, in the lanes that are empty while it plays. The ring is sized by that zone and time band, and the statement is fitted inside the ring.
+- **Tables:** a section schedule and a line schedule fill the right column, as the poster's tables do.
+- **As the song plays:**
+  - The dependencies already sung become the heavy critical path, drawn beneath the elements.
+  - The element being sung takes the heavy double rule, with its sung words bold.
+  - The sung word is selected in the lexicon.
 
-**Rejected first build (same day).** A tall poster that scrolled to follow the current line. The lyric sat in one critical-path element per line, and seven sparse lanes held invented program names. The user rejected it as empty and vague, nothing like the poster's density. It was also measured against the bar set by /1–/6: the lyric must be the sheet's repeated unit, and the sung word must drive the host's own selection state.
+**Rejected builds (same day).**
+1. A scrolling, sparse poster.
+2. A uniform grid of repeated words.
+3. A random dense packing with whole-line labels, random lines and circles. Rejected for having no visual hierarchy, no reason for the circles' positions, and no reason for any connection.
 
 ## v3: interfaces inside 3D scenes (2026-11-03)
 

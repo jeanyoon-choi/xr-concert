@@ -1,236 +1,391 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import type { ParametricSong } from "../model/song";
+import type { ParametricSong, TimedLyricLine } from "../model/song";
 import { SongPlayback } from "../playback";
 import { LYRIC_LEAD_MS, useLyricCue } from "../timeline/use-lyric-cue";
-import styles from "./messages.module.css";
+import { SLACK_ICONS, type SlackIconName } from "./model/icons";
+import {
+  channels,
+  CURRENT_CHANNEL,
+  directMessages,
+  ME,
+  MEMBER_COUNT,
+  people,
+  POSTER,
+  WORKSPACE_INITIALS,
+  WORKSPACE_NAME,
+  type Person,
+} from "./model/workspace";
+import styles from "./slack.module.css";
 
-type IconName = "compose" | "search" | "video" | "info" | "apps" | "emoji" | "audio";
+// The Slack desktop client (aubergine theme, dark), rebuilt from computed
+// styles and served SVG glyphs measured on app.slack.com, drawn at the
+// client's own 1:1 CSS size and reflowing with the window as Slack does.
+// The workspace is invented. The open channel's message list is the song:
+// each sung line is posted by one member at its onset, its words appearing
+// as they are sung; earlier lines stay above as the channel history; in the
+// gap before the next line the composer shows Slack's own typing indicator;
+// the member's DM carries Slack's unread badge, counting the lines posted.
+// Everything derives from the audio clock, so a seek rebuilds the screen.
 
-type Conversation = {
-  id: string;
-  name: string;
-  initials: string;
-  preview: string;
-  time: string;
-  unread?: boolean;
-  group?: boolean;
-};
-
-type TranscriptItem =
-  | { kind: "time"; id: string; day: string; time: string }
-  | { kind: "bubble"; id: string; text: string; outgoing: boolean; tail: boolean; arriving: boolean }
-  | { kind: "receipt"; id: string; text: string };
-
-const CONTACT = "Daniel";
-// The song clock starts at 21:30; every lyric minute is read from that baseline.
+// The song clock starts at 9:30 PM; message times read from that baseline.
 const CLOCK_BASE_MINUTES = 21 * 60 + 30;
-// Messages shows the typing bubble only while a reply is actually being composed.
-const TYPING_WINDOW_MS = 2_400;
-const MAX_LYRIC_BUBBLES = 60;
+// Slack shows "is typing" only while the next message is being written.
+const TYPING_WINDOW_MS = 2_500;
+// Enough history to fill the list at any height; older lines are scrolled off.
+const MAX_HISTORY = 40;
 
-const conversations: readonly Conversation[] = [
-  { id: "studio", name: "Studio Group", initials: "SG", preview: "Minji: Load-in is moved to 2 pm, the van is already booked.", time: "20:58", group: true, unread: true },
-  { id: "mom", name: "Mom", initials: "M", preview: "Did you eat? Call me when you are home.", time: "20:41" },
-  { id: "jiwoo", name: "Jiwoo Han", initials: "JH", preview: "Sending the revised floor plan tonight.", time: "19:12" },
-  { id: "hana", name: "Hana", initials: "H", preview: "haha okay see you there", time: "18:30", unread: true },
-  { id: "landlord", name: "Mr. Seo", initials: "S", preview: "The plumber will come by on Thursday morning.", time: "Yesterday" },
-  { id: "courier", name: "+82 10-4417-2093", initials: "", preview: "Your parcel is at the front desk. Unit 1203.", time: "Yesterday" },
-  { id: "eunbi", name: "Eunbi", initials: "E", preview: "Liked “thank you so much!!”", time: "Saturday" },
-  { id: "kevin", name: "Kevin Park", initials: "KP", preview: "Let me know if the invoice needs changes.", time: "Friday" },
-  { id: "yuna", name: "Yuna", initials: "Y", preview: "Photos from Sunday are in the shared album.", time: "Thursday" },
-];
-
-// The ordinary exchange that already sits above the lyric.
-const baselineTranscript: readonly TranscriptItem[] = [
-  { kind: "time", id: "base-time-1", day: "Yesterday", time: "23:48" },
-  { kind: "bubble", id: "base-1", text: "are you still up", outgoing: false, tail: false, arriving: false },
-  { kind: "bubble", id: "base-2", text: "can we talk", outgoing: false, tail: true, arriving: false },
-  { kind: "bubble", id: "base-3", text: "Not tonight. I'm going to sleep.", outgoing: true, tail: true, arriving: false },
-  { kind: "time", id: "base-time-2", day: "Today", time: "21:12" },
-  { kind: "bubble", id: "base-4", text: "I left your jacket with the doorman", outgoing: true, tail: false, arriving: false },
-  { kind: "bubble", id: "base-5", text: "Please stop coming by the studio.", outgoing: true, tail: true, arriving: false },
-  { kind: "receipt", id: "base-read", text: "Read 21:13" },
-];
-
-function formatClock(songMs: number) {
+function formatTime(songMs: number) {
   const minutes = CLOCK_BASE_MINUTES + Math.floor(songMs / 60_000);
-  return `${String(Math.floor(minutes / 60) % 24).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  const hours = Math.floor(minutes / 60) % 24;
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${String(minutes % 60).padStart(2, "0")} ${hours < 12 ? "AM" : "PM"}`;
 }
 
-function Icon({ name }: { name: IconName }) {
-  const props = {
-    "aria-hidden": true,
-    fill: "none",
-    focusable: false,
-    viewBox: "0 0 24 24",
-  } as const;
+type Posted = { readonly line: TimedLyricLine; readonly index: number; readonly text: string };
 
-  switch (name) {
-    case "compose": return <svg {...props}><path d="M18.6 12.6v5.2a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 17.8V7.6a2.2 2.2 0 0 1 2.2-2.2h5.2" /><path d="m9.4 14.6.5-2.6 8.2-8.2a1.5 1.5 0 0 1 2.1 2.1L12 14.1l-2.6.5Z" /></svg>;
-    case "search": return <svg {...props}><circle cx="10.5" cy="10.5" r="5.8" /><path d="m15 15 4.6 4.6" /></svg>;
-    case "video": return <svg {...props}><rect x="2.8" y="6.4" width="12.6" height="11.2" rx="2.6" /><path d="m15.4 10.6 5-3v8.8l-5-3" /></svg>;
-    case "info": return <svg {...props}><circle cx="12" cy="12" r="8.6" /><path d="M12 11v5.4" /><circle cx="12" cy="7.9" r=".9" fill="currentColor" stroke="none" /></svg>;
-    case "apps": return <svg {...props}><circle cx="12" cy="12" r="9" /><path d="M12 7.8v8.4M7.8 12h8.4" /></svg>;
-    case "emoji": return <svg {...props}><circle cx="12" cy="12" r="8.6" /><path d="M8.4 14.2c.9 1.3 2.1 2 3.6 2s2.7-.7 3.6-2" /><circle cx="9.2" cy="10" r="1" fill="currentColor" stroke="none" /><circle cx="14.8" cy="10" r="1" fill="currentColor" stroke="none" /></svg>;
-    case "audio": return <svg {...props}><path d="M4.5 10.5v3M8.2 7.5v9M12 4.5v15M15.8 8.5v7M19.5 10.5v3" /></svg>;
+function useChannelSong() {
+  const { cueIndex, currentTimeMs, hasStarted, isPlaying, song } = useLyricCue();
+  const clockMs = currentTimeMs + LYRIC_LEAD_MS;
+  const firstStart = song.lyrics[0]?.startMs ?? 0;
+  const begun = hasStarted && clockMs >= firstStart;
+  const postedCount = begun ? cueIndex + 1 : 0;
+
+  const posted: Posted[] = [];
+  for (let index = Math.max(0, postedCount - MAX_HISTORY); index < postedCount; index += 1) {
+    const line = song.lyrics[index]!;
+    const words = index === cueIndex ? line.words.filter((word) => word.startMs <= clockMs) : line.words;
+    posted.push({ line, index, text: words.map((word) => word.text).join(" ") });
   }
+
+  // Typing shows in the gap before the next line: once the current line's
+  // last word is out, or before the first line.
+  const current = begun ? song.lyrics[cueIndex] : undefined;
+  const next = begun ? song.lyrics[cueIndex + 1] : song.lyrics[0];
+  const currentDone = !current || clockMs >= current.words.at(-1)!.startMs + 400;
+  const typing =
+    hasStarted && isPlaying && next !== undefined && currentDone && next.startMs - clockMs <= TYPING_WINDOW_MS;
+
+  return { posted, postedCount, typing };
+}
+
+function Icon({ name, size = 20, className }: { name: SlackIconName; size?: number; className?: string }) {
+  const icon = SLACK_ICONS[name];
+  return (
+    <svg aria-hidden="true" className={className} height={size} viewBox={icon.viewBox} width={size}>
+      {icon.paths.map((path, index) =>
+        "stroke" in path && path.stroke ? (
+          <path d={path.d} fill="none" key={index} stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+        ) : (
+          <path
+            clipRule={path.evenOdd ? "evenodd" : undefined}
+            d={path.d}
+            fill="currentColor"
+            fillRule={path.evenOdd ? "evenodd" : undefined}
+            key={index}
+          />
+        ),
+      )}
+    </svg>
+  );
+}
+
+function Avatar({ person, size }: { person: Person; size: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={styles.avatar}
+      style={{ width: size, height: size, background: person.color, fontSize: Math.round(size * 0.38) }}
+    >
+      {person.initials}
+    </span>
+  );
 }
 
 export default function ParametricInterfaceSeven({ song }: { song?: ParametricSong }) {
   return (
     <SongPlayback song={song}>
-      <MessagesTranscript />
+      <SlackClient />
     </SongPlayback>
   );
 }
 
-function MessagesTranscript() {
-  const { currentTimeMs, hasStarted, isPlaying, reducedMotion, wordIndex, wordTimings } = useLyricCue();
-  const transcriptRef = useRef<HTMLDivElement>(null);
-
-  // Every word that has reached its onset, derived from the audio clock so seeks
-  // in either direction rebuild the same transcript.
-  const arrivedCount =
-    hasStarted && currentTimeMs + LYRIC_LEAD_MS >= wordTimings[0]!.startMs ? wordIndex + 1 : 0;
-
-  const lyricTranscript = useMemo(() => {
-    const items: TranscriptItem[] = [];
-    const firstShown = Math.max(0, arrivedCount - MAX_LYRIC_BUBBLES);
-
-    for (let index = firstShown; index < arrivedCount; index += 1) {
-      const timing = wordTimings[index]!;
-      const next = wordTimings[index + 1];
-
-      // Messages stamps a conversation only after a long silence, so the lyric
-      // gets one stamp; its cues stay separated by the tail-and-gap grouping.
-      if (index === 0) {
-        items.push({ kind: "time", id: "lyric-time", day: "Today", time: formatClock(timing.startMs) });
-      }
-
-      items.push({
-        kind: "bubble",
-        id: `word-${index}`,
-        text: timing.word,
-        outgoing: false,
-        tail: !next || next.cueIndex !== timing.cueIndex || index === arrivedCount - 1,
-        arriving: index === arrivedCount - 1,
-      });
-    }
-
-    return items;
-  }, [arrivedCount, wordTimings]);
-
-  const nextWord = wordTimings[arrivedCount];
-  const isTyping =
-    hasStarted &&
-    isPlaying &&
-    nextWord !== undefined &&
-    nextWord.startMs - currentTimeMs <= TYPING_WINDOW_MS;
-
-  const latestWord = arrivedCount > 0 ? wordTimings[arrivedCount - 1]! : null;
-  const contactPreview = latestWord ? latestWord.word : "Read 21:13";
-  const contactTime = latestWord ? formatClock(latestWord.startMs) : "21:13";
-
-  useEffect(() => {
-    const transcript = transcriptRef.current;
-    if (!transcript) return;
-    transcript.scrollTo({ top: transcript.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
-  }, [arrivedCount, isTyping, reducedMotion]);
-
-  // Once lyric bubbles push the baseline out of the bounded history, it is no longer rendered.
-  const transcript = arrivedCount > MAX_LYRIC_BUBBLES ? lyricTranscript : [...baselineTranscript, ...lyricTranscript];
+function SlackClient() {
+  const { posted, postedCount, typing } = useChannelSong();
 
   return (
-    <main className={`${styles.messages}${reducedMotion ? ` ${styles.reducedMotion}` : ""}`}>
-      <aside aria-label="Conversations" className={styles.sidebar}>
-        <div className={styles.sidebarToolbar}>
-          <div aria-hidden="true" className={styles.trafficLights}><i /><i /><i /></div>
-          <button aria-label="Compose" className={styles.toolbarButton} type="button"><Icon name="compose" /></button>
+    <main className={styles.page}>
+      <div className={styles.app}>
+        <TopNav />
+        <Rail />
+        <div className={styles.workspace}>
+          <Sidebar unread={postedCount} />
+          <section aria-label={`Channel ${CURRENT_CHANNEL}`} className={styles.primary}>
+            <ChannelHeader />
+            <MessageList posted={posted} />
+            <Composer typing={typing} />
+          </section>
         </div>
-        <div className={styles.search} role="search"><Icon name="search" /><span>Search</span></div>
-        <div className={styles.conversationList} role="list">
-          <ConversationRow
-            conversation={{ id: "daniel", name: CONTACT, initials: "D", preview: contactPreview, time: contactTime }}
-            selected
-          />
-          {conversations.map((conversation) => <ConversationRow conversation={conversation} key={conversation.id} />)}
-        </div>
-      </aside>
-
-      <section aria-label={`Conversation with ${CONTACT}`} className={styles.conversation}>
-        <header className={styles.conversationToolbar}>
-          <p className={styles.recipient}><span>To:</span> {CONTACT}</p>
-          <div className={styles.toolbarActions}>
-            <button aria-label="FaceTime" className={styles.toolbarButton} type="button"><Icon name="video" /></button>
-            <button aria-label="Details" className={styles.toolbarButton} type="button"><Icon name="info" /></button>
-          </div>
-        </header>
-
-        <div aria-live="polite" className={styles.transcript} ref={transcriptRef}>
-          <div className={styles.transcriptInner}>
-            {transcript.map((item) => <TranscriptRow item={item} key={item.id} />)}
-            {isTyping ? (
-              <div aria-label={`${CONTACT} is typing`} className={`${styles.bubbleRow} ${styles.incomingRow}`}>
-                <div className={styles.typingBubble}><i /><i /><i /></div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <footer className={styles.composer}>
-          <button aria-label="Apps" className={styles.composerButton} type="button"><Icon name="apps" /></button>
-          <div className={styles.field}>
-            <span>iMessage</span>
-            <Icon name="audio" />
-          </div>
-          <button aria-label="Emoji" className={styles.composerButton} type="button"><Icon name="emoji" /></button>
-        </footer>
-      </section>
+      </div>
     </main>
   );
 }
 
-function ConversationRow({ conversation, selected = false }: { conversation: Conversation; selected?: boolean }) {
+function TopNav() {
   return (
-    <article className={`${styles.conversationRow}${selected ? ` ${styles.selectedRow}` : ""}`} role="listitem">
-      <span aria-hidden="true" className={styles.unreadDot}>{conversation.unread ? <i /> : null}</span>
-      <span aria-hidden="true" className={`${styles.avatar}${conversation.group ? ` ${styles.groupAvatar}` : ""}`}>
-        {conversation.initials || <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4" /><path d="M4.5 21c.8-4 3.6-6.2 7.5-6.2s6.7 2.2 7.5 6.2" /></svg>}
-      </span>
-      <div className={styles.conversationText}>
-        <div className={styles.conversationHeading}>
-          <strong>{conversation.name}</strong>
-          <time>{conversation.time}</time>
+    <header className={styles.topNav}>
+      <div className={styles.history}>
+        <Icon name="back" />
+        <Icon className={styles.dim} name="forward" />
+        <Icon name="history" />
+      </div>
+      <div className={styles.searchBar}>
+        <Icon name="search" size={15} />
+        <span>Search {WORKSPACE_NAME}</span>
+      </div>
+      <Icon className={styles.help} name="help" />
+    </header>
+  );
+}
+
+function RailButton({ icon, label, active }: { icon: SlackIconName; label: string; active?: boolean }) {
+  return (
+    <div className={styles.railButton} data-active={active || undefined}>
+      <span className={styles.railIcon}><Icon name={icon} /></span>
+      <span className={styles.railLabel}>{label}</span>
+    </div>
+  );
+}
+
+function Rail() {
+  return (
+    <nav aria-label="Workspace" className={styles.rail}>
+      <span className={styles.workspaceIcon}>{WORKSPACE_INITIALS}</span>
+      <RailButton active icon="home" label="Home" />
+      <RailButton icon="dms" label="DMs" />
+      <RailButton icon="activity" label="Activity" />
+      <RailButton icon="files" label="Files" />
+      <div className={styles.railMore}>
+        <span className={styles.railIcon}>
+          <svg aria-hidden="true" height={20} viewBox="0 0 20 20" width={20}>
+            <circle cx={4} cy={10} fill="currentColor" r={1.6} />
+            <circle cx={10} cy={10} fill="currentColor" r={1.6} />
+            <circle cx={16} cy={10} fill="currentColor" r={1.6} />
+          </svg>
+        </span>
+        <span className={styles.railLabel}>More</span>
+      </div>
+      <div className={styles.railBottom}>
+        <span className={styles.railAdd}>
+          <svg aria-hidden="true" height={16} viewBox="0 0 20 20" width={16}>
+            <path d={SLACK_ICONS.plus.paths[0]!.d} fill="currentColor" />
+          </svg>
+        </span>
+        <span className={styles.railAvatar}>
+          <Avatar person={ME} size={36} />
+          <i className={styles.presence} />
+        </span>
+      </div>
+    </nav>
+  );
+}
+
+function Sidebar({ unread }: { unread: number }) {
+  return (
+    <aside aria-label="Channels and direct messages" className={styles.sidebar}>
+      <div className={styles.sidebarHeader}>
+        <span className={styles.teamName}>{WORKSPACE_NAME}</span>
+        <Icon className={styles.teamCaret} name="caretDown" size={18} />
+        <span className={styles.headerSpacer} />
+        <Icon name="settings" />
+        <Icon name="compose" />
+      </div>
+
+      <div className={styles.sidebarScroll}>
+        <div className={styles.findBox}>
+          <Icon name="find" size={16} />
+          <span>Find a conversation…</span>
         </div>
-        <p>{conversation.preview}</p>
+
+        <div className={styles.item}><Icon name="huddles" size={16} /><span>Huddles</span></div>
+        <div className={styles.item}><Icon name="send" size={16} /><span>Drafts &amp; sent</span></div>
+        <div className={styles.item}><Icon name="directories" size={16} /><span>Directories</span></div>
+        <div className={styles.rule} />
+
+        <div className={styles.sectionHeading}><Icon name="caretDown" size={16} /><span>Channels</span></div>
+        {channels.map((channel) => (
+          <div
+            className={styles.channel}
+            data-selected={channel.selected || undefined}
+            data-unread={channel.unread || undefined}
+            key={channel.id}
+          >
+            <Icon name="hash" size={16} />
+            <span>{channel.name}</span>
+          </div>
+        ))}
+
+        <div className={styles.sectionHeading}><Icon name="caretDown" size={16} /><span>Direct messages</span></div>
+        {directMessages.map((person) => {
+          const count = person.id === POSTER.id ? unread : 0;
+          return (
+            <div className={styles.channel} data-unread={count ? true : undefined} key={person.id}>
+              <Avatar person={person} size={20} />
+              <span>{person.name}</span>
+              {count ? <span className={styles.badge}>{count}</span> : null}
+            </div>
+          );
+        })}
+
+        <div className={styles.sectionHeading}><Icon name="caretDown" size={16} /><span>Apps</span></div>
+        <div className={styles.channel}><Icon name="apps" size={16} /><span>Workflow Builder</span></div>
+      </div>
+    </aside>
+  );
+}
+
+function ChannelHeader() {
+  const stack = [people.mira, people.jonas, people.theo];
+
+  return (
+    <>
+      <header className={styles.channelHeader}>
+        <Icon className={styles.headerStar} name="star" />
+        <span className={styles.channelTitle}>
+          <Icon name="hash" size={18} />
+          {CURRENT_CHANNEL}
+          <Icon name="caretDown" size={14} />
+        </span>
+        <span className={styles.headerSpacer} />
+        <span className={styles.memberStack}>
+          {stack.map((person) => <Avatar key={person.id} person={person} size={20} />)}
+          <span>{MEMBER_COUNT}</span>
+        </span>
+        <span className={styles.headerTool}>
+          <Icon name="headphones" />
+          <Icon name="caretSmall" />
+        </span>
+        <span className={styles.headerTool}><Icon name="bell" /></span>
+        <span className={styles.headerTool}><Icon name="search" /></span>
+        <span className={styles.headerTool}><Icon name="more" size={16} /></span>
+      </header>
+      <nav aria-label="Channel views" className={styles.tabs}>
+        <span className={styles.tab} data-active>
+          <svg aria-hidden="true" height={16} viewBox="0 0 20 20" width={16}>
+            <path d={SLACK_ICONS.dms.paths[0]!.d} fill="currentColor" fillRule="evenodd" />
+          </svg>
+          Messages
+        </span>
+        <span className={styles.tab}><Icon name="files" size={16} />Files</span>
+        <span className={styles.tab}><Icon name="plus" size={16} /></span>
+      </nav>
+    </>
+  );
+}
+
+function MessageRow({ entry }: { entry: Posted }) {
+  // Slack groups one member's consecutive messages under a single header.
+  const continuation = entry.index > 0;
+
+  return (
+    <article className={styles.message} data-continuation={continuation || undefined}>
+      <div className={styles.gutter}>
+        {continuation ? null : <Avatar person={POSTER} size={36} />}
+      </div>
+      <div className={styles.messageBody}>
+        {continuation ? null : (
+          <p className={styles.messageMeta}>
+            <span className={styles.sender}>{POSTER.name}</span>
+            <span className={styles.timestamp}>{formatTime(entry.line.startMs)}</span>
+          </p>
+        )}
+        <p className={styles.text}>{entry.text}</p>
       </div>
     </article>
   );
 }
 
-function TranscriptRow({ item }: { item: TranscriptItem }) {
-  if (item.kind === "time") {
-    return <p className={styles.timestamp}><b>{item.day}</b> {item.time}</p>;
-  }
-
-  if (item.kind === "receipt") {
-    return <p className={styles.receipt}>{item.text}</p>;
-  }
-
+function MessageList({ posted }: { posted: readonly Posted[] }) {
   return (
-    <div className={`${styles.bubbleRow} ${item.outgoing ? styles.outgoingRow : styles.incomingRow}`}>
-      <p
-        className={[
-          styles.bubble,
-          item.outgoing ? styles.outgoing : styles.incoming,
-          item.tail ? styles.tail : "",
-          item.arriving ? styles.arriving : "",
-        ].filter(Boolean).join(" ")}
-      >
-        {item.text}
-      </p>
+    <div className={styles.messageList}>
+      <div className={styles.messageStack}>
+        <div className={styles.dayDivider}>
+          <span className={styles.dayPill}>
+            Today
+            <Icon name="caretDown" size={13} />
+          </span>
+        </div>
+        {posted.map((entry) => <MessageRow entry={entry} key={entry.line.id} />)}
+      </div>
+    </div>
+  );
+}
+
+const TOOLBAR: readonly (SlackIconName | "|")[] = [
+  "bold", "italic", "underline", "strike", "|", "link", "orderedList", "bulletList", "|", "blockquote", "code", "codeBlock", "divider",
+];
+
+function Composer({ typing }: { typing: boolean }) {
+  return (
+    <div className={styles.composerWrap}>
+      <div className={styles.composer}>
+        <div className={styles.toolbar}>
+          {TOOLBAR.map((item, index) =>
+            item === "|" ? <i className={styles.toolbarRule} key={index} /> : <span className={styles.toolbarButton} key={index}><Icon name={item} size={18} /></span>,
+          )}
+        </div>
+        <p className={styles.placeholder}>Message #{CURRENT_CHANNEL}</p>
+        <div className={styles.composerFooter}>
+          <span className={styles.composerCircle}><Icon name="plus" size={16} /></span>
+          <span className={styles.composerAa}>Aa</span>
+          <span className={styles.toolbarButton}>
+            <svg aria-hidden="true" height={18} viewBox="0 0 20 20" width={18}>
+              <circle cx={10} cy={10} fill="none" r={7.75} stroke="currentColor" strokeWidth={1.5} />
+              <circle cx={7.5} cy={8.5} fill="currentColor" r={1} />
+              <circle cx={12.5} cy={8.5} fill="currentColor" r={1} />
+              <path d="M6.9 12c.7 1 1.8 1.6 3.1 1.6s2.4-.6 3.1-1.6" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+            </svg>
+          </span>
+          <span className={styles.toolbarButton}>
+            <svg aria-hidden="true" height={18} viewBox="0 0 20 20" width={18}>
+              <circle cx={10} cy={10} fill="none" r={3} stroke="currentColor" strokeWidth={1.5} />
+              <path d="M13 7v4.25a1.75 1.75 0 0 0 3.5 0V10a6.5 6.5 0 1 0-2.6 5.2" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+            </svg>
+          </span>
+          <i className={styles.toolbarRule} />
+          <span className={styles.toolbarButton}>
+            <svg aria-hidden="true" height={18} viewBox="0 0 20 20" width={18}>
+              <rect fill="none" height={10} rx={2} stroke="currentColor" strokeWidth={1.5} width={11} x={2} y={5} />
+              <path d="m13 9 4.5-2.5v7L13 11" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={1.5} />
+            </svg>
+          </span>
+          <span className={styles.toolbarButton}>
+            <svg aria-hidden="true" height={18} viewBox="0 0 20 20" width={18}>
+              <rect fill="none" height={9} rx={3} stroke="currentColor" strokeWidth={1.5} width={6} x={7} y={2.5} />
+              <path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+            </svg>
+          </span>
+          <i className={styles.toolbarRule} />
+          <span className={styles.toolbarButton}>
+            <svg aria-hidden="true" height={18} viewBox="0 0 20 20" width={18}>
+              <rect fill="none" height={14} rx={2.5} stroke="currentColor" strokeWidth={1.5} width={14} x={3} y={3} />
+              <path d="m11.5 6.5-3 7" stroke="currentColor" strokeLinecap="round" strokeWidth={1.5} />
+            </svg>
+          </span>
+          <span className={styles.headerSpacer} />
+          <span className={styles.send}>
+            <svg aria-hidden="true" height={16} viewBox="0 0 20 20" width={16}>
+              <path d={SLACK_ICONS.send.paths[0]!.d} fill="currentColor" />
+            </svg>
+            <i />
+            <Icon name="caretDown" size={16} />
+          </span>
+        </div>
+      </div>
+      <div className={styles.composerStatus}>
+        <p className={styles.typing}>{typing ? <><b>{POSTER.name}</b> is typing…</> : null}</p>
+        <p className={styles.hint}><b>Shift + Return</b> to add a new line</p>
+      </div>
     </div>
   );
 }

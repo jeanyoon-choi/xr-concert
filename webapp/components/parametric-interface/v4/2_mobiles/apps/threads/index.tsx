@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import type { PhoneStateProps } from "../types";
 import { ThreadsIcon, ThreadsLogo, type ThreadsIconName } from "./icons";
 import styles from "./threads.module.css";
+import { follow } from "../follow";
 
 // Threads (iOS), light, the home "For you" feed. Each sung line is a
 // different stranger's short text post: it lands at the top of the feed as
@@ -155,7 +156,7 @@ function ThreadsState({ seat, lines, replies, shown, reducedMotion, act }: Phone
   useLayoutEffect(() => {
     const feed = feedRef.current;
     if (!feed || !shown) return;
-    feed.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(feed, 0, reducedMotion);
   }, [topKey, shown, reducedMotion]);
 
   const post = (event: FormEvent) => {

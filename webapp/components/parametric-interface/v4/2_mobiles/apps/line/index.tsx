@@ -5,6 +5,7 @@ import { formatSongClock } from "../../../model/clock-face";
 import type { SungLine } from "../../../model/lines";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./line.module.css";
+import { follow } from "../follow";
 
 // LINE (iOS, English UI, light), a 1:1 chat with the ex. Here the phone's own
 // side is the singer: the line being sung is typed into the composer word by
@@ -101,7 +102,7 @@ function LineState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSta
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [entries, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

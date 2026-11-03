@@ -44,10 +44,10 @@ export const navigationExperiments: readonly NavigationExperiment[] = [
   { key: `${parametricV2}/4`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", phrase: "Fixed high-density departure FIDS with lyric destinations" },
   { key: `${parametricV2}/5`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", phrase: "Gmail inbox where starred mail accumulates and lyric messages arrive in the stream" },
   { key: `${parametricV2}/6`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", phrase: "zsh terminal line with lyric developed inside a printf argument" },
-  { key: `${parametricV2}/7`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", phrase: "Messages conversation where each lyric word arrives as its own double-texted bubble" },
-  { key: `${parametricV2}/8`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", phrase: "Find My 3D city map where lyric words are the places a tracked contact passes" },
+  { key: `${parametricV2}/7`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", updated: "2026-11-03", phrase: "Messages where every conversation row is a word of the sung line, the sung word selected, and each word arrives as its own bubble" },
+  { key: `${parametricV2}/8`, area: "parametric-interface", family: parametricV2, date: "2026-10-27", updated: "2026-11-03", phrase: "Find My where every person is a word of the sung line, the sung word selected and located, and lyric words are the places on the 3D map" },
   { key: `${parametricV2}/9`, area: "parametric-interface", family: parametricV2, date: "2026-11-03", phrase: "nytimes.com homepage where the sung line is the lead headline and earlier lines step down the headline slots" },
-  { key: `${parametricV2}/10`, area: "parametric-interface", family: parametricV2, date: "2026-11-03", phrase: "Dense one-sheet plan chart in the 1989 Integrated Space Plan grammar; every element is a word of the sung line and the sung word becomes the critical path" },
+  { key: `${parametricV2}/10`, area: "parametric-interface", family: parametricV2, date: "2026-11-03", phrase: "Dense one-sheet plan chart in the 1989 Integrated Space Plan grammar; every element is a line of the song, and the sung line's elements become the critical path" },
   { key: parametricV3, area: "parametric-interface", family: parametricV3, date: "2026-11-03", phrase: "ROSÉ — toxic till the end, parametric interfaces placed inside 3D scenes" },
   { key: `${parametricV3}/1`, area: "parametric-interface", family: parametricV3, date: "2026-11-03", phrase: "The v2/4 departures display on a freestanding TV in a departures hall, seen at eye level" },
   { key: `${parametricV3}/2`, area: "parametric-interface", family: parametricV3, date: "2026-11-03", phrase: "Euljiro back alley at dusk where every projecting sign shows the sung word at once" },
@@ -60,6 +60,7 @@ export const navigationExperiments: readonly NavigationExperiment[] = [
   { key: "face-voronoi/3", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Moving Voronoi material field with colour and portrait-gradient modes" },
   { key: "schematic/1", area: "schematic", family: "schematic", date: "2026-11-03", phrase: "The concert as one circuit: where sound leaves devices and how signal travels between stage, remote performers, and phones" },
   { key: "schematic/2", area: "schematic", family: "schematic", date: "2026-11-03", phrase: "One direct trace per sender and receiver, routed like a printed schematic; select senders to send along their own traces" },
+  { key: "schematic/3", area: "schematic", family: "schematic", date: "2026-11-03", phrase: "The whole concert system on one drawing sheet: mixer, laptop, server, screen, remote sites, and every phone, wired by layer" },
 ];
 
 function toNavigationItem({ updated, ...experiment }: NavigationExperiment): NavigationItem {

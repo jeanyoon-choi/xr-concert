@@ -19,61 +19,95 @@
   height: 100%;
 }
 
-.venue {
-  fill: none;
-  stroke: var(--schematic-wire);
-  stroke-width: 2;
+/* Sheet layers: one colour per kind of signal, like an overlaid services drawing. */
+.frame {
+  --layer: #3d4a4c;
+}
+.plan {
+  --layer: #2a3638;
+}
+.device {
+  --layer: var(--schematic-chalk);
+}
+.audio {
+  --layer: #a8745a;
+}
+.video {
+  --layer: #a8965a;
+}
+.network {
+  --layer: #7d8a8c;
+}
+.control {
+  --layer: #5c9aa0;
+}
+.signal {
+  --layer: #8a86ae;
 }
 
 .wire {
   fill: none;
-  stroke: var(--schematic-wire);
-  stroke-width: 1.25;
+  stroke: var(--layer);
+  stroke-width: 1;
   stroke-linejoin: round;
+}
+
+.bus {
+  stroke-width: 3;
+}
+
+.dashedWire {
+  stroke-dasharray: 4 3;
+}
+
+.outline {
+  fill: none;
+  stroke: var(--layer);
+  stroke-width: 1.2;
+}
+
+.dot {
+  fill: var(--layer);
+}
+
+.text {
+  fill: var(--layer);
+  font-family: var(--schematic-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.device.text {
+  fill: #d8d6cc;
+}
+
+.strong {
+  font-weight: 600;
 }
 
 .stroke,
 .dashed {
   stroke: var(--schematic-chalk);
-  stroke-width: 2;
+  stroke-width: 1.6;
 }
 
 .dashed {
   stroke-dasharray: 4 4;
 }
 
+.live {
+  pointer-events: none;
+}
+
 .line {
   fill: none;
-  stroke-width: 1.5;
-}
-
-.flow {
-  fill: none;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-dasharray: 0 24;
-  animation: flow 0.12s linear infinite;
-}
-
-@keyframes flow {
-  from {
-    stroke-dashoffset: var(--tail, 0px);
-  }
-  to {
-    stroke-dashoffset: calc(var(--tail, 0px) - 24px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .flow {
-    animation: none;
-  }
+  stroke-width: 2;
+  stroke-linejoin: round;
 }
 
 .rings,
 .ringsIn {
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: 1.25;
 }
 
 .ringsIn {
@@ -101,14 +135,9 @@
   fill: transparent;
 }
 
-.label {
-  fill: var(--schematic-chalk);
-  font: 400 18px var(--schematic-mono);
-}
-
 .toggle {
   position: absolute;
-  right: 16px;
+  left: 16px;
   bottom: max(16px, env(safe-area-inset-bottom));
 }
 
@@ -119,7 +148,7 @@
   left: 16px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
 }
 

@@ -15,11 +15,3 @@
 .helvetica { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
 
 .times { font-family: "Times New Roman", Times, serif; }
-
-/* Circled statements sit over the lines with a thin paper halo. */
-.statement {
-  paint-order: stroke;
-  stroke: #fff;
-  stroke-width: 3px;
-  stroke-linejoin: round;
-}

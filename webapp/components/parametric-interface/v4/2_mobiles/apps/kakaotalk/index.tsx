@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import { formatSongClock } from "../../../model/clock-face";
 import type { PhoneStateProps } from "../types";
 import styles from "./kakaotalk.module.css";
+import { follow } from "../follow";
 
 // KakaoTalk (iOS, 기본 테마, light), one group chat room: 우리끼리, four
 // members. The friends were talking about the ex and karaoke; then the song
@@ -130,7 +131,7 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [entries, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

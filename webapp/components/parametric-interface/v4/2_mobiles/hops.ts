@@ -1,55 +1,59 @@
-// Phones moving between apps on their own (after goldfishes pc/mobiles/1's
-// hops): at the end of each sung line a phone may leave its app for another
-// — not every phone, not every line: each takes the chance HOP_CHANCE, by
-// its own dice. How it gets there varies as goldfishes' do: a notification
-// tapped open, the swipe along the home bar, or the app switcher.
+// Phones moving between apps (after goldfishes pc/mobiles/1's hops), by
+// passage: the lyric falls into passages — wider than a line, narrower than
+// a verse (PASSAGES). When a passage ends, the dice decide once for the
+// whole grid: either every phone moves to another app together, each to a
+// different one, or none does.
 //
-// Pure in (seat, line): the dice are hashes, not Math.random, so a reload or a
-// seek lands every phone on the same app it had.
+// Pure in (seats, part): the dice are hashes, not Math.random, so a reload
+// or a seek lands every phone on the same app it had.
 
 import { VERSE_PHONES, type PhoneState } from "../model/score";
 
-export type HopKind = "open" | "slide" | "switcher";
+/**
+ * How long a move takes. A move is always centred on the moment the new
+ * passage begins: it starts MOVE_MS / 2 before and ends MOVE_MS / 2 after,
+ * whatever MOVE_MS is.
+ */
+export const MOVE_MS = 750;
 
-/** The chance a phone changes app when a line ends. */
-export const HOP_CHANCE = 0.35;
+/** How long before a move the next app is mounted, out of sight, so the move itself only moves. */
+export const PRELOAD_MS = 700;
 
-/** How a phone moves, weighted: tapping a notification open is the commonest. */
-const KINDS: readonly HopKind[] = ["open", "open", "slide", "switcher"];
+/** The chance the grid changes apps when a passage ends. */
+export const PASSAGE_CHANCE = 0.7;
 
-export type PhonePlan = {
-  readonly app: PhoneState;
-  /** How the phone arrived at it. */
-  readonly kind: HopKind;
-  /** The line it arrived on (-1: held since before the song). */
-  readonly since: number;
-};
+/**
+ * The first line (cue index) of each passage of “toxic till the end”. Each
+ * “We were toxic …” line is a passage of its own.
+ */
+export const PASSAGES: readonly number[] = [0, 2, 4, 8, 11, 12, 15, 16, 19, 21, 25, 28, 29, 32, 33, 35, 37, 40, 41, 44];
 
-/** 0–1 from a seat, a line and a salt. */
-function dice(seat: number, line: number, salt: number) {
-  let value = Math.imul((seat + 1) ^ Math.imul(line + 7, 0x9e3779b1), 0x85ebca6b) >>> 0;
+/** The passage a line belongs to (0 before the song). */
+export function passageOf(cueIndex: number) {
+  let passage = 0;
+  for (let index = 1; index < PASSAGES.length; index += 1) if (PASSAGES[index]! <= cueIndex) passage = index;
+  return passage;
+}
+
+/** 0–1 from a passage and a salt. */
+function dice(part: number, salt: number) {
+  let value = Math.imul(Math.imul(part + 7, 0x9e3779b1) ^ 0x51ed27, 0x85ebca6b) >>> 0;
   value = Math.imul(value ^ (value >>> 13) ^ Math.imul(salt + 1, 0x27d4eb2f), 0xc2b2ae35) >>> 0;
   return ((value ^ (value >>> 16)) >>> 0) / 4_294_967_296;
 }
 
 /**
- * Every phone's app while line `cueIndex` is sung. Phones move in seat order
- * at each line end, and a phone that moves picks among the apps no other
- * phone is in, so the grid never shows one app twice (there are more apps
- * than the default twelve phones; past sixteen phones, repeats are allowed).
+ * Every phone's app during passage `passage`. At each passage change the dice
+ * either leave the grid as it is or turn every phone the same number of
+ * places along the app list: all move, together, and no two phones land on
+ * the same app.
  */
-export function plansAt(seats: number, cueIndex: number): PhonePlan[] {
+export function appsAt(seats: number, passage: number): PhoneState[] {
   const count = VERSE_PHONES.length;
-  const plans: PhonePlan[] = Array.from({ length: seats }, (_, seat) => ({ app: VERSE_PHONES[seat % count]!, kind: "open", since: -1 }));
-  for (let line = 1; line <= cueIndex; line += 1) {
-    for (let seat = 0; seat < seats; seat += 1) {
-      if (dice(seat, line, 1) >= HOP_CHANCE) continue;
-      const taken = new Set(plans.map((plan) => plan.app));
-      const free = VERSE_PHONES.filter((app) => !taken.has(app));
-      const choices = free.length ? free : VERSE_PHONES.filter((app) => app !== plans[seat]!.app);
-      const app = choices[Math.floor(dice(seat, line, 2) * choices.length)]!;
-      plans[seat] = { app, kind: KINDS[Math.floor(dice(seat, line, 3) * KINDS.length)]!, since: line };
-    }
+  let turn = 0;
+  for (let boundary = 1; boundary <= passage; boundary += 1) {
+    // At least four places, so no phone is handed its neighbour's app.
+    if (dice(boundary, 1) < PASSAGE_CHANCE) turn += 4 + Math.floor(dice(boundary, 2) * (count - 7));
   }
-  return plans;
+  return Array.from({ length: seats }, (_, seat) => VERSE_PHONES[(seat + turn) % count]!);
 }

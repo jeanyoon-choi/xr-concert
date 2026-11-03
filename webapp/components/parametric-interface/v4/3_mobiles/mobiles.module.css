@@ -1,0 +1,23 @@
+.field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+.box {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+}
+
+.seat {
+  position: relative;
+  contain: strict;
+}

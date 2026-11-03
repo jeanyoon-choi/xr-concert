@@ -1,0 +1,74 @@
+/* After goldfishes pc/mobiles/1 controls (bubble/7's control), at nrf-xr's
+   16 px text and 44 px target minimums. */
+.control {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  color: #171717;
+  font: 16px/1.3 Arial, Helvetica, sans-serif;
+}
+
+.control * { box-sizing: border-box; }
+
+.trigger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: #171717;
+  color: #fff;
+  box-shadow: 0 3px 16px #0003;
+  cursor: pointer;
+}
+
+.trigger[aria-expanded="true"] {
+  background: #fff;
+  color: #171717;
+}
+
+.panel {
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 4px 28px #0004;
+}
+
+.heading {
+  margin: 0 2px;
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.chips button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #f1f1f1;
+  color: #171717;
+  font: 600 16px Arial, Helvetica, sans-serif;
+  cursor: pointer;
+}
+
+.chips button[aria-pressed="true"] { background: #171717; color: #fff; }
+
+.control button:focus-visible { outline: 2px solid #1469d8; outline-offset: 2px; }

@@ -6,6 +6,7 @@ import type { SungLine } from "../../../model/lines";
 import type { PhoneStateProps } from "../types";
 import { XIcon, type XIconName } from "./icons";
 import styles from "./x.module.css";
+import { follow } from "../follow";
 
 // X (iOS), dark "Lights out", the post-detail screen of a self-thread. The
 // phone belongs to the thread's author: her opening post is the focal post,
@@ -134,7 +135,7 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
     if (!scroller || !shown) return;
     const last = lastKey ? scroller.querySelector<HTMLElement>(`[data-row="${lastKey}"]`) : null;
     const top = last ? last.offsetTop + last.offsetHeight - scroller.clientHeight + 64 : 0;
-    scroller.scrollTo({ top: Math.max(0, top), behavior: reducedMotion ? "auto" : "smooth" });
+    follow(scroller, Math.max(0, top), reducedMotion);
   }, [lastKey, shown, reducedMotion]);
 
   const typing = draft.length > 0;

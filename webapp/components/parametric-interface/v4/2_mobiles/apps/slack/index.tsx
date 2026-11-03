@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./slack.module.css";
+import { follow } from "../follow";
 
 // Slack for iOS, one channel open (light). The lyric is shift talk that is not
 // about the shift: in a late work channel one coworker keeps posting the
@@ -193,7 +194,7 @@ function SlackState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
   useLayoutEffect(() => {
     const feed = feedRef.current;
     if (!feed || !shown) return;
-    feed.scrollTo({ top: feed.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(feed, feed.scrollHeight, reducedMotion);
   }, [posts, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

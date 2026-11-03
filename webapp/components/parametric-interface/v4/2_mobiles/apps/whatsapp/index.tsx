@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./whatsapp.module.css";
+import { follow } from "../follow";
 
 // WhatsApp for iOS, light theme, one 1:1 chat with the seat's ex. Unlike
 // Messages (the ex's words fill a bubble while sung), WhatsApp never shows a
@@ -83,7 +84,7 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [rows, typing, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

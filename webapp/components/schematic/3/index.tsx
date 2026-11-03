@@ -1,139 +1,230 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { reversePath, slicePath, toSvgPoints, type Polyline } from "../1/model/path";
-import { DEFAULT_CONFIG, LIMITS, normalizeConfig, type TopologyConfig } from "../1/model/topology";
-import { buildCircuit, NODE_R, VENUE, VIEW, type CircuitNode } from "./circuit";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { toSvgPoints } from "../1/model/path";
+import {
+  buildSheet,
+  DEFAULT_CONFIG,
+  LIMITS,
+  normalizeConfig,
+  VIEW,
+  type Mark,
+  type NodeShape,
+  type SheetConfig,
+  type SheetNode,
+} from "./sheet";
 import styles from "./schematic.module.css";
 
 /** Wire units per second. */
 const SPEED = 640;
-const PHONE_PRESETS = [5, 24, 60, 100] as const;
+const RINGS = 2;
 /** One family per kind of sender, one shade per sender; receivers take the
  * colour of what reached them. */
 const SHADES: Record<string, readonly string[]> = {
   local: ["#c46a3e", "#dc8a52", "#a8522c", "#e6a273", "#b86446"],
   remote: ["#c9a640", "#e0c062", "#a98a2c", "#ecd389"],
   phone: ["#5f9aa2"],
+  laptop: ["#e4dcc4"],
 };
 
 function colorOf(id: string, kind: string | undefined) {
   const shades = kind ? SHADES[kind] : undefined;
-  if (!shades) return undefined;
+  if (!shades) return "#f2f0e7";
   const index = Number(id.slice(id.lastIndexOf("-") + 1)) - 1;
-  return shades[index % shades.length];
-}
-
-/** The part of a path between distances a and b from its start. */
-function subPath(path: Polyline, a: number, b: number): Polyline {
-  const head = slicePath(path, b);
-  return a <= 0 ? head : reversePath(slicePath(reversePath(head), b - a));
-}
-
-/** Study 1's rings. Sending: solid rings expand out of the device.
- * Receiving: dashed rings close in on the device. */
-function Rings({ x, y, base, reach, color, seconds, receiving }: {
-  x: number;
-  y: number;
-  base: number;
-  reach: number;
-  color: string;
-  seconds: number;
-  receiving: boolean;
-}) {
-  const count = 3;
-  return (
-    <g className={receiving ? styles.ringsIn : styles.rings} stroke={color}>
-      {Array.from({ length: count }, (_, index) => {
-        const phase = (seconds * 0.9 + index / count) % 1;
-        const distance = receiving ? 1 - phase : phase;
-        return <circle key={index} cx={x} cy={y} r={base + distance * reach} strokeOpacity={(1 - distance) * 0.9} />;
-      })}
-    </g>
-  );
+  return shades[Number.isFinite(index) ? index % shades.length : 0];
 }
 
 type Send = { since: number; releasedAt: number | null };
 
-function Shape({ node, color }: { node: CircuitNode; color: string | undefined }) {
-  const fill = color ?? "var(--schematic-field)";
-  switch (node.kind) {
-    case "projection":
-    case "speaker": {
-      const { x0, x1, y0, y1 } = node.rect;
-      return <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} className={styles.stroke} fill={fill} />;
-    }
-    case "phone":
+// ── Static drawing: rendered once per configuration ────────────────────────
+function MarkView({ mark }: { mark: Mark }) {
+  const layer = styles[mark.layer];
+  switch (mark.kind) {
+    case "wire":
       return (
-        <rect
-          x={node.x - node.width / 2}
-          y={node.y - node.height / 2}
-          width={node.width}
-          height={node.height}
-          rx={2}
-          className={styles.stroke}
-          fill={fill}
+        <polyline
+          points={toSvgPoints(mark.points)}
+          className={`${styles.wire} ${layer} ${mark.bus ? styles.bus : ""} ${mark.dashed ? styles.dashedWire : ""}`}
         />
       );
-    default:
+    case "rect":
       return (
-        <circle cx={node.x} cy={node.y} r={NODE_R} className={node.kind === "remote" ? styles.dashed : styles.stroke} fill={fill} />
+        <rect
+          x={mark.x}
+          y={mark.y}
+          width={mark.w}
+          height={mark.h}
+          className={`${styles.outline} ${layer} ${mark.dashed ? styles.dashedWire : ""}`}
+        />
+      );
+    case "circle":
+      return <circle cx={mark.x} cy={mark.y} r={mark.r} className={`${styles.outline} ${layer}`} />;
+    case "shape":
+      return <polygon points={toSvgPoints(mark.points)} className={`${styles.outline} ${layer}`} />;
+    case "dot":
+      return <circle cx={mark.x} cy={mark.y} r={2} className={`${styles.dot} ${layer}`} />;
+    case "text":
+      return (
+        <text
+          x={mark.x}
+          y={mark.y}
+          fontSize={mark.size}
+          textAnchor={mark.anchor ?? "start"}
+          transform={mark.vertical ? `rotate(-90 ${mark.x} ${mark.y})` : undefined}
+          className={`${styles.text} ${layer} ${mark.strong ? styles.strong : ""}`}
+        >
+          {mark.text}
+        </text>
       );
   }
 }
 
+const Drawing = memo(function Drawing({ marks }: { marks: readonly Mark[] }) {
+  return (
+    <g>
+      {marks.map((mark, index) => (
+        <MarkView key={index} mark={mark} />
+      ))}
+    </g>
+  );
+});
+
+function ShapeView({ shape, className, fill }: { shape: NodeShape; className: string; fill?: string }) {
+  return shape.type === "circle" ? (
+    <circle cx={shape.x} cy={shape.y} r={shape.r} fill={fill} className={`${className} ${shape.dashed ? styles.dashed : ""}`} />
+  ) : (
+    <rect x={shape.x} y={shape.y} width={shape.w} height={shape.h} fill={fill} className={className} />
+  );
+}
+
+/** Ring circles whose radius and opacity the animation loop sets directly. */
+function RingSet({ node, color, receiving, register }: {
+  node: SheetNode;
+  color?: string;
+  receiving: boolean;
+  register: (element: SVGGElement | null) => void;
+}) {
+  if (!node.ring) return null;
+  return (
+    <g ref={register} className={receiving ? styles.ringsIn : styles.rings} stroke={color} visibility={receiving ? "hidden" : undefined}>
+      {Array.from({ length: RINGS }, (_, index) => (
+        <circle key={index} cx={node.ring!.x} cy={node.ring!.y} r={node.ring!.base} />
+      ))}
+    </g>
+  );
+}
+
 export default function SchematicStudy3() {
-  const [config, setConfig] = useState<TopologyConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<SheetConfig>(DEFAULT_CONFIG);
   /** Sender id → when it was selected and, once deselected, when it was
-   * released. Any number at once. */
+   * released. Any number at once. Changes only on input, never per frame. */
   const [selection, setSelection] = useState<ReadonlyMap<string, Send>>(new Map());
-  const [now, setNow] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  const circuit = useMemo(() => buildCircuit(config), [config]);
-  const traces = useMemo(() => circuit.edges.map((edge) => toSvgPoints(edge.path)), [circuit]);
-  const kindOf = useMemo(() => new Map(circuit.nodes.map((node) => [node.id, node.kind])), [circuit]);
+  const sheet = useMemo(() => buildSheet(config), [config]);
+  const nodeById = useMemo(() => new Map(sheet.nodes.map((node) => [node.id, node])), [sheet]);
+  const longest = useMemo(() => Math.max(0, ...sheet.routes.map((route) => route.length)), [sheet]);
+  /** Every route's points, computed once per configuration. */
+  const routePoints = useMemo(() => sheet.routes.map((route) => toSvgPoints(route.path)), [sheet]);
 
-  const longest = useMemo(() => Math.max(0, ...circuit.edges.map((edge) => edge.length)), [circuit]);
+  // Routes and receivers in play for the current selection.
+  const live = useMemo(() => {
+    const routes = sheet.routes
+      .map((route, index) => ({ route, index }))
+      .filter(({ route }) => selection.has(route.from));
+    const receivers = [...new Set(routes.map(({ route }) => route.to))]
+      .map((id) => nodeById.get(id))
+      .filter((node): node is SheetNode => node !== undefined);
+    return { routes, receivers };
+  }, [sheet, selection, nodeById]);
+
+  // Elements the loop writes to, keyed by route index or node id.
+  // Stable registries, filled by ref callbacks and read only by the loop.
+  const [routeRefs] = useState(() => new Map<number, SVGPolylineElement>());
+  const [sendRefs] = useState(() => new Map<string, SVGGElement>());
+  const [receiveRefs] = useState(() => new Map<string, SVGGElement>());
+  const [fillRefs] = useState(() => new Map<string, SVGElement>());
+  const selectionRef = useRef(selection);
+  useEffect(() => {
+    selectionRef.current = selection;
+  }, [selection]);
+
   const hasSelection = selection.size > 0;
   useEffect(() => {
     if (!hasSelection) return;
     let frame = 0;
     const tick = (time: number) => {
-      setNow(time);
-      // Drop released senders once their tail has drained every trace.
-      setSelection((current) => {
-        const done = [...current].filter(
-          ([, send]) => send.releasedAt !== null && ((time - send.releasedAt) / 1000) * SPEED > longest,
-        );
-        if (done.length === 0) return current;
-        const next = new Map(current);
-        for (const [id] of done) next.delete(id);
-        return next;
-      });
+      const current = selectionRef.current;
+      const reached = new Map<string, string>();
+
+      for (const { route, index } of live.routes) {
+        const element = routeRefs.get(index);
+        const send = current.get(route.from);
+        if (!element || !send) continue;
+        const head = Math.max(0, ((time - send.since) / 1000) * SPEED);
+        const tail = send.releasedAt === null ? 0 : Math.max(0, ((time - send.releasedAt) / 1000) * SPEED);
+        const end = Math.min(head, route.length);
+        const visible = end - tail;
+        // Reveal [tail, end] of the full route with one dash.
+        element.setAttribute("stroke-dasharray", visible > 0 ? `0 ${tail} ${visible} ${route.length + 1}` : `0 ${route.length + 1}`);
+        if (head >= route.length && tail < route.length && !reached.has(route.to)) {
+          reached.set(route.to, colorOf(route.from, nodeById.get(route.from)?.kind));
+        }
+      }
+
+      const seconds = time / 1000;
+      const placeRings = (group: SVGGElement, node: SheetNode, inward: boolean) => {
+        const ring = node.ring!;
+        const circles = group.children;
+        for (let index = 0; index < circles.length; index += 1) {
+          const phase = (seconds * 0.9 + index / RINGS) % 1;
+          const distance = inward ? 1 - phase : phase;
+          circles[index].setAttribute("r", String(ring.base + distance * ring.reach));
+          circles[index].setAttribute("stroke-opacity", String((1 - distance) * 0.8));
+        }
+      };
+      for (const [id, group] of sendRefs) {
+        const node = nodeById.get(id);
+        if (node) placeRings(group, node, false);
+      }
+      for (const [id, group] of receiveRefs) {
+        const node = nodeById.get(id);
+        const color = reached.get(id);
+        if (!node) continue;
+        if (color) {
+          group.setAttribute("visibility", "visible");
+          group.setAttribute("stroke", color);
+          placeRings(group, node, true);
+        } else {
+          group.setAttribute("visibility", "hidden");
+        }
+      }
+      for (const [id, element] of fillRefs) {
+        const color = reached.get(id);
+        if (color) {
+          element.setAttribute("fill", color);
+          element.setAttribute("visibility", "visible");
+        } else {
+          element.setAttribute("visibility", "hidden");
+        }
+      }
+
+      // Drop released senders once their tail has drained every route.
+      const drained = [...current].filter(
+        ([, send]) => send.releasedAt !== null && ((time - send.releasedAt) / 1000) * SPEED > longest,
+      );
+      if (drained.length > 0) {
+        setSelection((previous) => {
+          const next = new Map(previous);
+          for (const [id] of drained) next.delete(id);
+          return next;
+        });
+      }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [hasSelection, longest]);
-
-  // Each wavefront leaves its sender along that sender's own traces. After
-  // release a tail follows from the sender at the same speed, so the trace
-  // drains in order; a receiver is on while the signal covers its end.
-  const flows: { color: string; points: string; tail: number }[] = [];
-  const reached = new Map<string, string>();
-  for (const [senderId, send] of selection) {
-    const color = colorOf(senderId, kindOf.get(senderId));
-    const head = Math.max(0, ((now - send.since) / 1000) * SPEED);
-    const tail = send.releasedAt === null ? 0 : Math.max(0, ((now - send.releasedAt) / 1000) * SPEED);
-    if (!color || head <= 0) continue;
-    for (const edge of circuit.edgesFrom.get(senderId) ?? []) {
-      const end = Math.min(head, edge.length);
-      if (tail >= end) continue;
-      flows.push({ color, tail, points: toSvgPoints(subPath(edge.path, tail, end)) });
-      if (head >= edge.length && !reached.has(edge.to)) reached.set(edge.to, color);
-    }
-  }
+  }, [hasSelection, live, longest, nodeById, routeRefs, sendRefs, receiveRefs, fillRefs]);
 
   // Event timestamps share requestAnimationFrame's time origin.
   const toggle = (id: string, time: number) => {
@@ -151,77 +242,81 @@ export default function SchematicStudy3() {
       return next;
     });
   };
-  const change = (next: Partial<TopologyConfig>) => {
+  const change = (next: Partial<SheetConfig>) => {
     setSelection(new Map());
     setConfig((current) => normalizeConfig({ ...current, ...next }));
   };
-  const nextPhones = PHONE_PRESETS.find((preset) => preset > config.phones) ?? PHONE_PRESETS[0];
+
+  const register = <K, T>(map: Map<K, T>, key: K) => (element: T | null) => {
+    if (element) map.set(key, element);
+    else map.delete(key);
+  };
+  const isSending = (id: string) => {
+    const send = selection.get(id);
+    return send !== undefined && send.releasedAt === null;
+  };
 
   return (
     <main className={styles.root}>
       <svg className={styles.svg} viewBox={`0 0 ${VIEW.width} ${VIEW.height}`} onClick={(event) => releaseAll(event.timeStamp)}>
-        <rect
-          x={VENUE.x0}
-          y={VENUE.y0}
-          width={VENUE.x1 - VENUE.x0}
-          height={VENUE.y1 - VENUE.y0}
-          className={styles.venue}
-        />
+        <Drawing marks={sheet.marks} />
 
-        <g className={styles.wire}>
-          {traces.map((points, index) => (
-            <polyline key={index} points={points} />
+        <g className={styles.live}>
+          {live.routes.map(({ route, index }) => (
+            <polyline
+              key={index}
+              ref={register(routeRefs, index)}
+              points={routePoints[index]}
+              className={styles.line}
+              stroke={colorOf(route.from, nodeById.get(route.from)?.kind)}
+              strokeDasharray={`0 ${route.length + 1}`}
+            />
+          ))}
+
+          {[...selection.keys()].filter(isSending).map((id) => {
+            const node = nodeById.get(id);
+            return node ? (
+              <RingSet
+                key={`send-${id}`}
+                node={node}
+                color={colorOf(id, node.kind)}
+                receiving={false}
+                register={register(sendRefs, id)}
+              />
+            ) : null;
+          })}
+          {live.receivers.map((node) => (
+            <RingSet
+              key={`receive-${node.id}`}
+              node={node}
+              receiving
+              register={register(receiveRefs, node.id)}
+            />
           ))}
         </g>
 
-        {flows.map(({ color, points, tail }, index) => (
-          <g key={index}>
-            <polyline points={points} className={styles.line} stroke={color} />
-            <polyline
-              points={points}
-              className={styles.flow}
-              stroke={color}
-              // Keep dots anchored to the full trace while the tail drains it.
-              style={{ "--tail": `${tail}px` } as CSSProperties}
-            />
-          </g>
-        ))}
-
-        {circuit.nodes.map((node) => {
-          if (node.kind === "projection") return null;
-          const send = selection.get(node.id);
-          const sendColor = send && send.releasedAt === null ? colorOf(node.id, node.kind) : undefined;
-          const receiveColor = reached.get(node.id);
-          if (!sendColor && !receiveColor) return null;
-          const center =
-            node.kind === "speaker"
-              ? { x: node.x, y: (node.rect.y0 + node.rect.y1) / 2, base: 16, reach: 72 }
-              : node.kind === "phone"
-                ? { x: node.x, y: node.y, base: node.height * 0.6, reach: node.height * 0.9 }
-                : { x: node.x, y: node.y, base: NODE_R + 4, reach: 46 };
-          const seconds = now / 1000;
-          return (
-            <g key={`rings-${node.id}`}>
-              {sendColor ? <Rings {...center} color={sendColor} seconds={seconds} receiving={false} /> : null}
-              {receiveColor ? <Rings {...center} color={receiveColor} seconds={seconds} receiving /> : null}
-            </g>
+        {sheet.nodes.map((node) => {
+          const sending = isSending(node.id);
+          const fill = sending ? colorOf(node.id, node.kind) : node.kind === "laptop" ? "none" : "var(--schematic-field)";
+          const body = (
+            <>
+              <ShapeView shape={node.shape} fill={fill} className={styles.stroke} />
+              {live.receivers.includes(node) && !sending ? (
+                <g ref={register(fillRefs, node.id)} visibility="hidden">
+                  <ShapeView shape={node.shape} className={styles.stroke} />
+                </g>
+              ) : null}
+            </>
           );
-        })}
-
-        {circuit.nodes.map((node) => {
-          const send = selection.get(node.id);
-          const color = send && send.releasedAt === null ? colorOf(node.id, node.kind) : reached.get(node.id);
-          if (node.kind === "speaker" || node.kind === "projection") {
-            return <Shape key={node.id} node={node} color={color} />;
-          }
+          if (!node.sender) return <g key={node.id}>{body}</g>;
           return (
             <g
               key={node.id}
               className={styles.point}
               role="button"
               tabIndex={0}
-              aria-label={node.label ?? node.id}
-              aria-pressed={send !== undefined && send.releasedAt === null}
+              aria-label={node.label}
+              aria-pressed={sending}
               onClick={(event) => {
                 event.stopPropagation();
                 toggle(node.id, event.timeStamp);
@@ -233,18 +328,8 @@ export default function SchematicStudy3() {
                 }
               }}
             >
-              <circle cx={node.x} cy={node.y} r={node.kind === "phone" ? Math.max(12, node.height * 0.7) : NODE_R + 6} className={styles.hit} />
-              <Shape node={node} color={color} />
-              {node.kind === "local" ? (
-                <text x={node.x} y={node.y - NODE_R - 12} className={styles.label} textAnchor="middle">
-                  {node.label}
-                </text>
-              ) : null}
-              {node.kind === "remote" ? (
-                <text x={node.x} y={node.y + NODE_R + 26} className={styles.label} textAnchor="middle">
-                  {node.label}
-                </text>
-              ) : null}
+              <ShapeView shape={node.hit} fill="transparent" className={styles.hit} />
+              {body}
             </g>
           );
         })}
@@ -262,9 +347,7 @@ export default function SchematicStudy3() {
         <nav className={styles.panel} aria-label="Options">
           <Stepper label="Local" value={config.local} limits={LIMITS.local} onChange={(local) => change({ local })} />
           <Stepper label="Remote" value={config.remote} limits={LIMITS.remote} onChange={(remote) => change({ remote })} />
-          <button type="button" className={styles.button} onClick={() => change({ phones: nextPhones })}>
-            {config.phones} phones
-          </button>
+          <Stepper label="Phones" value={config.phones} limits={LIMITS.phones} onChange={(phones) => change({ phones })} />
         </nav>
       ) : null}
     </main>

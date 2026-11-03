@@ -11,7 +11,7 @@ Study 1 is design only. It is a standalone page outside the realtime registry; i
 | `/schematic` | Navigation index |
 | `/schematic/1` | Scripted circuit with Parts 0–3 |
 | `/schematic/2` | One direct trace per sender → receiver; select senders to send along their own traces |
-| `/schematic/3` | Copy of Study 2, the base for the next iteration |
+| `/schematic/3` | The whole system on one drawing sheet: every block, pin, and wire of the concert |
 
 ## Sources
 
@@ -60,6 +60,22 @@ Any number of senders can be selected at once, each in its own shade (local copp
 | Phone | Projection | Sheet Part 3: faces → projection |
 | Local performer ↔ remote performer | Each other | Sheet Part 2: remote–local conversation |
 | Local / remote performer | Speakers | NRF_June p.8: PA speakers | The Options button opens local, remote, and phone counts.
+
+## Study 3
+
+`components/schematic/3/sheet.ts` lays out the whole system on one sheet with a zone border (1–8, A–D) and a title block. Blocks are the equipment and processes the concert runs on; pin names and values come from `docs/harness/architecture.md`. Wires are drawn at rest in one colour per layer: audio, video, network, control, and signaling. Counts: local 1–5, remote 0–4, phones 10–20 (default 2, 2, 16).
+
+| Sender | Route | Receivers |
+| --- | --- | --- |
+| Performer | mic → mixer channel → master L/R; mix-minus → laptop → WebRTC | PA left and right; every remote's headphones |
+| Remote performer | mic → network → laptop WebRTC → audio interface → mixer channel → master L/R; mix-minus to other remotes | PA; other remotes' headphones |
+| Remote performer | camera → network → laptop → frame at the stage side | Its frame |
+| Phone | gesture 25 Hz → server validate → latest sample → aggregate 30 Hz → /screen | Projection |
+| Laptop | getUserMedia → one RTCPeerConnection per phone → `<audio>`; offer through the server | Every phone |
+
+The mixer draws one aux bus per remote; every channel except that remote's own feeds it (mix-minus). Mix-minus and the laptop as the WebRTC end for remote performers are assumptions of this drawing, not settled concert decisions. Session (idle, live, paused) is drawn as a static block. Text is 12 units or larger; only block, device, and rate labels are shown.
+
+Selection, propagation, and draining behave as in Study 2, drawn as a plain coloured line without moving dots; two rings mark sending and receiving. Performance: the static sheet renders once per configuration and does not re-render while animating. The animation loop writes only the live routes' `stroke-dasharray` and the ring attributes. At the maximum configuration with ten senders selected (94 live routes) it measured 60 fps (p95 frame 17.5 ms).
 
 ## Open questions
 

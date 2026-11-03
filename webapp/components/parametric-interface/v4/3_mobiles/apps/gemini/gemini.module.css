@@ -1,0 +1,234 @@
+/* Google Gemini for iOS, light, one chat open, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: #1f1f1f;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  height: 110px;
+  padding: 54px 8px 0;
+}
+
+.icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #444746;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  gap: 2px;
+  font: 500 20px/26px var(--ios-font);
+  letter-spacing: -0.2px;
+}
+
+.titleChevron {
+  display: grid;
+  color: #444746;
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  justify-self: center;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font: 500 15px/1 var(--ios-font);
+}
+
+.thread {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.turns {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 8px 16px 16px;
+}
+
+/* Her prompt: the right-hand bubble, its top-right corner squared. */
+.user {
+  align-self: flex-end;
+  max-width: 296px;
+  margin: 8px 0 20px;
+  padding: 12px 16px;
+  border-radius: 24px 4px 24px 24px;
+  background: #e9eef6;
+  font: 400 16px/24px var(--ios-font);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.model { margin: 0 0 12px; }
+
+.modelHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 32px;
+  margin: 0 0 8px;
+}
+
+.sparkle {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  background: url("/parametric-interface/v4/apps/gemini/sparkle.svg") center / 24px 24px no-repeat;
+}
+
+/* While it thinks, the sparkle turns, as the app's does. */
+.sparkle[data-thinking] { animation: turn 2.4s linear infinite; }
+
+@keyframes turn {
+  to { transform: rotate(360deg); }
+}
+
+.showThinking {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #444746;
+  font: 500 14px/20px var(--ios-font);
+  letter-spacing: 0.1px;
+}
+
+.answer p {
+  margin: 0 0 16px;
+  font: 400 16px/26px var(--ios-font);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.answer p:last-child { margin-bottom: 0; }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  margin: 8px 0 0 -10px;
+  color: #444746;
+}
+
+.actions svg {
+  box-sizing: content-box;
+  padding: 10px;
+}
+
+.composer {
+  padding: 8px 12px 42px;
+  background: #fff;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 8px 8px;
+  border-radius: 28px;
+  background: #f0f4f9;
+}
+
+.field {
+  position: relative;
+  display: block;
+  padding: 0 12px 6px;
+}
+
+.field input {
+  width: 100%;
+  height: 24px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #1f1f1f;
+  font: 400 16px/24px var(--ios-font);
+  outline: none;
+  caret-color: #0b57d0;
+}
+
+.field input::placeholder { color: #444746; }
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+}
+
+.tool {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #444746;
+}
+
+.spacer { flex: 1; }
+
+/* Live: the waveform on its own tonal disc, at the end of the composer. */
+.live {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #dde3ea;
+  color: #1f1f1f;
+}
+
+.send,
+.stop {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+}
+
+.send {
+  background: transparent;
+  color: #0b57d0;
+  cursor: pointer;
+}
+
+.send:focus-visible { outline: 2px solid #0b57d0; outline-offset: 2px; }
+
+.stop {
+  background: #1f1f1f;
+  color: #fff;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle[data-thinking] { animation: none; }
+}

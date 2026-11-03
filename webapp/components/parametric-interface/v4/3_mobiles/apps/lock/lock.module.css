@@ -1,0 +1,161 @@
+/* iOS 18 lock screen at native points, metrics from experiments-jyc SCC
+   mobiles/1 os.module.css (.lock*): status bar 54 pt, home indicator 34 pt. */
+.lock {
+  position: absolute;
+  inset: 0;
+  background-color: #222;
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+}
+
+.padlock {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  margin-left: -7px;
+  opacity: 0.9;
+}
+
+.date {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  font: 600 21px/25px var(--ios-display);
+  letter-spacing: 0.15px;
+  text-align: center;
+  opacity: 0.92;
+}
+
+.clock {
+  position: absolute;
+  top: 120px;
+  left: 0;
+  right: 0;
+  font: 700 108px/1 var(--ios-display);
+  letter-spacing: -3.5px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 10%);
+}
+
+/* One app's notifications, grouped: the newest in front, earlier ones tucked beneath. */
+.stack {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 146px;
+  display: grid;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stack:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 22px; }
+
+.stack[data-tucked="1"] { margin-bottom: 8px; }
+.stack[data-tucked="2"] { margin-bottom: 16px; }
+
+.front {
+  position: relative;
+  z-index: 3;
+  grid-area: 1 / 1;
+  animation: arrive 480ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+/* The earlier notifications: only their lower edges show, tucked under the
+   front card, each a little narrower — never behind its translucent body. */
+.under {
+  position: absolute;
+  bottom: -8px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  border-radius: 0 0 14px 14px;
+  background: rgb(246 246 246 / 55%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+}
+
+.under[data-depth="1"] { z-index: 2; }
+.under[data-depth="2"] { z-index: 1; bottom: -16px; left: 20px; right: 20px; background: rgb(246 246 246 / 38%); }
+
+@keyframes arrive {
+  from { transform: translateY(-28px) scale(0.94); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: start;
+  padding: 12px 14px 13px 12px;
+  border-radius: 22px;
+  background: rgb(246 246 246 / 72%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  color: #000;
+  font: 400 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+}
+
+.icon {
+  grid-row: span 2;
+  width: 38px;
+  height: 38px;
+  margin-top: 1px;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.icon img,
+.icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.age {
+  color: rgb(60 60 67 / 60%);
+  font-size: 13px;
+}
+
+.body {
+  grid-column: 2 / 4;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.button {
+  position: absolute;
+  bottom: 78px;
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 26%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.button[data-side="left"] { left: 46px; }
+.button[data-side="right"] { right: 46px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .front { animation: none; }
+}

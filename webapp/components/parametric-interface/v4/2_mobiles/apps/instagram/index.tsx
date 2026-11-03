@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import type { PhoneStateProps } from "../types";
 import { Glyph } from "./glyphs";
 import styles from "./instagram.module.css";
+import { follow } from "../follow";
 
 // Instagram iOS, the Home feed (light) scrolled to one post: a text-on-colour
 // quote card from a quote account, the kind of post such accounts make. The
@@ -112,7 +113,7 @@ function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: Pho
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list || !shown || !sheet) return;
-    list.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(list, 0, reducedMotion);
   }, [comments, shown, sheet, reducedMotion]);
 
   const post = (event: FormEvent) => {

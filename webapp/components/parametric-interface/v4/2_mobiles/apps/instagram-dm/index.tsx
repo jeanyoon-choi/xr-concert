@@ -5,6 +5,7 @@ import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import { Glyph } from "./glyphs";
 import styles from "./instagram-dm.module.css";
+import { follow } from "../follow";
 
 // Instagram iOS, a Direct thread (light) with the ex. The lyric is the ex
 // replying to YOUR story: when the song starts, the thread shows "Replied to
@@ -87,7 +88,7 @@ function InstagramDmState({ seat, lines, replies, shown, reducedMotion, act }: P
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
     paintSent();
   }, [rows, shown, reducedMotion, paintSent]);
 

@@ -4,20 +4,15 @@ import { memo, useCallback, useMemo, useState, type CSSProperties, type ReactNod
 import type { SungLine } from "../../model/lines";
 import type { PhoneState } from "../../model/score";
 import { PHONE_STATES } from "../apps/registry";
-import { noticeOf } from "../apps/lock/notify";
 import type { PhoneAction, Reply } from "../apps/types";
-import type { HopKind } from "../hops";
+import { MOVE_MS } from "../hops";
 import styles from "./phone.module.css";
 
 // One phone (after goldfishes pc/mobiles/1): someone's phone in use, moving
-// between apps on its own (hops.ts). As in goldfishes, nothing blinks in or
-// out: a new app is mounted whole and brought in by motion over the one it
-// left, which stays opaque beneath until covered — opened out of a tapped
-// notification banner, swiped in along the home bar, or picked in the app
-// switcher. On a lock line the lock screen comes down over whatever app is
-// open, its notifications from that app, and goes back up after.
-//
-// Each phone is a different person's: its own signal, Wi-Fi and battery.
+// between apps (hops.ts). A move is a scroll: the next app rises from below
+// as the one before is carried up. On a lock line the lock screen comes
+// down over the app, its notifications from that app, and goes back up after.
+// Each phone has its own signal, Wi-Fi and battery.
 //
 // Drawn at native points (404 × 858, glass 390 × 844) and zoomed as one unit:
 // CSS zoom, not a scale transform, so text rasterises at the shown size.
@@ -29,12 +24,10 @@ type Props = {
   seat: number;
   /** The sung lines, oldest first, at most PHONE_HISTORY; shared by every phone. */
   lines: readonly SungLine[];
-  /** The app the phone is in, how it got there, and a key that changes with each move. */
+  /** The app the phone is in. */
   app: PhoneState;
-  hop: HopKind;
-  hopKey: string;
-  /** Whether the phone moved on the line being sung (its banner shows once, then). */
-  hopFresh: boolean;
+  /** The app it will move to next, mounted out of sight ahead of the move (null: none coming). */
+  upcoming: PhoneState | null;
   /** Whether a lock line is being sung. */
   locked: boolean;
   /** Changes with each line: an app opened from the lock screen holds until then. */
@@ -80,40 +73,47 @@ function Wifi({ arcs }: { arcs: number }) {
 }
 
 /**
- * The app open now, over the one it was left from while the hop plays (after
- * goldfishes' Hop). Keyed by app, so the app keeps its DOM as it goes beneath.
+ * The app open now. When it changes, the new app rises from below as the old
+ * one is carried up with it, like one scrolled sheet; transform only. The
+ * next app is mounted ahead, out of sight below, under the same key, so when
+ * the move starts nothing mounts: the layer only starts moving. The old app
+ * is dropped as soon as the move ends.
  */
-function Hop({ id, kind, children }: { id: string; kind: HopKind; children: ReactNode }) {
+function Slide({ id, children, next }: { id: string; children: ReactNode; next: { id: string; node: ReactNode } | null }) {
   const [current, setCurrent] = useState({ id, node: children });
-  const [leaving, setLeaving] = useState<{ id: string; node: ReactNode; kind: HopKind } | null>(null);
+  const [leaving, setLeaving] = useState<{ id: string; node: ReactNode } | null>(null);
   if (current.id !== id) {
-    setLeaving({ id: current.id, node: current.node, kind });
+    setLeaving({ id: current.id, node: current.node });
     setCurrent({ id, node: children });
   }
   const node = current.id === id ? children : current.node;
   return (
     <>
+      {leaving ? (
+        <div key={leaving.id} className={styles.slideLayer} data-phase="out">
+          {leaving.node}
+        </div>
+      ) : null}
       <div
         key={id}
-        className={styles.hopLayer}
-        data-hop={leaving ? leaving.kind : undefined}
-        data-phase="in"
+        className={styles.slideLayer}
+        data-phase={leaving ? "in" : undefined}
         onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) setLeaving(null);
         }}
       >
         {node}
       </div>
-      {leaving ? (
-        <div key={leaving.id} className={styles.hopLayer} data-hop={leaving.kind} data-phase="out">
-          {leaving.node}
+      {next && next.id !== id && next.id !== leaving?.id ? (
+        <div key={next.id} className={styles.slideLayer} data-phase="waiting" aria-hidden="true">
+          {next.node}
         </div>
       ) : null}
     </>
   );
 }
 
-function PhoneView({ seat, lines, app, hop, hopKey, hopFresh, locked, lineKey, clock, scale, reducedMotion }: Props) {
+function PhoneView({ seat, lines, app, upcoming, locked, lineKey, clock, scale, reducedMotion }: Props) {
   const [replies, setReplies] = useState<readonly Reply[]>([]);
   const [opened, setOpened] = useState<{ lineKey: string; state: PhoneState } | null>(null);
   const openedNow = opened && opened.lineKey === lineKey ? opened.state : null;
@@ -140,35 +140,26 @@ function PhoneView({ seat, lines, app, hop, hopKey, hopFresh, locked, lineKey, c
     const { history } = PHONE_STATES[state];
     return lines.length > history ? lines.slice(-history) : lines;
   };
-  const { Screen } = PHONE_STATES[appShown];
+  const renderApp = (state: PhoneState, shown: boolean) => {
+    const { Screen } = PHONE_STATES[state];
+    return (
+      <div className={styles.layer} data-state={state} data-shown={shown || undefined}>
+        <Screen seat={seat} lines={slice(state)} replies={replies} clock={clock} shown={shown} reducedMotion={reducedMotion} act={act} />
+      </div>
+    );
+  };
   const { Screen: Lock } = PHONE_STATES.lock;
   const tone = PHONE_STATES[lockShown ? "lock" : appShown].statusTone;
-  // The banner a tapped hop opens out of: the new app's notification of the line.
-  const banner = hopFresh && hop === "open" && !lockShown && lines.at(-1) ? noticeOf(appShown, seat, lines.at(-1)!) : null;
 
   return (
-    <div
-      className={styles.phone}
-      style={{ zoom: scale } as CSSProperties}
-      data-reduced-motion={reducedMotion || undefined}
-    >
+    <div className={styles.phone} style={{ zoom: scale, "--move-ms": `${MOVE_MS}ms` } as CSSProperties} data-reduced-motion={reducedMotion || undefined}>
       <div className={styles.glass}>
-        <Hop id={`${appShown}:${openedNow ? lineKey : hopKey}`} kind={openedNow ? "open" : hop}>
-          <div className={styles.layer} data-state={appShown} data-shown={!lockShown || undefined}>
-            <Screen seat={seat} lines={slice(appShown)} replies={replies} clock={clock} shown={!lockShown} reducedMotion={reducedMotion} act={act} />
-          </div>
-        </Hop>
+        <Slide id={appShown} next={upcoming && !openedNow ? { id: upcoming, node: renderApp(upcoming, false) } : null}>
+          {renderApp(appShown, !lockShown)}
+        </Slide>
         <div className={styles.lockLayer} data-state="lock" data-shown={lockShown || undefined}>
           <Lock seat={seat} lines={slice("lock")} replies={replies} clock={clock} shown={lockShown} reducedMotion={reducedMotion} act={act} source={app} />
         </div>
-        {banner ? (
-          <div key={hopKey} className={styles.banner} aria-hidden="true">
-            <span className={styles.bannerIcon}>{banner.icon ? <img src={banner.icon} alt="" width={38} height={38} /> : null}</span>
-            <span className={styles.bannerTitle}>{banner.title}</span>
-            <span className={styles.bannerAge}>now</span>
-            <span className={styles.bannerBody}>{banner.body}</span>
-          </div>
-        ) : null}
         <div className={styles.statusBar} data-tone={tone} aria-hidden="true">
           <span className={styles.statusTime}>{clock}</span>
           <span />

@@ -70,92 +70,29 @@
 }
 
 /*
- * Hops between apps (goldfishes pc/mobiles/1 phone.module.css): the new app
- * comes in over the old, which stays opaque beneath until covered.
+ * A move between apps: a scroll. The new app rises from below as the old
+ * one is carried up with it, as one continuous sheet — MOVE_MS, eased in and
+ * out, its midpoint on the passage's first word. Transform only.
  */
-.hopLayer {
+.slideLayer {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  animation-duration: 560ms;
-  animation-fill-mode: both;
-  backface-visibility: hidden;
 }
 
-.hopLayer:not([data-hop]) { animation: none; }
-.hopLayer[data-phase="in"] { z-index: 2; }
-.hopLayer[data-phase="out"] { z-index: 1; pointer-events: none; }
+/* Duration: --move-ms, set from hops.ts MOVE_MS; the grid starts it MOVE_MS / 2 before the passage begins. */
+.slideLayer[data-phase="in"] { z-index: 2; animation: scroll-in var(--move-ms) cubic-bezier(0.45, 0.05, 0.2, 1) both; }
+.slideLayer[data-phase="out"] { z-index: 1; pointer-events: none; animation: scroll-out var(--move-ms) cubic-bezier(0.45, 0.05, 0.2, 1) both; }
+/* The next app, mounted ahead below the glass, where the move will bring it from. */
+.slideLayer[data-phase="waiting"] { z-index: 0; transform: translateY(100%); pointer-events: none; }
 
-/* A tapped notification: the app opens out of the banner's place; the app before settles back beneath. */
-.hopLayer[data-hop="open"][data-phase="in"] { animation-name: hop-open-in; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-delay: 380ms; }
-.hopLayer[data-hop="open"][data-phase="out"] { animation-name: hop-open-under; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-delay: 380ms; }
-@keyframes hop-open-in {
-  from { clip-path: inset(10px 8px 734px 8px round 22px); transform: translateY(54px); }
-  to { clip-path: inset(0 0 0 0 round 0); transform: none; }
-}
-@keyframes hop-open-under { from { transform: none; } to { transform: scale(0.9); } }
-
-/* The swipe along the home bar to the next app. */
-.hopLayer[data-hop="slide"][data-phase="in"] { animation-name: hop-slide-in; animation-timing-function: cubic-bezier(0.3, 0.8, 0.25, 1); }
-.hopLayer[data-hop="slide"][data-phase="out"] { animation-name: hop-slide-out; animation-timing-function: cubic-bezier(0.3, 0.8, 0.25, 1); }
-@keyframes hop-slide-in { from { transform: translateX(102%) scale(0.9); border-radius: 48px; } 55% { transform: translateX(8%) scale(0.93); border-radius: 48px; } to { transform: none; border-radius: 0; } }
-@keyframes hop-slide-out { from { transform: none; } 55% { transform: translateX(-96%) scale(0.93); border-radius: 48px; } to { transform: translateX(-104%) scale(0.9); border-radius: 48px; } }
-
-/* The app switcher: the cards shrink, slide, and the chosen one opens. */
-.hopLayer[data-hop="switcher"][data-phase="in"] { animation-name: hop-switch-in; animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1); animation-duration: 760ms; }
-.hopLayer[data-hop="switcher"][data-phase="out"] { animation-name: hop-switch-out; animation-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1); animation-duration: 760ms; }
-@keyframes hop-switch-in { from { transform: translateX(112%) scale(0.74); border-radius: 48px; } 62% { transform: scale(0.74); border-radius: 48px; } to { transform: none; border-radius: 0; } }
-@keyframes hop-switch-out { from { transform: none; } 30% { transform: scale(0.74); border-radius: 48px; } to { transform: translateX(-112%) scale(0.74); border-radius: 48px; } }
-
-/* The iOS banner a tapped hop comes from: in from above, then opened (it fades into the app). */
-.banner {
-  position: absolute;
-  z-index: 8;
-  top: 10px;
-  left: 8px;
-  right: 8px;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  column-gap: 10px;
-  align-items: start;
-  padding: 12px 14px 13px 12px;
-  border-radius: 22px;
-  background: rgb(246 246 246 / 86%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  backdrop-filter: blur(26px) saturate(180%);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
-  color: #000;
-  font: 400 15px/20px var(--ios-font);
-  letter-spacing: -0.24px;
-  pointer-events: none;
-  animation: banner 940ms cubic-bezier(0.2, 1, 0.3, 1) both;
-}
-
-@keyframes banner {
-  0% { transform: translateY(-150px) scale(0.96); opacity: 1; }
-  40% { transform: none; opacity: 1; }
-  62% { transform: scale(1.03); opacity: 0; }
-  100% { transform: scale(1.03); opacity: 0; }
-}
-
-.bannerIcon {
-  grid-row: span 2;
-  width: 38px;
-  height: 38px;
-  overflow: hidden;
-  border-radius: 9px;
-}
-
-.bannerIcon img { display: block; width: 100%; height: 100%; }
-.bannerTitle { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.bannerAge { color: rgb(60 60 67 / 60%); font-size: 13px; }
-.bannerBody { grid-column: 2 / 4; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+@keyframes scroll-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes scroll-out { from { transform: none; } to { transform: translateY(-100%); } }
 
 .phone[data-reduced-motion] .layer,
 .phone[data-reduced-motion] .lockLayer { transition: none; }
 
-.phone[data-reduced-motion] .hopLayer,
-.phone[data-reduced-motion] .banner { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+.phone[data-reduced-motion] .slideLayer { animation-duration: 1ms !important; }
 
 .statusBar {
   position: absolute;

@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useRef, useState } from "react";
 import { formatSongClock } from "../../../model/clock-face";
 import type { PhoneStateProps } from "../types";
 import styles from "./notes.module.css";
+import { follow } from "../follow";
 
 // iOS Notes, one note open. The note is what she writes down and does not
 // send: each sung line is typed into it as its own line, word by word, the
@@ -42,7 +43,7 @@ function NotesState({ seat, lines, shown, reducedMotion }: PhoneStateProps) {
   useLayoutEffect(() => {
     const body = bodyRef.current;
     if (!body || !shown) return;
-    body.scrollTo({ top: body.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(body, body.scrollHeight, reducedMotion);
   }, [lines, shown, reducedMotion]);
 
   return (

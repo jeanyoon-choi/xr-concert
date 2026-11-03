@@ -1,0 +1,421 @@
+/* X iOS, dark ("Lights out"), post detail of a self-thread, at native points on
+   the 390 × 844 glass. Metrics and tokens ported from experiments-jyc SCC
+   apps/scc/components/mobile/clone/13/screen/app.module.css (x-web served tokens). */
+.app {
+  --bg: #000;
+  --text: #e7e9ea;
+  --muted: #71767b;
+  --line: #2f3336;
+  --field: #202327;
+  --blue: #1d9bf0;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  background: var(--bg);
+  color: var(--text);
+  color-scheme: dark;
+  font-family: var(--ios-font);
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: normal;
+}
+
+.app p { margin: 0; }
+.muted { color: var(--muted); }
+
+/* ---------- header (53 pt below the status bar) ---------- */
+.bar {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  height: 107px;
+  padding: 54px 8px 0;
+  background: rgb(0 0 0 / 0.82);
+}
+
+.back {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.barEnd { width: 36px; }
+
+.scroller {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar { display: none; }
+
+/* ---------- avatar ---------- */
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ---------- focal post ---------- */
+.focal { padding: 12px 16px 0; }
+
+.focalHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.focalWho {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.focalWho strong { font-weight: 700; }
+
+.focalText {
+  margin-top: 12px !important;
+  font-size: 17px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 16px 0 !important;
+  color: var(--muted);
+}
+
+.meta strong { color: var(--text); font-weight: 700; }
+
+.detailActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.detailActions .action { flex: none; font-size: 15px; }
+.detailActions .actionIcon svg { width: 22px; height: 22px; }
+
+/* ---------- thread post ---------- */
+.post {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 8px;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.post[data-up] { padding-top: 4px; }
+.post[data-down] { border-bottom: 0; }
+
+.gutter {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.post[data-down] .gutter::after {
+  content: "";
+  position: absolute;
+  top: 44px;
+  bottom: -12px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: #333639;
+}
+
+.gutter .avatar { position: relative; z-index: 1; }
+
+.main { min-width: 0; }
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+}
+
+.identity {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.identity strong {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.identity > .muted:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.identity > .muted:last-child { flex: none; }
+
+.more {
+  display: grid;
+  flex: none;
+  width: 24px;
+  height: 20px;
+  place-items: center;
+  color: var(--muted);
+}
+
+.text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- action row ---------- */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  margin-top: 4px;
+  padding-bottom: 6px;
+  box-sizing: content-box !important;
+}
+
+.action {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.actionIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  place-items: center;
+}
+
+.detailActions .actionIcon { margin-left: 0; }
+
+.count { font-variant-numeric: tabular-nums; }
+
+.pair {
+  display: flex;
+  flex: none;
+  align-items: center;
+  margin: 0 -8px 0 10px;
+}
+
+.pair .action { flex: none; }
+.pair .actionIcon { margin-left: 0; }
+
+/* ---------- docked composer ---------- */
+.composer {
+  padding: 8px 16px 0;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.replying {
+  margin: 0 0 6px 44px !important;
+  color: var(--muted);
+}
+
+.replying span { color: var(--blue); }
+
+.composeRow {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.field {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.field > textarea,
+.field > .lyric { grid-area: 1 / 1; }
+
+.field textarea,
+.lyric {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  font: 400 17px/24px var(--ios-font);
+  letter-spacing: normal;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.field textarea {
+  min-height: 56px;
+  resize: none;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.field textarea::placeholder { color: var(--muted); }
+
+.lyric {
+  z-index: 1;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 22px;
+  margin-left: 1px;
+  vertical-align: -5px;
+  background: var(--blue);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret { 50% { opacity: 0; } }
+
+.tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  height: 48px;
+  color: var(--blue);
+}
+
+.tool { display: grid; place-items: center; }
+
+.spacer { flex: 1; }
+
+.ring {
+  flex: none;
+  transform: rotate(-90deg);
+}
+
+.ringTrack { fill: none; stroke: var(--line); stroke-width: 2; }
+.ringFill { fill: none; stroke: var(--blue); stroke-width: 2; }
+
+.divider {
+  width: 1px;
+  height: 28px;
+  margin: 0 -6px;
+  background: var(--line);
+}
+
+.addPost {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.postButton {
+  min-height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--blue);
+  color: #fff;
+  font: 700 15px/20px var(--ios-font);
+  cursor: pointer;
+}
+
+.postButton:disabled { opacity: 0.5; cursor: default; }
+
+/* Collapsed: the detail screen's "Post your reply" bar. */
+.composer:not([data-open]):not(:focus-within) { padding-bottom: 8px; }
+.composer:not([data-open]):not(:focus-within) .replying,
+.composer:not([data-open]):not(:focus-within) .tools,
+.composer:not([data-open]):not(:focus-within) .avatar { display: none; }
+.composer:not([data-open]):not(:focus-within) .composeRow { grid-template-columns: minmax(0, 1fr); }
+
+.composer:not([data-open]):not(:focus-within) .field textarea {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  background: var(--field);
+  font-size: 16px; /* the app's 15; iOS zooms focused fields under 16 px */
+  line-height: 36px;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- tab bar (pre-Liquid Glass chrome, per the replica) ---------- */
+.tabbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 83px;
+  padding: 11px 6px 0;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.bell { position: relative; display: block; }
+
+.badge {
+  position: absolute;
+  top: -6px;
+  left: 14px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1.5px solid var(--bg);
+  border-radius: 9px;
+  box-sizing: content-box !important;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret { animation: none; }
+}

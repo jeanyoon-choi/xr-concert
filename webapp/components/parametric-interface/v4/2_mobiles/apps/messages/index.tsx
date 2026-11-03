@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./messages.module.css";
+import { follow } from "../follow";
 
 // iOS Messages, one thread per seat with that seat's contact. As in v2/7,
 // the lyric is the other person double texting: each sung line arrives as
@@ -61,7 +62,7 @@ function MessagesState({ seat, lines, replies, shown, reducedMotion, act }: Phon
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [rows, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

@@ -24,6 +24,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from
 import type { PhoneStateProps } from "../types";
 import { Icon } from "./icons";
 import styles from "./youtube.module.css";
+import { follow } from "../follow";
 
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap", preload: false });
 
@@ -113,7 +114,7 @@ function YouTubeState({ seat, lines, replies, shown, reducedMotion, act }: Phone
   useLayoutEffect(() => {
     const chat = chatRef.current;
     if (!chat || !shown) return;
-    chat.scrollTo({ top: chat.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(chat, chat.scrollHeight, reducedMotion);
   }, [rows, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

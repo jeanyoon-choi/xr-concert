@@ -6,32 +6,41 @@ import { SongPlayback } from "../playback";
 import { useLyricCue } from "../timeline/use-lyric-cue";
 import {
   buildSheet,
-  DEFINITIONS_X,
-  HEADER_HEIGHT,
-  LANE_LEFT,
-  LANE_RIGHT,
+  CHORUS_FONT,
+  CHORUS_ROW,
+  LEXICON_FONT,
+  LINE_FONT,
+  LINE_ROW,
+  PART_X,
   RIGHT_YEARS_X,
   SHEET_WIDTH,
+  TABLES_WIDTH,
+  TABLES_X,
   wrap,
-  type Edge,
+  type LineBox,
+  type Point,
   type Sheet,
 } from "./model/layout";
-import { ABOUT_THIS_DIAGRAM, DEFINITIONS_TITLE, PLAN_ORG, PLAN_TITLE, PLAN_VERSION } from "./model/sheet";
+import { LEXICON_HEAD, PART_HEADS, ROOT_LABEL, SECTIONS, TERMINAL_LABEL } from "./model/structure";
+import { ABOUT_THIS_DIAGRAM, PLAN_ORG, PLAN_TITLE, PLAN_VERSION } from "./model/sheet";
 import styles from "./plan.module.css";
 
-// A long-range program plan in the grammar of the 1989 Integrated Space Plan,
-// packed as densely and filling the whole screen at once. As in the radio
-// field (/1), the lyric is the sheet's repeated unit: every program element
-// is labelled with a word of the line being sung, tiled lane by lane, and
-// every element holding the sung word becomes a critical-path element (the
-// poster's own double rule). The root element and the circled era
-// statements carry the whole line; the definitions column lists every word
-// of the song. Nothing scrolls; the sheet is fitted to the viewport.
+// A long-range plan sheet in the grammar of the 1989 Integrated Space Plan,
+// organised by the song: time runs down the sheet; lanes are the song's
+// parts under their headings; the chorus is the central critical path; each
+// line is an element at its own start, depending on the line before; repeated
+// lines are tied along recurrence rails; each section's era statement sits
+// at its time in the lanes empty while it plays; the lexicon lists each word
+// at its first use. As the song plays, the dependencies already sung turn
+// into the heavy critical path, the element being sung takes the heavy
+// double rule with its sung words set bold, and the sung word is selected
+// in the lexicon.
 
 const INK = "#111";
+const ROOT = { x: PART_X.chorus.x + 4, y: 22, w: PART_X.chorus.w - 8, h: 70 };
 
 function useSheetHeight() {
-  const [height, setHeight] = useState(1080);
+  const [height, setHeight] = useState(844);
 
   useLayoutEffect(() => {
     const update = () => setHeight(Math.round((SHEET_WIDTH * window.innerHeight) / window.innerWidth));
@@ -43,44 +52,13 @@ function useSheetHeight() {
   return height;
 }
 
-function bare(word: string) {
-  return word.toUpperCase().replace(/^[^A-Z]+|[^A-Z']+$/g, "");
+function polyline(points: readonly Point[]) {
+  return points.map((point) => point.join(",")).join(" ");
 }
 
-// Every distinct word of the song with the first line it appears in.
-function definitionsOf(song: ParametricSong) {
-  const seen = new Map<string, string>();
-  for (const line of song.lyrics) {
-    for (const word of line.words) {
-      const key = bare(word.text);
-      if (key && !seen.has(key)) seen.set(key, line.text);
-    }
-  }
-  return [...seen].sort(([a], [b]) => a.localeCompare(b));
-}
-
-function EdgePath({ edge }: { edge: Edge }) {
-  const points = edge.points.map((point) => point.join(",")).join(" ");
-
-  if (edge.style === "double") {
-    return (
-      <>
-        <polyline fill="none" points={points} stroke={INK} strokeWidth={3} />
-        <polyline fill="none" markerEnd="url(#sheet-arrow)" points={points} stroke="#fff" strokeWidth={1.2} />
-      </>
-    );
-  }
-
-  return (
-    <polyline
-      fill="none"
-      markerEnd="url(#sheet-arrow)"
-      points={points}
-      stroke={INK}
-      strokeDasharray={edge.style === "dashed" ? "4 3" : undefined}
-      strokeWidth={edge.style === "heavy" ? 2 : 0.8}
-    />
-  );
+function formatTime(ms: number) {
+  const seconds = Math.floor(ms / 1000);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function Lines({
@@ -111,66 +89,219 @@ function Lines({
   );
 }
 
-// Everything that does not follow the song.
-const StaticSheet = memo(function StaticSheet({
-  sheet,
-  definitions,
+function LineElement({
+  box,
+  words,
+  state,
+  sungUntil = -1,
 }: {
-  sheet: Sheet;
-  definitions: readonly (readonly [string, string])[];
+  box: LineBox;
+  words: readonly string[];
+  state: "plain" | "current";
+  sungUntil?: number;
 }) {
-  const rowHeight = 9.4;
-  const firstRow = HEADER_HEIGHT + 30;
-  const visibleDefinitions = definitions.slice(0, Math.floor((sheet.height - firstRow - 10) / rowHeight));
+  const isChorus = box.part === "chorus";
+  const font = isChorus ? CHORUS_FONT : LINE_FONT;
+  const row = isChorus ? CHORUS_ROW : LINE_ROW;
+  const centreX = box.x + box.w / 2;
+  const firstY = box.y + (isChorus ? 5 : 3) + font * 0.92;
+  const outer = state === "current" ? 2.4 : isChorus ? 1.6 : 0.8;
 
   return (
+    <g>
+      <rect fill="#fff" height={box.h} stroke={INK} strokeWidth={outer} width={box.w} x={box.x} y={box.y} />
+      {isChorus || state === "current" ? (
+        <rect fill="none" height={box.h - 5} stroke={INK} strokeWidth={0.7} width={box.w - 5} x={box.x + 2.5} y={box.y + 2.5} />
+      ) : null}
+      <text
+        className={styles.helvetica}
+        fill={INK}
+        fontSize={font}
+        fontWeight={isChorus ? 700 : 400}
+        textAnchor="middle"
+        x={centreX}
+        y={firstY}
+      >
+        {box.rows.map((indexes, rowIndex) => (
+          <tspan dy={rowIndex === 0 ? 0 : row} key={rowIndex} x={centreX}>
+            {indexes.map((wordIndex, position) => (
+              <tspan fontWeight={wordIndex <= sungUntil ? 700 : undefined} key={wordIndex}>
+                {position > 0 ? " " : ""}
+                {words[wordIndex]}
+              </tspan>
+            ))}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  );
+}
+
+// Under the elements: frame, years, rings, dependencies and rails.
+const PlanSheet = memo(function PlanSheet({ sheet }: { sheet: Sheet }) {
+  return (
     <>
-      <rect fill="none" height={sheet.height - 8} stroke={INK} strokeWidth={2} width={SHEET_WIDTH - 8} x={4} y={4} />
+      <rect fill="none" height={sheet.height - 6} stroke={INK} strokeWidth={1.6} width={SHEET_WIDTH - 6} x={3} y={3} />
 
       {sheet.years.map(({ year, y }) => (
         <g key={year}>
-          <line stroke={INK} strokeWidth={0.6} x1={LANE_LEFT - 4} x2={LANE_RIGHT + 4} y1={y} y2={y} />
-          <text className={styles.times} fontSize={14} x={10} y={y - 3}>{year}</text>
-          <text className={styles.times} fontSize={14} textAnchor="end" x={RIGHT_YEARS_X} y={y - 3}>{year}</text>
+          <line stroke={INK} strokeWidth={0.5} x1={36} x2={RIGHT_YEARS_X - 30} y1={y} y2={y} />
+          <text className={styles.times} fontSize={11} x={6} y={y - 2}>{year}</text>
+          <text className={styles.times} fontSize={11} textAnchor="end" x={RIGHT_YEARS_X} y={y - 2}>{year}</text>
         </g>
       ))}
 
-      {sheet.edges.map((edge) => <EdgePath edge={edge} key={edge.id} />)}
+      {sheet.statements.map((statement) => (
+        <circle cx={statement.cx} cy={statement.cy} fill="none" key={`ring-${statement.id}`} r={statement.r} stroke={INK} strokeWidth={0.9} />
+      ))}
 
-      {/* Header: organisation, about, title block, legend. */}
-      <rect fill="#fff" height={50} stroke={INK} strokeWidth={1.4} width={300} x={LANE_LEFT} y={14} />
-      <text className={styles.helvetica} fontSize={16} fontWeight={700} x={LANE_LEFT + 12} y={38}>{PLAN_ORG[0]}</text>
-      <text className={styles.helvetica} fontSize={11} x={LANE_LEFT + 12} y={55}>{PLAN_ORG[1]}</text>
-      <Lines anchor="start" className={styles.times} lineHeight={10.5} lines={wrap(ABOUT_THIS_DIAGRAM, 120)} size={9.5} x={LANE_LEFT} y={84} />
+      {/* Dependencies, recurrence rails and lexicon chains, under the elements. */}
+      {sheet.progress.map((points, index) => (
+        <polyline fill="none" key={`progress-${index}`} markerEnd="url(#sheet-arrow)" points={polyline(points)} stroke={INK} strokeWidth={0.8} />
+      ))}
+      {sheet.rails.map((rail) => (
+        <g key={rail.id}>
+          <polyline fill="none" points={polyline(rail.points)} stroke={INK} strokeDasharray="3 2" strokeWidth={0.8} />
+          <text
+            className={styles.helvetica}
+            fontSize={5.6}
+            textAnchor="middle"
+            transform={`rotate(-90 ${rail.labelAt[0]} ${rail.labelAt[1]})`}
+            x={rail.labelAt[0]}
+            y={rail.labelAt[1]}
+          >
+            {rail.label}
+          </text>
+        </g>
+      ))}
+      {sheet.lexiconChains.map((points, index) => (
+        <polyline fill="none" key={`chain-${index}`} points={polyline(points)} stroke={INK} strokeWidth={0.7} />
+      ))}
+      <polyline fill="none" markerEnd="url(#sheet-arrow)" points={polyline(sheet.rootToFirst)} stroke={INK} strokeWidth={1.6} />
+      <polyline fill="none" markerEnd="url(#sheet-arrow)" points={polyline(sheet.lastToEnd)} stroke={INK} strokeWidth={1.6} />
 
-      <text className={styles.helvetica} fontSize={12} fontWeight={700} textAnchor="middle" x={960} y={22}>CRITICAL PATH</text>
+    </>
+  );
+});
 
-      <rect fill="#fff" height={96} stroke={INK} strokeWidth={2} width={340} x={1290} y={12} />
-      <Lines className={styles.times} lineHeight={30} lines={[PLAN_TITLE, "(Preliminary)"]} size={27} x={1460} y={44} />
-      <text className={styles.times} fontSize={12} fontWeight={700} textAnchor="middle" x={1460} y={100}>{PLAN_VERSION}</text>
+// Elements, headings, statements, header and tables, over the critical path.
+const PlanElements = memo(function PlanElements({
+  sheet,
+  song,
+  lyrics,
+}: {
+  sheet: Sheet;
+  song: ParametricSong;
+  lyrics: readonly (readonly string[])[];
+}) {
+  const scheduleRow = 8.2;
+  const sectionTop = 112;
+  const lineTop = sectionTop + 18 + SECTIONS.length * scheduleRow + 22;
+  const visibleLines = song.lyrics.slice(0, Math.floor((sheet.height - lineTop - 10) / scheduleRow));
 
-      <rect fill="#fff" height={96} stroke={INK} strokeWidth={1} width={222} x={DEFINITIONS_X} y={12} />
-      <text className={styles.helvetica} fontSize={9} fontWeight={700} textAnchor="middle" x={DEFINITIONS_X + 111} y={26}>LEGEND</text>
-      <rect fill="none" height={10} stroke={INK} width={26} x={DEFINITIONS_X + 10} y={34} />
-      <text className={styles.helvetica} fontSize={8} x={DEFINITIONS_X + 44} y={42}>PROGRAM ELEMENT</text>
-      <rect fill="none" height={10} stroke={INK} strokeWidth={2} width={26} x={DEFINITIONS_X + 10} y={50} />
-      <rect fill="none" height={5} stroke={INK} strokeWidth={0.7} width={21} x={DEFINITIONS_X + 12.5} y={52.5} />
-      <text className={styles.helvetica} fontSize={8} x={DEFINITIONS_X + 44} y={58}>CRITICAL PATH ELEMENT</text>
-      <line markerEnd="url(#sheet-arrow)" stroke={INK} x1={DEFINITIONS_X + 10} x2={DEFINITIONS_X + 36} y1={71} y2={71} />
-      <text className={styles.helvetica} fontSize={8} x={DEFINITIONS_X + 44} y={74}>DEPENDENCY</text>
-      <line stroke={INK} strokeDasharray="4 3" x1={DEFINITIONS_X + 10} x2={DEFINITIONS_X + 36} y1={84} y2={84} />
-      <text className={styles.helvetica} fontSize={8} x={DEFINITIONS_X + 44} y={87}>SUPPORTING TECHNOLOGY</text>
-      <circle cx={DEFINITIONS_X + 23} cy={98} fill="none" r={5} stroke={INK} />
-      <text className={styles.helvetica} fontSize={8} x={DEFINITIONS_X + 44} y={101}>ERA STATEMENT</text>
+  return (
+    <>
+      {sheet.lines.map((box) => (
+        <LineElement box={box} key={box.lineIndex} state="plain" words={lyrics[box.lineIndex]!} />
+      ))}
 
-      {/* Definitions: every word of the song with the line it comes from. */}
-      <rect fill="#fff" height={sheet.height - HEADER_HEIGHT - 4} stroke={INK} strokeWidth={1} width={222} x={DEFINITIONS_X} y={HEADER_HEIGHT - 6} />
-      <Lines className={styles.helvetica} lineHeight={9} lines={wrap(DEFINITIONS_TITLE, 30)} size={8} weight={700} x={DEFINITIONS_X + 111} y={HEADER_HEIGHT + 6} />
-      {visibleDefinitions.map(([word, line], index) => (
-        <g key={word}>
-          <text className={styles.times} fontSize={7.6} fontWeight={700} x={DEFINITIONS_X + 6} y={firstRow + index * rowHeight}>{word}</text>
-          <text className={styles.times} fontSize={7.6} x={DEFINITIONS_X + 72} y={firstRow + index * rowHeight}>
-            {line.length > 40 ? `${line.slice(0, 39)}…` : line}
+      {sheet.words.map((box) => (
+        <g key={box.key}>
+          <rect fill="#fff" height={box.h} stroke={INK} strokeWidth={0.7} width={box.w} x={box.x} y={box.y} />
+          <text className={styles.helvetica} fontSize={LEXICON_FONT} textAnchor="middle" x={box.x + box.w / 2} y={box.y + 7.4}>{box.word}</text>
+        </g>
+      ))}
+
+      {/* Lane headings, as the poster's program-area titles. */}
+      {sheet.heads.map((head) => (
+        <Lines
+          anchor="start"
+          className={styles.helvetica}
+          key={head.part}
+          lineHeight={10}
+          lines={[head.part === "lexicon" ? LEXICON_HEAD : PART_HEADS[head.part]]}
+          size={9}
+          weight={700}
+          x={head.x}
+          y={head.y}
+        />
+      ))}
+
+      {/* Era statements, at their section's time, in the empty lanes. */}
+      {sheet.statements.map((statement) => (
+        <Lines
+          className={styles.times}
+          key={statement.id}
+          lineHeight={statement.size * 1.12}
+          lines={statement.rows}
+          size={statement.size}
+          x={statement.cx}
+          y={statement.cy - ((statement.rows.length - 1) * statement.size * 1.12) / 2 + statement.size * 0.34}
+        />
+      ))}
+
+      <text className={styles.times} fontSize={14} fontWeight={700} x={PART_X.bridge.x} y={sheet.height - 12}>
+        {TERMINAL_LABEL}
+      </text>
+
+      {/* Header: organisation, about, root, title block, legend. */}
+      <rect fill="#fff" height={40} stroke={INK} strokeWidth={1.3} width={250} x={40} y={10} />
+      <text className={styles.helvetica} fontSize={13} fontWeight={700} x={50} y={29}>{PLAN_ORG[0]}</text>
+      <text className={styles.helvetica} fontSize={9} x={50} y={43}>{PLAN_ORG[1]}</text>
+      <Lines anchor="start" className={styles.times} lineHeight={9} lines={wrap(ABOUT_THIS_DIAGRAM, 128)} size={8} x={40} y={62} />
+
+      <text className={styles.helvetica} fontSize={10} fontWeight={700} textAnchor="middle" x={ROOT.x + ROOT.w / 2} y={16}>CRITICAL PATH</text>
+      <rect fill="#fff" height={ROOT.h} stroke={INK} strokeWidth={2} width={ROOT.w} x={ROOT.x} y={ROOT.y} />
+      <rect fill="none" height={ROOT.h - 5} stroke={INK} strokeWidth={0.7} width={ROOT.w - 5} x={ROOT.x + 2.5} y={ROOT.y + 2.5} />
+      <Lines className={styles.helvetica} lineHeight={15} lines={ROOT_LABEL} size={12} weight={700} x={ROOT.x + ROOT.w / 2} y={ROOT.y + 22} />
+
+      <rect fill="#fff" height={84} stroke={INK} strokeWidth={1.8} width={RIGHT_YEARS_X - 30 - 916} x={916} y={8} />
+      <Lines className={styles.times} lineHeight={25} lines={[PLAN_TITLE, "(Preliminary)"]} size={22} x={(916 + RIGHT_YEARS_X - 30) / 2} y={36} />
+      <text className={styles.times} fontSize={10} fontWeight={700} textAnchor="middle" x={(916 + RIGHT_YEARS_X - 30) / 2} y={84}>{PLAN_VERSION}</text>
+
+      <rect fill="#fff" height={92} stroke={INK} strokeWidth={0.9} width={TABLES_WIDTH} x={TABLES_X} y={8} />
+      <text className={styles.helvetica} fontSize={8} fontWeight={700} textAnchor="middle" x={TABLES_X + TABLES_WIDTH / 2} y={20}>LEGEND</text>
+      {[
+        { y: 26, label: "PROGRAM ELEMENT" },
+        { y: 39, label: "CRITICAL PATH ELEMENT", double: true },
+        { y: 52, label: "DEPENDENCY", arrow: true },
+        { y: 64, label: "CRITICAL PATH (SUNG)", heavy: true },
+        { y: 76, label: "RECURRENCE", dashed: true },
+        { y: 88, label: "ERA STATEMENT", circle: true },
+      ].map((entry) => (
+        <g key={entry.label}>
+          {entry.arrow || entry.dashed || entry.heavy ? (
+            <line markerEnd={entry.arrow ? "url(#sheet-arrow)" : undefined} stroke={INK} strokeDasharray={entry.dashed ? "3 2" : undefined} strokeWidth={entry.heavy ? 2.6 : 0.8} x1={TABLES_X + 8} x2={TABLES_X + 30} y1={entry.y + 4} y2={entry.y + 4} />
+          ) : entry.circle ? (
+            <circle cx={TABLES_X + 19} cy={entry.y + 4} fill="none" r={4.5} stroke={INK} />
+          ) : (
+            <>
+              <rect fill="none" height={9} stroke={INK} strokeWidth={entry.double ? 1.6 : 0.8} width={22} x={TABLES_X + 8} y={entry.y} />
+              {entry.double ? <rect fill="none" height={4.5} stroke={INK} strokeWidth={0.6} width={17.5} x={TABLES_X + 10.25} y={entry.y + 2.25} /> : null}
+            </>
+          )}
+          <text className={styles.helvetica} fontSize={7} x={TABLES_X + 36} y={entry.y + 7}>{entry.label}</text>
+        </g>
+      ))}
+
+      {/* Schedules, as the poster's data tables. */}
+      <rect fill="#fff" height={sheet.height - 112 - 8} stroke={INK} strokeWidth={0.9} width={TABLES_WIDTH} x={TABLES_X} y={106} />
+      <text className={styles.helvetica} fontSize={7.4} fontWeight={700} textAnchor="middle" x={TABLES_X + TABLES_WIDTH / 2} y={sectionTop + 8}>SECTION SCHEDULE</text>
+      {SECTIONS.map((section, index) => (
+        <g key={section.id}>
+          <text className={styles.times} fontSize={7} fontWeight={700} x={TABLES_X + 5} y={sectionTop + 20 + index * scheduleRow}>{section.name}</text>
+          <text className={styles.times} fontSize={7} x={TABLES_X + 74} y={sectionTop + 20 + index * scheduleRow}>{formatTime(song.lyrics[section.first]!.startMs)}</text>
+          <text className={styles.times} fontSize={7} x={TABLES_X + 104} y={sectionTop + 20 + index * scheduleRow}>LINES {section.first + 1}–{section.last + 1}</text>
+        </g>
+      ))}
+      <line stroke={INK} strokeWidth={0.7} x1={TABLES_X} x2={TABLES_X + TABLES_WIDTH} y1={lineTop - 16} y2={lineTop - 16} />
+      <text className={styles.helvetica} fontSize={7.4} fontWeight={700} textAnchor="middle" x={TABLES_X + TABLES_WIDTH / 2} y={lineTop - 6}>LINE SCHEDULE</text>
+      {visibleLines.map((line, index) => (
+        <g key={line.id}>
+          <text className={styles.times} fontSize={6.6} fontWeight={700} x={TABLES_X + 5} y={lineTop + 4 + index * scheduleRow}>{index + 1}</text>
+          <text className={styles.times} fontSize={6.6} x={TABLES_X + 18} y={lineTop + 4 + index * scheduleRow}>{formatTime(line.startMs)}</text>
+          <text className={styles.times} fontSize={6.6} x={TABLES_X + 40} y={lineTop + 4 + index * scheduleRow}>
+            {line.text.length > 30 ? `${line.text.slice(0, 29)}…` : line.text}
           </text>
         </g>
       ))}
@@ -178,81 +309,43 @@ const StaticSheet = memo(function StaticSheet({
   );
 });
 
-// The song: element labels, critical-path rules, root and era statements.
-const LyricSheet = memo(function LyricSheet({
+// The heavy critical path through the dependencies already sung.
+const SungPath = memo(function SungPath({ sheet, cueIndex, hasBegun }: { sheet: Sheet; cueIndex: number; hasBegun: boolean }) {
+  if (!hasBegun) return null;
+  return [sheet.rootToFirst, ...sheet.progress.slice(0, cueIndex)].map((points, index) => (
+    <polyline fill="none" key={`sung-${index}`} points={polyline(points)} stroke={INK} strokeWidth={2.8} />
+  ));
+});
+
+// The element being sung, and the sung word selected in the lexicon.
+const CurrentState = memo(function CurrentState({
   sheet,
-  words,
+  cueIndex,
   activeWordPosition,
+  words,
+  hasBegun,
 }: {
   sheet: Sheet;
-  words: readonly string[];
+  cueIndex: number;
   activeWordPosition: number;
+  words: readonly string[];
+  hasBegun: boolean;
 }) {
-  const line = words.join(" ").toUpperCase();
-  const firstBox = sheet.boxes.find((box) => box.x + box.w / 2 > 900 && box.x < 960);
+  if (!hasBegun) return null;
+  const current = sheet.lines[cueIndex]!;
+  const sungWord = (words[activeWordPosition] ?? "").replace(/^[^A-Z]+|[^A-Z']+$/g, "");
+  const lexiconBox = sheet.words.find((box) => box.word === sungWord);
 
   return (
     <>
-      {sheet.boxes.map((box) => {
-        const position = box.order % words.length;
-        const isCritical = position === activeWordPosition;
-        const centreX = box.x + box.w / 2;
-
-        return (
-          <g key={box.id}>
-            <rect fill="#fff" height={box.h} stroke={INK} strokeWidth={isCritical ? 2.2 : 0.8} width={box.w} x={box.x} y={box.y} />
-            {isCritical ? (
-              <rect fill="none" height={box.h - 5} stroke={INK} strokeWidth={0.7} width={box.w - 5} x={box.x + 2.5} y={box.y + 2.5} />
-            ) : null}
-            <text
-              className={styles.helvetica}
-              fill={INK}
-              fontSize={8.5}
-              fontWeight={isCritical ? 700 : 400}
-              textAnchor="middle"
-              x={centreX}
-              y={box.y + box.h / 2 + 3}
-            >
-              {words[position]!.toUpperCase()}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Root element of the critical path carries the whole line. */}
-      <rect fill="#fff" height={96} stroke={INK} strokeWidth={2.2} width={300} x={810} y={30} />
-      <rect fill="none" height={90} stroke={INK} strokeWidth={0.8} width={294} x={813} y={33} />
-      <Lines className={styles.helvetica} lineHeight={17} lines={wrap(line, 26)} size={15} weight={700} x={960} y={62} />
-      {firstBox ? (
-        <polyline
-          fill="none"
-          markerEnd="url(#sheet-arrow)"
-          points={`960,126 960,${HEADER_HEIGHT - 4} ${firstBox.x + firstBox.w / 2},${HEADER_HEIGHT - 4} ${firstBox.x + firstBox.w / 2},${firstBox.y}`}
-          stroke={INK}
-          strokeWidth={2.4}
-        />
+      <LineElement box={current} state="current" sungUntil={activeWordPosition} words={words} />
+      {lexiconBox ? (
+        <g>
+          <rect fill="#fff" height={lexiconBox.h} stroke={INK} strokeWidth={2} width={lexiconBox.w} x={lexiconBox.x} y={lexiconBox.y} />
+          <rect fill="none" height={lexiconBox.h - 4} stroke={INK} strokeWidth={0.6} width={lexiconBox.w - 4} x={lexiconBox.x + 2} y={lexiconBox.y + 2} />
+          <text className={styles.helvetica} fontSize={LEXICON_FONT} fontWeight={700} textAnchor="middle" x={lexiconBox.x + lexiconBox.w / 2} y={lexiconBox.y + 7.4}>{lexiconBox.word}</text>
+        </g>
       ) : null}
-
-      {/* Era circles run over the elements, as on the poster. */}
-      {sheet.circles.map((circle) => (
-        <circle cx={circle.cx} cy={circle.cy} fill="none" key={`ring-${circle.cx}-${circle.cy}`} r={circle.r} stroke={INK} strokeWidth={1} />
-      ))}
-
-      {sheet.circles.map((circle) => {
-        const size = Math.max(22, circle.r * 0.17);
-        const lines = wrap(line, Math.max(8, Math.floor((circle.r * 1.5) / (size * 0.58))));
-        return (
-          <Lines
-            className={`${styles.times} ${styles.statement}`}
-            key={`${circle.cx}-${circle.cy}`}
-            lineHeight={size * 1.08}
-            lines={lines}
-            size={size}
-            x={circle.cx}
-            y={circle.cy - ((lines.length - 1) * size * 1.08) / 2 + size * 0.35}
-          />
-        );
-      })}
     </>
   );
 });
@@ -266,10 +359,12 @@ export default function ParametricInterfaceTen({ song }: { song?: ParametricSong
 }
 
 function IntegratedPlan() {
-  const { activeWordPosition, lyric, song } = useLyricCue();
+  const { activeWordPosition, cueIndex, currentTimeMs, hasStarted, lyric, song } = useLyricCue();
   const height = useSheetHeight();
-  const sheet = useMemo(() => buildSheet(height), [height]);
-  const definitions = useMemo(() => definitionsOf(song), [song]);
+  const sheet = useMemo(() => buildSheet(height, song), [height, song]);
+  const lyrics = useMemo(() => song.lyrics.map((line) => line.words.map((word) => word.text.toUpperCase())), [song]);
+  const words = useMemo(() => lyric.map((word) => word.toUpperCase()), [lyric]);
+  const hasBegun = hasStarted && currentTimeMs >= (song.lyrics[0]?.startMs ?? 0) - 200;
 
   return (
     <main className={styles.page}>
@@ -280,13 +375,15 @@ function IntegratedPlan() {
         viewBox={`0 0 ${SHEET_WIDTH} ${height}`}
       >
         <defs>
-          <marker id="sheet-arrow" markerHeight={6} markerWidth={6} orient="auto" refX={6} refY={3}>
-            <path d="M0,0 L6,3 L0,6 Z" fill={INK} />
+          <marker id="sheet-arrow" markerHeight={5} markerWidth={5} orient="auto" refX={5} refY={2.5}>
+            <path d="M0,0 L5,2.5 L0,5 Z" fill={INK} />
           </marker>
         </defs>
         <rect fill="#fff" height={height} width={SHEET_WIDTH} />
-        <StaticSheet definitions={definitions} sheet={sheet} />
-        <LyricSheet activeWordPosition={activeWordPosition} sheet={sheet} words={lyric} />
+        <PlanSheet sheet={sheet} />
+        <SungPath cueIndex={cueIndex} hasBegun={hasBegun} sheet={sheet} />
+        <PlanElements lyrics={lyrics} sheet={sheet} song={song} />
+        <CurrentState activeWordPosition={activeWordPosition} cueIndex={cueIndex} hasBegun={hasBegun} sheet={sheet} words={words} />
       </svg>
     </main>
   );

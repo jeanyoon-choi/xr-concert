@@ -3,6 +3,7 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { PhoneStateProps } from "../types";
 import styles from "./chatgpt.module.css";
+import { follow } from "../follow";
 
 // The ChatGPT iOS app, light, one chat open. The 1031 idea's "texting with an
 // AI assistant": she asks it about the ex. The sung lines alternate between
@@ -108,7 +109,7 @@ function ChatGptState({ lines, replies, shown, reducedMotion, act }: PhoneStateP
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [rows, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

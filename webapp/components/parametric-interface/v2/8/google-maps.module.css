@@ -1,0 +1,550 @@
+/* google.com/maps desktop, measured at 1322 × 703 on 2026-11-03. Google Sans
+   is the served woff2 kept in the git-ignored public/fonts/google; Roboto is
+   the served (Apache-licensed) face. */
+
+@font-face {
+  font-family: "Google Sans";
+  font-weight: 400 700;
+  font-display: block;
+  src: url("/fonts/google/google-sans-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/google/roboto-400-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-weight: 500;
+  font-display: block;
+  src: url("/fonts/google/roboto-500-latin.woff2") format("woff2");
+}
+
+.window {
+  --sans: "Google Sans", Roboto, Arial, sans-serif;
+  --roboto: Roboto, Arial, sans-serif;
+  --ink: #1f1f1f;
+  --muted: #5e5e5e;
+  --raised: 0 2px 4px rgba(0, 0, 0, 0.2), 0 -1px 0 rgba(0, 0, 0, 0.02);
+  --chip-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #f5f3f3;
+  color: var(--ink);
+  font-family: var(--roboto);
+  -webkit-font-smoothing: antialiased;
+}
+
+.window *,
+.window *::before,
+.window *::after { box-sizing: border-box; }
+
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  flex: none;
+}
+
+/* Map body. */
+.map,
+.mapCanvas,
+.mapLabels,
+.pins {
+  position: absolute;
+  inset: 0;
+}
+
+.mapContainer {
+  width: 100%;
+  height: 100%;
+}
+
+.mapLabels,
+.pins { pointer-events: none; }
+
+.mapLabels { width: 100%; height: 100%; overflow: visible; }
+
+.mapLabels text {
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+.streetLabel {
+  fill: #5c5f63;
+  font: 400 11px var(--roboto);
+  stroke-width: 3px;
+}
+
+.majorStreetLabel {
+  fill: #4a4d51;
+  font: 500 11.5px var(--roboto);
+  stroke-width: 3px;
+}
+
+.placeLabel {
+  fill: #474a4e;
+  font: 500 12px var(--sans);
+  letter-spacing: 1.2px;
+  stroke-width: 3px;
+}
+
+.waterLabel {
+  fill: #2e86b4;
+  font: 400 13px var(--sans);
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 2px;
+}
+
+.poi {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-11px, -11px);
+  white-space: nowrap;
+}
+
+.pin {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pin svg {
+  width: 13px;
+  height: 13px;
+  fill: #fff;
+}
+
+.transitPin {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  margin: 2.5px;
+  border-radius: 50%;
+  background: #0039a6;
+  color: #fff;
+  font: 700 5.5px/1 Arial, sans-serif;
+  letter-spacing: -0.2px;
+}
+
+.poiName {
+  max-width: 130px;
+  overflow: hidden;
+  font: 500 13px/1.15 var(--sans);
+  text-overflow: ellipsis;
+  text-shadow: -1.5px 0 #fff, 1.5px 0 #fff, 0 -1.5px #fff, 0 1.5px #fff, -1px -1px #fff, 1px 1px #fff, -1px 1px #fff, 1px -1px #fff;
+}
+
+/* Side rail. */
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 72px;
+  background: #f3fbfd;
+  color: var(--muted);
+}
+
+.railMenu {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+}
+
+.railItem {
+  position: absolute;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 72px;
+  height: 64px;
+  padding-top: 12px;
+  font: 500 12px/16px var(--sans);
+  letter-spacing: 0.2px;
+}
+
+.railItem[data-disabled] { color: #a6aaad; }
+
+/* Search box and area card. */
+.searchColumn {
+  position: absolute;
+  top: 12px;
+  left: 88px;
+  display: grid;
+  gap: 12px;
+  width: 376px;
+}
+
+.searchBox {
+  position: relative;
+  height: 48px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--raised);
+}
+
+.searchPlaceholder {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  color: var(--muted);
+  font: 400 15px/24px var(--sans);
+  letter-spacing: 0.1px;
+}
+
+.searchButton {
+  position: absolute;
+  top: 12px;
+  left: 286px;
+  color: var(--muted);
+}
+
+.directionsButton {
+  position: absolute;
+  top: 12px;
+  left: 337px;
+}
+
+.directionsIcon {
+  width: 24px;
+  height: 24px;
+  fill: #0b57d0;
+}
+
+.areaCard {
+  padding: 12px 0 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--raised);
+}
+
+.areaCard h2 {
+  margin: 0;
+  padding: 0 20px 8px;
+  font: 500 16px/24px var(--sans);
+}
+
+.areaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 24px 0 16px;
+}
+
+.trafficBadge {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f9ab00;
+  color: #fff;
+}
+
+.trafficBadge svg { width: 16px; height: 16px; fill: currentColor; }
+
+.areaText {
+  display: grid;
+  flex: 1;
+}
+
+.areaText strong {
+  font: 400 16px/22px var(--sans);
+}
+
+.areaText span {
+  color: var(--muted);
+  font: 400 12px/16px var(--sans);
+  letter-spacing: 0.1px;
+}
+
+.areaChevron {
+  width: 24px;
+  height: 24px;
+  fill: var(--muted);
+}
+
+/* Category chips. */
+.chipRow {
+  position: absolute;
+  top: 21px;
+  left: 501px;
+  right: 136px;
+  height: 32px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  height: 36px;
+  overflow: hidden;
+}
+
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--chip-shadow);
+  font: 500 14px/20px var(--sans);
+  letter-spacing: 0.1px;
+}
+
+.chipIcon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.chipNext {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--chip-shadow);
+}
+
+/* Apps and account. */
+.account {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appsButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: #444746;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #8e5bb5;
+  color: #fff;
+  font: 500 16px var(--sans);
+}
+
+/* Map controls. */
+.controls {
+  position: absolute;
+  right: 20px;
+  bottom: 52px;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.locate,
+.zoom {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  color: #1f1f1f;
+}
+
+.locate { height: 29px; }
+.locate svg { width: 18px; height: 18px; }
+
+.zoom { height: 57px; }
+.zoom svg { width: 18px; height: 18px; }
+
+.zoom i {
+  width: 18px;
+  height: 1px;
+  background: #e3e3e3;
+}
+
+.imagery {
+  position: absolute;
+  right: 20px;
+  bottom: 21px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 29px;
+  padding: 0 6px 0 4px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pegman svg { width: 20px; height: 20px; fill: #1f1f1f; }
+
+.thumb {
+  width: 18px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.thumb[data-kind="globe"] { background: linear-gradient(#b9d7f0, #8fb3d9); }
+.thumb[data-kind="terrain"] { background: linear-gradient(135deg, #d9c38a, #b49a5c); }
+.thumb[data-kind="green"] { background: linear-gradient(135deg, #8fbf72, #5c9a4f); }
+
+.imageryMore {
+  width: 18px;
+  height: 18px;
+  fill: #444746;
+}
+
+.layers {
+  position: absolute;
+  bottom: 22px;
+  left: 94px;
+  width: 75px;
+  height: 75px;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 30% 35%, rgba(120, 130, 110, 0.6) 0 8%, transparent 9%),
+    radial-gradient(circle at 70% 60%, rgba(90, 100, 85, 0.6) 0 10%, transparent 11%),
+    linear-gradient(135deg, #3d4438, #23281f 60%, #1b2224);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.layersLabel {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font: 500 11px var(--roboto);
+}
+
+.layersLabel svg { width: 16px; height: 16px; fill: #fff; }
+
+.wordmark {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #5f6368;
+  font: 500 18px var(--sans);
+  letter-spacing: -0.2px;
+  text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
+}
+
+.bottomBar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 17px;
+  padding: 0 22px 0 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  font: 400 10px/13px var(--roboto);
+}
+
+.scale {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scale i {
+  width: 57px;
+  height: 6px;
+  border: 1px solid var(--ink);
+  border-top: 0;
+}
+
+/* Directions, as Google draws a route: blue line on a white casing, a dark
+   ringed origin, small ringed stops and the red destination pin. */
+.routeCasing,
+.routeLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.routeCasing {
+  stroke: #fff;
+  stroke-width: 9px;
+}
+
+.routeLine {
+  stroke: #1a73e8;
+  stroke-width: 5.5px;
+}
+
+.routeOrigin {
+  fill: #fff;
+  stroke: #3c4043;
+  stroke-width: 3px;
+}
+
+.routeStop {
+  fill: #fff;
+  stroke: #3c4043;
+  stroke-width: 2.5px;
+}
+
+.destination {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  transform: translate(-13.5px, -43px);
+  white-space: nowrap;
+}
+
+.destinationPin {
+  width: 27px;
+  height: 43px;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+}
+
+.destinationPin path {
+  fill: #ea4335;
+  stroke: #b31412;
+  stroke-width: 1;
+}
+
+.destinationPin circle { fill: #b31412; }
+
+.destinationName {
+  margin-top: 6px;
+  color: #c5221f;
+  font: 700 14px/1.15 var(--sans);
+  text-shadow: -1.5px 0 #fff, 1.5px 0 #fff, 0 -1.5px #fff, 0 1.5px #fff, -1px -1px #fff, 1px 1px #fff, -1px 1px #fff, 1px -1px #fff;
+}

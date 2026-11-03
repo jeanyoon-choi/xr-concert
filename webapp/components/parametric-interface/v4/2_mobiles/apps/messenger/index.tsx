@@ -4,6 +4,7 @@ import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type For
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./messenger.module.css";
+import { follow } from "../follow";
 
 // Messenger for iOS, light, one chat with the ex. Messages already has the
 // ex double texting; here the lyric is what she starts to say back and takes
@@ -102,7 +103,7 @@ function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: Pho
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
     paint();
   }, [rows, shown, reducedMotion, paint]);
 

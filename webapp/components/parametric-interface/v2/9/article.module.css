@@ -1,0 +1,283 @@
+/* A nytimes.com article page. Every value is the computed style measured on a
+   live article at a 1322 px viewport (2026-11-03); the page is zoomed to the
+   viewport as one fixed-format artifact. Font faces are the woff2 files
+   nytimes.com serves, kept in the git-ignored public/fonts/nyt for this
+   private study. */
+
+@font-face { font-family: "nyt-cheltenham"; font-weight: 300; font-style: normal; font-display: block; src: url("/fonts/nyt/cheltenham-normal-300.woff2") format("woff2"); }
+@font-face { font-family: "nyt-cheltenham"; font-weight: 400; font-style: normal; font-display: block; src: url("/fonts/nyt/cheltenham-normal-400.woff2") format("woff2"); }
+@font-face { font-family: "nyt-cheltenham"; font-weight: 700; font-style: normal; font-display: block; src: url("/fonts/nyt/cheltenham-normal-700.woff2") format("woff2"); }
+@font-face { font-family: "nyt-cheltenham"; font-weight: 700; font-style: italic; font-display: block; src: url("/fonts/nyt/cheltenham-italic-700.woff2") format("woff2"); }
+@font-face { font-family: "nyt-franklin"; font-weight: 500; font-style: normal; font-display: block; src: url("/fonts/nyt/franklin-normal-500.woff2") format("woff2"); }
+@font-face { font-family: "nyt-franklin"; font-weight: 600; font-style: normal; font-display: block; src: url("/fonts/nyt/franklin-normal-600.woff2") format("woff2"); }
+@font-face { font-family: "nyt-franklin"; font-weight: 700; font-style: normal; font-display: block; src: url("/fonts/nyt/franklin-normal-700.woff2") format("woff2"); }
+@font-face { font-family: "nyt-imperial"; font-weight: 400; font-style: normal; font-display: block; src: url("/fonts/nyt/imperial-normal-400.woff2") format("woff2"); }
+
+.page {
+  --cheltenham: nyt-cheltenham, georgia, "times new roman", times, serif;
+  --franklin: nyt-franklin, helvetica, arial, sans-serif;
+  --imperial: nyt-imperial, georgia, "times new roman", times, serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1322px;
+  height: 100vh;
+  overflow: hidden;
+  background: #fff;
+  color: #121212;
+  font-family: var(--franklin);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page *,
+.page *::before,
+.page *::after { box-sizing: border-box; }
+
+:where(.page) p,
+:where(.page) h1,
+:where(.page) figure { margin: 0; }
+
+/* Masthead bar: menu, search, section label, wordmark, log in. */
+.masthead {
+  position: relative;
+  height: 43px;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.iconButton {
+  position: absolute;
+  top: 4px;
+  width: 34px;
+  height: 33px;
+  padding: 8px 9px 9px;
+}
+
+.iconButton[data-at="menu"] { left: 10px; }
+.iconButton[data-at="search"] { left: 52px; }
+.iconButton svg { display: block; width: 16px; height: 16px; }
+
+.sectionLabel {
+  position: absolute;
+  top: 12px;
+  left: 105px;
+  font: 700 14.25px/19px var(--franklin);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.wordmark {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 195px;
+  height: 26px;
+  transform: translateX(-50%);
+}
+
+.login {
+  position: absolute;
+  top: 4px;
+  left: 1242px;
+  display: grid;
+  place-items: center;
+  width: 63px;
+  height: 29px;
+  border: 1px solid #326891;
+  border-radius: 3px;
+  background: #567b95;
+  color: #fff;
+  font: 700 11px/11px var(--franklin);
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+/* Section bar under the masthead. */
+.sectionBar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 55px;
+  padding-left: 20px;
+  background: #fff;
+  box-shadow: rgba(0, 0, 0, 0.15) 1px 3px 6px 0;
+}
+
+.tMark {
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+}
+
+.electionMark {
+  display: flex;
+  align-items: center;
+  width: 99px;
+  height: 20px;
+  margin-left: 51px;
+  border-right: 1px solid #e2e2e2;
+}
+
+.electionMark svg { width: 80px; height: 20px; }
+
+.liveLink {
+  display: flex;
+  align-items: baseline;
+  margin-left: 17px;
+  margin-right: 13px;
+}
+
+.live {
+  color: #d0021b;
+  font: 700 11px/11px var(--franklin);
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
+
+.updates {
+  margin-left: 6px;
+  font: 500 14px/14px var(--franklin);
+}
+
+.ago {
+  margin-left: 5px;
+  color: #d0021b;
+  font: 500 11px/11px var(--franklin);
+  letter-spacing: 0.25px;
+}
+
+.sectionLink {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12.5px;
+  font: 500 14px/14px var(--franklin);
+  white-space: nowrap;
+}
+
+/* The sung word's link takes the page's own hover underline. */
+.sectionLink[data-hover] .linkText {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.chevron {
+  width: 7px;
+  height: 4.3px;
+  fill: #121212;
+}
+
+/* The article column. */
+.article {
+  width: 600px;
+  margin: 0 auto;
+  padding-top: 54px;
+}
+
+.headline {
+  margin-bottom: 8px;
+  font: italic 700 40px/46px var(--cheltenham);
+}
+
+.summary {
+  margin-bottom: 20px;
+  color: #363636;
+  font: 300 23px/30px var(--cheltenham);
+}
+
+.actionBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 55px;
+  padding-top: 20px;
+  border-top: 1px solid #dfdfdf;
+}
+
+.listen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 12px/12px var(--franklin);
+}
+
+.listen svg { width: 32px; height: 32px; }
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.giftButton,
+.roundButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: 1px solid #dfdfdf;
+  border-radius: 50px;
+  background: #fff;
+}
+
+.giftButton {
+  gap: 6px;
+  width: 129px;
+  padding-left: 10px;
+  justify-content: flex-start;
+  font: 500 12px/12px var(--franklin);
+}
+
+.giftButton svg { width: 19px; height: 19px; }
+
+.roundButton { width: 34px; }
+.shareGlyph { width: 20px; height: 16px; }
+.saveGlyph { width: 12px; height: 18px; }
+
+.figure { margin-top: 25px; }
+
+.photo {
+  width: 600px;
+  height: 400px;
+  background: #ebebeb center / cover no-repeat;
+}
+
+.caption {
+  margin-top: 10px;
+  max-width: 543px;
+  color: #727272;
+  font: 400 15px/20px var(--imperial);
+}
+
+.credit {
+  margin-left: 6px;
+  font: 400 13px/17px var(--franklin);
+}
+
+.byline {
+  margin-top: 40px;
+  color: #363636;
+  font: 700 15px/20px var(--franklin);
+}
+
+.byline u { text-underline-offset: 2px; }
+
+.reporting {
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.date {
+  display: block;
+  margin-top: 20px;
+  font: 500 13px/18px var(--franklin);
+}
+
+.body {
+  margin-top: 40px;
+  color: #363636;
+  font: 400 20px/30px var(--imperial);
+}
+
+.body p { margin-bottom: 15px; }

@@ -1,0 +1,189 @@
+/*
+ * iOS at native points (1 CSS px = 1 pt), after goldfishes pc/mobiles/1
+ * phone.module.css: a 404 × 858 frame with a 7 pt bezel, so the glass is
+ * exactly 390 × 844.
+ */
+.phone {
+  --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ios-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 404px;
+  height: 858px;
+  box-sizing: border-box;
+  padding: 7px;
+  border-radius: 62px;
+  background: #0b0b0c;
+  box-shadow: inset 0 0 0 1.5px #3a3a3c, inset 0 0 0 3px #0b0b0c;
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+}
+
+.phone *,
+.phone *::before,
+.phone *::after { box-sizing: border-box; }
+
+.glass {
+  contain: strict;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 55px;
+  background: #000;
+  color: #000;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.41px;
+}
+
+/*
+ * The app layer: under the lock screen it settles back, as iOS does when
+ * the phone locks; it returns when the lock screen goes up.
+ */
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.layer:not([data-shown]) { transform: scale(0.94); }
+
+/* The lock screen comes down over the app on a lock line and goes back up after. */
+.lockLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 560ms;
+}
+
+.lockLayer[data-shown] {
+  transform: none;
+  visibility: visible;
+  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+}
+
+/*
+ * A move between apps: a scroll. The new app rises from below as the old
+ * one is carried up with it, as one continuous sheet — MOVE_MS, eased in and
+ * out, its midpoint on the passage's first word. Transform only.
+ */
+.slideLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Duration: --move-ms, set from hops.ts MOVE_MS; the grid starts it MOVE_MS / 2 before the passage begins. */
+.slideLayer[data-phase="in"] { z-index: 2; animation: scroll-in var(--move-ms) cubic-bezier(0.45, 0.05, 0.2, 1) both; }
+.slideLayer[data-phase="out"] { z-index: 1; pointer-events: none; animation: scroll-out var(--move-ms) cubic-bezier(0.45, 0.05, 0.2, 1) both; }
+/* The next app, mounted ahead below the glass, where the move will bring it from. */
+.slideLayer[data-phase="waiting"] { z-index: 0; transform: translateY(100%); pointer-events: none; }
+
+@keyframes scroll-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes scroll-out { from { transform: none; } to { transform: translateY(-100%); } }
+
+.phone[data-reduced-motion] .layer,
+.phone[data-reduced-motion] .lockLayer { transition: none; }
+
+.phone[data-reduced-motion] .slideLayer { animation-duration: 1ms !important; }
+
+.statusBar {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: grid;
+  grid-template-columns: 1fr 126px 1fr;
+  align-items: center;
+  pointer-events: none;
+  color: #000;
+  transition: color 300ms;
+}
+
+.statusBar[data-tone="light"] { color: #fff; }
+
+.statusTime {
+  justify-self: center;
+  padding-left: 14px;
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusRight {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.battery {
+  position: relative;
+  width: 27px;
+  height: 13px;
+  padding: 1.5px;
+  border: 1.2px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.95;
+}
+
+.battery::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: -3.5px;
+  width: 1.6px;
+  height: 4.5px;
+  border-radius: 0 1px 1px 0;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.battery[data-low] .batteryLevel { background: #ff3b30; }
+
+.batteryLevel {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.island {
+  position: absolute;
+  z-index: 30;
+  top: 11px;
+  left: 50%;
+  width: 126px;
+  height: 37px;
+  margin-left: -63px;
+  border-radius: 20px;
+  background: #000;
+  pointer-events: none;
+}
+
+.homeIndicator {
+  position: absolute;
+  z-index: 20;
+  bottom: 8px;
+  left: 50%;
+  width: 139px;
+  height: 5px;
+  margin-left: -69.5px;
+  border-radius: 3px;
+  background: #000;
+  pointer-events: none;
+  transition: background-color 300ms;
+}
+
+.homeIndicator[data-tone="light"] { background: #fff; }

@@ -1,102 +1,43 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
-import type { ParametricSong, TimedLyricLine } from "../model/song";
+import { useEffect, useLayoutEffect, useState } from "react";
+import type { ParametricSong } from "../model/song";
 import { SongPlayback } from "../playback";
 import { LYRIC_LEAD_MS, useLyricCue } from "../timeline/use-lyric-cue";
+import { ARTICLE, SECTION, SECTION_LINKS } from "./model/article";
 import {
-  EDITIONS,
-  headlineCase,
-  homepageStories,
-  SECTIONS,
-  TODAY,
-  type HomepageStory,
-} from "./model/front-page";
+  ELECTION_DIGIT_PATHS,
+  ELECTION_SQUARES,
+  GIFT_PATH,
+  LISTEN_RING,
+  LISTEN_TRIANGLE,
+  MENU_BARS,
+  SAVE_PATH,
+  SHARE_PATH,
+  T_MARK_PATH,
+} from "./model/icons";
+import { headlineOf, linkOf, sentenceOf } from "./model/lyric-text";
 import { CHEVRON_POINTS, MASTHEAD_PATH, MASTHEAD_VIEWBOX, SEARCH_PATH } from "./model/masthead";
-import styles from "./front-page.module.css";
+import styles from "./article.module.css";
 
-// The nytimes.com desktop homepage, measured from the live page at 1322 px
-// wide (2026-11-03) and scaled as one fixed-format page to the viewport.
-// Every headline on the page is the line being sung, set word by word at
-// each onset, all at once; every summary is the line before it. Before the
-// first sung word each slot keeps its own copy. Read times and photos never
-// change. Everything derives from the audio clock, so a seek rebuilds the
-// same page.
+// A single nytimes.com article page (desktop), rebuilt from values measured
+// on a live article at a 1322 px viewport on 2026-11-03 and zoomed to the
+// viewport as one fixed-format page: masthead bar, section bar, headline,
+// summary, listen and share bar, lead photo with caption, byline, body.
+// The copy and photo are the study's own.
+//
+// The song takes the page's title-like slots, as the radio field (/1), the
+// departures board (/4) and the inbox (/5) take theirs: the headline is the
+// line being sung, set word by word at each onset in headline case; the
+// summary is the line before it and the photo caption the line before that.
+// The section links carry the sung line's words, six at a time, and the link
+// of the sung word takes the page's own link-hover underline; the LIVE label
+// reads the sung word. The tab title follows the headline. Before the first
+// sung word every slot keeps the article's own copy; the body never changes.
+// Everything derives from the audio clock, so a seek rebuilds the same page.
 
 const DESIGN_WIDTH = 1322;
-
-type Headline =
-  | { kind: "story"; text: string }
-  | { kind: "lyric"; line: TimedLyricLine; sungUntilMs: number; titleCase: boolean };
-
-type TextField = "headline" | "summary";
-
-function textAt(
-  storyIndex: number,
-  field: TextField,
-  lines: readonly TimedLyricLine[],
-  cueIndex: number,
-  clockMs: number,
-  hasBegun: boolean,
-): Headline {
-  const story = homepageStories[storyIndex]!;
-  const own = { kind: "story", text: field === "headline" ? story.headline : story.summary ?? "" } as const;
-  if (!hasBegun) return own;
-
-  if (field === "headline") {
-    return { kind: "lyric", line: lines[cueIndex]!, sungUntilMs: clockMs, titleCase: true };
-  }
-
-  const previous = lines[cueIndex - 1];
-  return previous
-    ? { kind: "lyric", line: previous, sungUntilMs: Number.POSITIVE_INFINITY, titleCase: false }
-    : own;
-}
-
-function HeadlineText({ headline }: { headline: Headline }) {
-  if (headline.kind === "story") return headline.text;
-
-  // The lead holds only the words sung so far; the story below moves down as
-  // the headline grows, as a live homepage update does.
-  const sung = headline.line.words.filter((word) => word.startMs <= headline.sungUntilMs);
-  return sung
-    .map((word, index) => (headline.titleCase ? headlineCase(word.text, index === 0) : word.text))
-    .join(" ")
-    // The homepage sets typographic quotes and apostrophes.
-    .replace(/(^|\s)"/g, "$1“")
-    .replace(/"/g, "”")
-    .replace(/'/g, "’");
-}
-
-function Story({
-  story,
-  headline,
-  summary,
-  headlineClass,
-}: {
-  story: HomepageStory;
-  headline: Headline;
-  summary: Headline;
-  headlineClass: string;
-}) {
-  return (
-    <>
-      <p className={headlineClass}><HeadlineText headline={headline} /></p>
-      {story.summary ? <p className={styles.summary}><HeadlineText headline={summary} /></p> : null}
-      <p className={styles.readTime}>{story.readMinutes} min read</p>
-    </>
-  );
-}
-
-function Photo({ story, className }: { story: HomepageStory; className: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={`${styles.image} ${className}`}
-      style={story.image ? { backgroundImage: `url(${story.image})` } : undefined}
-    />
-  );
-}
+const LINK_SLOTS = SECTION_LINKS.length;
 
 function usePageZoom() {
   const [frame, setFrame] = useState({ zoom: 1, height: 0 });
@@ -115,120 +56,155 @@ function usePageZoom() {
   return frame;
 }
 
+function Chevron() {
+  return (
+    <svg aria-hidden="true" className={styles.chevron} viewBox="0 0 13 8">
+      <polygon points={CHEVRON_POINTS} />
+    </svg>
+  );
+}
+
 export default function ParametricInterfaceNine({ song }: { song?: ParametricSong }) {
   return (
     <SongPlayback song={song}>
-      <Homepage />
+      <ArticlePage />
     </SongPlayback>
   );
 }
 
-function Homepage() {
-  const { cueIndex, currentTimeMs, hasStarted, song } = useLyricCue();
-  const { zoom, height } = usePageZoom();
-  const clockMs = currentTimeMs + LYRIC_LEAD_MS;
+function useArticleLyric() {
+  const { activeWordPosition, cueIndex, currentTimeMs, hasStarted, lyric, lyricCues, song } = useLyricCue();
   const firstOnsetMs = song.lyrics[0]?.startMs ?? 0;
-  const hasBegun = hasStarted && clockMs >= firstOnsetMs;
-  const [lead, picture, second, third, feature, tileLeft, tileRight, rowLeft, rowRight] = homepageStories;
-  const text = (storyIndex: number) => ({
-    headline: textAt(storyIndex, "headline", song.lyrics, cueIndex, clockMs, hasBegun),
-    summary: textAt(storyIndex, "summary", song.lyrics, cueIndex, clockMs, hasBegun),
-  });
+  const hasBegun = hasStarted && currentTimeMs + LYRIC_LEAD_MS >= firstOnsetMs;
+  if (!hasBegun) return null;
+
+  const previous = lyricCues[cueIndex - 1];
+  const beforePrevious = lyricCues[cueIndex - 2];
+  const windowStart = Math.floor(activeWordPosition / LINK_SLOTS) * LINK_SLOTS;
+
+  return {
+    headline: headlineOf(lyric.slice(0, activeWordPosition + 1)),
+    fullHeadline: headlineOf(lyric),
+    summary: previous ? sentenceOf(previous) : null,
+    caption: beforePrevious ? sentenceOf(beforePrevious) : null,
+    liveLabel: linkOf(lyric[activeWordPosition] ?? ""),
+    links: Array.from({ length: LINK_SLOTS }, (_, slot) => {
+      const position = windowStart + slot;
+      const word = lyric[position];
+      return word ? { text: linkOf(word), sung: position === activeWordPosition } : null;
+    }),
+  };
+}
+
+function ArticlePage() {
+  const { zoom, height } = usePageZoom();
+  const sung = useArticleLyric();
+  const tabHeadline = sung?.fullHeadline ?? ARTICLE.headline;
+
+  // The tab title follows the headline as nytimes.com sets it, after the
+  // study's version path.
+  useEffect(() => {
+    document.title = `v2/9 · ${tabHeadline} - The New York Times`;
+  }, [tabHeadline]);
 
   return (
     <main className={styles.page} style={{ zoom, height: height || undefined }}>
-      <div className={styles.shell}>
-        <header className={styles.header}>
-          <div aria-hidden="true" className={styles.topBar}>
-            <svg aria-hidden="true" className={styles.search} viewBox="0 0 16 16">
-              <path d={SEARCH_PATH} fill="#333" />
-            </svg>
-            <ul className={styles.editions}>
-              {EDITIONS.map((edition, index) => (
-                <li data-active={index === 0 || undefined} key={edition}>{edition}</li>
-              ))}
-            </ul>
-            <span className={styles.login}>Log in</span>
-          </div>
+      <header className={styles.masthead}>
+        <span aria-hidden="true" className={styles.iconButton} data-at="menu">
+          <svg viewBox="0 0 16 16">
+            {MENU_BARS.map((y) => <rect fill="#333" height={2} key={y} width={14} x={1} y={y} />)}
+          </svg>
+        </span>
+        <span aria-hidden="true" className={styles.iconButton} data-at="search">
+          <svg viewBox="0 0 16 16"><path d={SEARCH_PATH} fill="#333" /></svg>
+        </span>
+        <span className={styles.sectionLabel}>{SECTION}</span>
+        <svg aria-label="The New York Times" className={styles.wordmark} role="img" viewBox={MASTHEAD_VIEWBOX}>
+          <path d={MASTHEAD_PATH} fill="#000" />
+        </svg>
+        <span className={styles.login}>Log in</span>
+      </header>
 
-          <div className={styles.mastheadRow}>
-            <div className={styles.dateBlock}>
-              <span>{TODAY}</span>
-              <span>Today’s Paper</span>
-            </div>
-            <svg aria-label="The New York Times" className={styles.masthead} role="img" viewBox={MASTHEAD_VIEWBOX}>
-              <path d={MASTHEAD_PATH} fill="#000" />
-            </svg>
-            <span />
-          </div>
-
-          <nav aria-label="Sections" className={styles.sections}>
-            {SECTIONS.map((section) => (
-              <span className={styles.section} key={section}>
-                {section}
-                <svg aria-hidden="true" className={styles.chevron} viewBox="0 0 13 8">
-                  <polygon points={CHEVRON_POINTS} />
-                </svg>
-              </span>
+      <nav aria-label="Section" className={styles.sectionBar}>
+        <svg aria-hidden="true" className={styles.tMark} viewBox="0 0 44 57">
+          <path d={T_MARK_PATH} fill="#000" />
+        </svg>
+        <span className={styles.electionMark}>
+          <svg aria-label="2026 Elections" role="img" viewBox="0 0 100 25">
+            {ELECTION_SQUARES.map((square) => (
+              <rect fill={square.fill} height={25} key={square.x} width={25} x={square.x} />
             ))}
-          </nav>
-          <div aria-hidden="true" className={styles.doubleRule} />
+            {ELECTION_DIGIT_PATHS.map((path) => <path d={path} fill="#fff" key={path} />)}
+          </svg>
+        </span>
+        <span className={styles.liveLink}>
+          <span className={styles.live}>Live</span>
+          <span className={styles.updates}>{sung?.liveLabel ?? "Updates"}</span>
+          <span className={styles.ago}>2h ago</span>
+        </span>
+        {SECTION_LINKS.map((link, slot) => {
+          const lyricLink = sung ? sung.links[slot] : undefined;
+          if (lyricLink === null) return null;
+          return (
+            <span className={styles.sectionLink} data-hover={lyricLink?.sung || undefined} key={link.label}>
+              <span className={styles.linkText}>{lyricLink?.text ?? link.label}</span>
+              {"dropdown" in link ? <Chevron /> : null}
+            </span>
+          );
+        })}
+      </nav>
 
-        </header>
+      <article className={styles.article}>
+        <h1 className={styles.headline}>{sung?.headline ?? ARTICLE.headline}</h1>
+        <p className={styles.summary}>{sung?.summary ?? ARTICLE.summary}</p>
 
-        <div className={styles.front}>
-          <section className={styles.topStories}>
-            <div className={styles.leftColumn}>
-              <article className={styles.story}>
-                <Story {...text(0)} headlineClass={styles.leadHeadline} story={lead!} />
-              </article>
-              <article className={styles.story}>
-                <Story {...text(2)} headlineClass={styles.headline} story={second!} />
-              </article>
-              <article className={styles.story}>
-                <Story {...text(3)} headlineClass={styles.headline} story={third!} />
-              </article>
-            </div>
-
-            <article className={styles.pictureColumn}>
-              <Photo className={styles.pictureImage} story={picture!} />
-              <Story {...text(1)} headlineClass={styles.headline} story={picture!} />
-            </article>
-
-            <div className={styles.row}>
-              <article className={styles.rowStory}>
-                <Photo className={styles.rowImage} story={rowLeft!} />
-                <div>
-                  <Story {...text(7)} headlineClass={styles.smallHeadline} story={rowLeft!} />
-                </div>
-              </article>
-              <article className={styles.rowStory}>
-                <Photo className={styles.rowImage} story={rowRight!} />
-                <div>
-                  <Story {...text(8)} headlineClass={styles.smallHeadline} story={rowRight!} />
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <aside className={styles.rightColumn}>
-            <article className={styles.story}>
-              <Photo className={styles.featureImage} story={feature!} />
-              <Story {...text(4)} headlineClass={styles.featureHeadline} story={feature!} />
-            </article>
-            <div className={styles.tiles}>
-              <article>
-                <Photo className={styles.tileImage} story={tileLeft!} />
-                <Story {...text(5)} headlineClass={styles.smallHeadline} story={tileLeft!} />
-              </article>
-              <article>
-                <Photo className={styles.tileImage} story={tileRight!} />
-                <Story {...text(6)} headlineClass={styles.smallHeadline} story={tileRight!} />
-              </article>
-            </div>
-          </aside>
+        <div className={styles.actionBar}>
+          <span className={styles.listen}>
+            <svg aria-hidden="true" viewBox="0 0 55 55">
+              <path d={LISTEN_TRIANGLE} fill="#121212" />
+              <path d={LISTEN_RING} fill="none" stroke="#DFDFDF" strokeWidth={1.5} />
+            </svg>
+            <span>{ARTICLE.listen}</span>
+          </span>
+          <span className={styles.actions}>
+            <span className={styles.giftButton}>
+              <svg aria-hidden="true" viewBox="0 0 19 19"><path d={GIFT_PATH} fill="#121212" /></svg>
+              Share full article
+            </span>
+            <span aria-label="More sharing options" className={styles.roundButton}>
+              <svg aria-hidden="true" className={styles.shareGlyph} viewBox="0 0 23 18"><path d={SHARE_PATH} fill="#000" /></svg>
+            </span>
+            <span aria-label="Save article for reading later" className={styles.roundButton}>
+              <svg aria-hidden="true" className={styles.saveGlyph} viewBox="0 0 12 18"><path d={SAVE_PATH} fill="#000" /></svg>
+            </span>
+          </span>
         </div>
-      </div>
+
+        <figure className={styles.figure}>
+          <div
+            aria-label={ARTICLE.imageAlt}
+            className={styles.photo}
+            role="img"
+            style={{ backgroundImage: `url(${ARTICLE.image})` }}
+          />
+          <figcaption className={styles.caption}>
+            {sung?.caption ?? ARTICLE.caption}
+            <span className={styles.credit}>{ARTICLE.credit}</span>
+          </figcaption>
+        </figure>
+
+        <div className={styles.byline}>
+          <p>
+            By <u>{ARTICLE.byline[0]}</u> and <u>{ARTICLE.byline[1]}</u>
+          </p>
+          <p className={styles.reporting}>{ARTICLE.dateline}</p>
+          <time className={styles.date}>{ARTICLE.date}</time>
+        </div>
+
+        <section className={styles.body}>
+          {ARTICLE.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        </section>
+      </article>
     </main>
   );
 }

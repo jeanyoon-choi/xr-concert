@@ -4,6 +4,7 @@ import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type 
 import { formatSongClock } from "../../../model/clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./telegram.module.css";
+import { follow } from "../follow";
 
 // Telegram for iOS, default ("Classic") theme, one private chat with the
 // seat's ex. The lyric is Telegram's own move: a message edited in place.
@@ -94,7 +95,7 @@ function TelegramState({ seat, lines, replies, clock, shown, reducedMotion, act 
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
-    thread.scrollTo({ top: thread.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    follow(thread, thread.scrollHeight, reducedMotion);
   }, [rows, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {

@@ -4,6 +4,7 @@ import { memo } from "react";
 import { SONG_DATE } from "../../../model/clock-face";
 import type { PhoneState } from "../../../model/score";
 import type { PhoneStateProps } from "../types";
+import { wallpaperOf } from "../../wallpapers";
 import { noticeOf, type Notice } from "./notify";
 import styles from "./lock.module.css";
 
@@ -14,17 +15,6 @@ import styles from "./lock.module.css";
 // typed character by character. iOS groups one app's notifications into a
 // stack: the newest card in front, the earlier ones as cards tucked beneath
 // it. Tapping the stack opens the app (held until the line changes).
-
-/** iOS's "Color" wallpapers: one hue, lighter at the top. A different one per phone. */
-const WALLPAPERS = [
-  "linear-gradient(180deg, #5d8fd8 0%, #2a5bab 55%, #173d7e 100%)",
-  "linear-gradient(180deg, #e8a0b4 0%, #c56d89 55%, #94445f 100%)",
-  "linear-gradient(180deg, #8fc3a2 0%, #4f8f6b 55%, #2d6347 100%)",
-  "linear-gradient(180deg, #f0b27a 0%, #d27d3f 55%, #a2531f 100%)",
-  "linear-gradient(180deg, #a99ae0 0%, #7461bf 55%, #4c3a93 100%)",
-  "linear-gradient(180deg, #9aa4b1 0%, #66717f 55%, #414a55 100%)",
-  "linear-gradient(180deg, #7fc8d6 0%, #3f97aa 55%, #22687a 100%)",
-] as const;
 
 function Glyph({ name }: { name: "padlock" | "flashlight" | "camera" }) {
   const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -75,7 +65,7 @@ function LockState({ seat, lines, clock, shown, act, source }: PhoneStateProps) 
   const notice = newest ? noticeOf(app, seat, newest) : null;
 
   return (
-    <section className={styles.lock} aria-label="Lock screen" inert={!shown} style={{ background: WALLPAPERS[seat % WALLPAPERS.length] }}>
+    <section className={styles.lock} aria-label="Lock screen" inert={!shown} style={{ backgroundImage: wallpaperOf(seat).image }}>
       <span className={styles.padlock}>
         <Glyph name="padlock" />
       </span>
