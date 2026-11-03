@@ -5,8 +5,8 @@ import type { ComponentType } from "react";
 // versions.
 export const parametricInterfaceV4 = {
   key: "v4",
-  // The phones are v4's default view: 2_mobiles, the one being worked on.
-  load: (): Promise<{ default: ComponentType }> => import("./2_mobiles"),
+  // The phones are v4's default view: 3_mobiles, the extended one.
+  load: (): Promise<{ default: ComponentType }> => import("./3_mobiles"),
   interfaces: [
     {
       key: "1",
@@ -16,6 +16,11 @@ export const parametricInterfaceV4 = {
       // A copy of 1_mobiles, adjusted on its own from here.
       key: "2",
       load: (): Promise<{ default: ComponentType }> => import("./2_mobiles"),
+    },
+    {
+      // 2_mobiles extended with twenty-three more text interfaces.
+      key: "3",
+      load: (): Promise<{ default: ComponentType }> => import("./3_mobiles"),
     },
     {
       key: "tabs",

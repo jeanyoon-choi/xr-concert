@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { SONG_DATE } from "../../../model/clock-face";
+import { SONG_DATE } from "../../clock-face";
 import type { PhoneState } from "../../states";
 import type { PhoneStateProps } from "../types";
 import { wallpaperOf } from "../../wallpapers";

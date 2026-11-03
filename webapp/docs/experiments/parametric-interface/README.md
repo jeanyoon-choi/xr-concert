@@ -19,7 +19,8 @@ A standalone import of the SCC `parametric-interface` archive, now organised by 
 | `/parametric-interface/v3/2` | `2_street`: an Euljiro back alley whose projecting signs all show the sung word (below) |
 | `/parametric-interface/v3/3` | `3_daechi`: the experiments-jyc Daechi-dong street, its academy signs taking the sung line one word per sign (below) |
 | `/parametric-interface/v4/1` | ROSÉ — a grid of phones: seventeen chat and social apps (KakaoTalk, WhatsApp, Instagram, X, TikTok, …), each taking the sung line ([v4](./v4.md)) |
-| `/parametric-interface/v4`, `/v4/2` | Default: the phones of `/v4/1` moving between apps on their own at line ends, notifications from each app on the lock lines ([v4](./v4.md)) |
+| `/parametric-interface/v4/2` | the phones of `/v4/1` moving between apps on their own at line ends, notifications from each app on the lock lines ([v4](./v4.md)) |
+| `/parametric-interface/v4`, `/v4/3` | Default: 2 extended to 29 text interfaces (voicemail, Mail, Safari/Google, 지식iN, 에브리타임, 당근, Photos …), phone time on the real clock ([v4](./v4.md)) |
 | `/parametric-interface/v4/tabs` → `/v4/tab` | Controller that opens real browser windows, each running one of v2's interfaces on its clock ([v4](./v4.md)) |
 
 The former `/7` lecture-note study was removed. Legacy `/whole` and `/1`–`/6` redirect (308) to their `v0` equivalents. On 2026-11-03 the U2 version was renamed `v1` → `v0`, and the ROSÉ v2 was copied to `v1` so that v2 can change; old `/v1` links now open the ROSÉ copy.

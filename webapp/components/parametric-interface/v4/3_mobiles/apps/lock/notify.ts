@@ -45,16 +45,38 @@ export function noticeOf(state: PhoneState, seat: number, line: SungLine): Notic
       return { state, icon: icon(state), title: "ChatGPT", body: text };
     case "tiktok":
       return { state, icon: icon(state), title: "TikTok", body: `${other} commented: ${text}` };
-    case "slack":
-      return { state, icon: icon(state), title: "#late-night-edit", body: `${name}: ${text}` };
     case "instagram":
       return { state, icon: icon(state), title: "Instagram", body: `${other} commented: ${text}` };
     case "discord":
       return { state, icon: icon(state), title: `${handle(name)} (#general, friends)`, body: text };
-    case "youtube":
-      return { state, icon: icon(state), title: "Hana Sings is live now", body: text };
     case "threads":
       return { state, icon: icon(state), title: "Threads", body: `${other}: ${text}` };
+    case "voicemail":
+      return { state, icon: null, title: "Voicemail", body: `New voicemail from ${name}: “${text}”` };
+    case "mail":
+      return { state, icon: icon(state), title: "Drafts", body: text };
+    case "safari":
+      return { state, icon: icon(state), title: "Google", body: text };
+    case "naver":
+      return { state, icon: icon(state), title: "지식iN", body: `내 질문에 답변이 등록되었습니다: ${text}` };
+    case "everytime":
+      return { state, icon: icon(state), title: "에브리타임", body: `새로운 댓글이 달렸어요: ${text}` };
+    case "blind":
+      return { state, icon: icon(state), title: "블라인드", body: `내 글에 새 댓글: ${text}` };
+    case "karrot":
+      return { state, icon: icon(state), title: "당근", body: text };
+    case "reddit":
+      return { state, icon: icon(state), title: "r/relationship_advice", body: `${other} replied: ${text}` };
+    case "snapchat":
+      return { state, icon: icon(state), title: "Snapchat", body: `from ${name}` };
+    case "signal":
+      return { state, icon: icon(state), title: name, body: text };
+    case "character-ai":
+      return { state, icon: icon(state), title: "Ezra", body: text };
+    case "gemini":
+      return { state, icon: icon(state), title: "Gemini", body: text };
+    case "docs":
+      return { state, icon: icon(state), title: "letter (don't send)", body: text };
     default:
       return { state: "messages", icon: null, title: name, body: text };
   }

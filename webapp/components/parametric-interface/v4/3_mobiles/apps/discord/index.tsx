@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { clockAgo, dateLabel, formatSongClock } from "../../clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./discord.module.css";
 import { follow } from "../follow";
@@ -92,6 +92,10 @@ function Message({ post, grouped }: { post: Post; grouped: boolean }) {
   );
 }
 
+// Today's earlier chatter, on the wall clock: 43, 38, 26 and 25 minutes before the song.
+const AT = { p1: clockAgo(43), p2: clockAgo(38), p4: clockAgo(26), p5: clockAgo(25) };
+const DAY = dateLabel("en-US", { month: "long", day: "numeric", year: "numeric" });
+
 function DiscordState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const contact = contactFor(seat);
   const poster: Member = useMemo(() => ({ name: contact.name.toLowerCase(), avatar: 0, color: "#3498db" }), [contact.name]);
@@ -101,11 +105,11 @@ function DiscordState({ seat, lines, replies, shown, reducedMotion, act }: Phone
   // The evening before the song: ordinary server chatter.
   const prior: readonly Post[] = useMemo(
     () => [
-      { key: "p1", who: FRIENDS[1]!, minute: minuteOf("20:47"), time: "20:47", text: "anyone on tonight? need 2 for ranked" },
-      { key: "p2", who: FRIENDS[0]!, minute: minuteOf("20:52"), time: "20:52", text: "cant, still at work 💀" },
-      { key: "p3", who: FRIENDS[0]!, minute: minuteOf("20:52"), time: "20:52", text: "maybe after 11" },
-      { key: "p4", who: FRIENDS[2]!, minute: minuteOf("21:04"), time: "21:04", text: "has anyone heard from " + poster.name + " today" },
-      { key: "p5", who: FRIENDS[1]!, minute: minuteOf("21:05"), time: "21:05", text: "no?? why" },
+      { key: "p1", who: FRIENDS[1]!, minute: minuteOf(AT.p1), time: AT.p1, text: "anyone on tonight? need 2 for ranked" },
+      { key: "p2", who: FRIENDS[0]!, minute: minuteOf(AT.p2), time: AT.p2, text: "cant, still at work 💀" },
+      { key: "p3", who: FRIENDS[0]!, minute: minuteOf(AT.p2), time: AT.p2, text: "maybe after 11" },
+      { key: "p4", who: FRIENDS[2]!, minute: minuteOf(AT.p4), time: AT.p4, text: "has anyone heard from " + poster.name + " today" },
+      { key: "p5", who: FRIENDS[1]!, minute: minuteOf(AT.p5), time: AT.p5, text: "no?? why" },
     ],
     [poster.name],
   );
@@ -180,7 +184,7 @@ function DiscordState({ seat, lines, replies, shown, reducedMotion, act }: Phone
             <p>This is the start of the #general channel.</p>
           </div>
           <p className={styles.divider}>
-            <span>November 3, 2026</span>
+            <span>{DAY}</span>
           </p>
           {all.map((post, index) => {
             const previous = all[index - 1];

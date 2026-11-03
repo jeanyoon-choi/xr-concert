@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { formatSongClock } from "../../clock-face";
 import type { SungLine } from "../../../model/lines";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./line.module.css";

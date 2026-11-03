@@ -54,6 +54,7 @@ export const navigationExperiments: readonly NavigationExperiment[] = [
   { key: `${parametricV3}/3`, area: "parametric-interface", family: parametricV3, date: "2026-11-03", phrase: "Daechi-dong academy street at 10 p.m. whose academy signs read the sung line one word per sign along each row" },
   { key: parametricV4, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "ROSÉ — toxic till the end across many phones and many browser windows" },
   { key: `${parametricV4}/1`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "A grid of phones: seventeen hyper-real chat and social apps, each taking the sung line in its own slot" },
+  { key: `${parametricV4}/3`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Twenty-nine hyper-real text interfaces — voicemail, mail, search, 지식iN, 에브리타임, 당근, a camera roll — moving together by lyric passage" },
   { key: `${parametricV4}/tabs`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Controller that opens real browser windows, each running one of v2's interfaces on the controller's clock" },
   { key: "face-voronoi/1", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living portrait photographs clipped to changing Voronoi territories" },
   { key: "face-voronoi/2", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living Voronoi population pulse with monochrome, face, and politician renderers" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatSongClock } from "../model/clock-face";
+import { anchorSongClock, formatSongClock } from "./clock-face";
 import { isLockLine } from "../model/score";
 import type { LyricCue } from "../timeline/use-lyric-cue";
 import { useSungLines } from "../timeline/use-sung-lines";
@@ -18,6 +18,12 @@ import styles from "./mobiles.module.css";
 
 export function PhoneGrid({ cue, phones, mode = "score" }: { cue: LyricCue; phones: number; mode?: StateMode }) {
   const container = useRef<HTMLDivElement>(null);
+  // The phones' clock is the wall clock: tick each minute even while the song is stopped.
+  const [, setMinute] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setMinute(Math.floor(Date.now() / 60_000)), 5_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [box, setBox] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -30,6 +36,7 @@ export function PhoneGrid({ cue, phones, mode = "score" }: { cue: LyricCue; phon
 
   const lines = useSungLines(cue, PHONE_HISTORY);
   const layout = fitPhoneGrid(box.width, box.height, phones);
+  anchorSongClock(cue.currentTimeMs);
   const clock = formatSongClock(cue.currentTimeMs);
   const locked = mode === "score" && isLockLine(cue.lyric);
   // Passage starts in song time; a move is centred on each (hops.ts MOVE_MS).

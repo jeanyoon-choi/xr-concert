@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { clockAgo, dateLabel, formatSongClock } from "../../clock-face";
 import type { PhoneStateProps } from "../types";
 import styles from "./kakaotalk.module.css";
 import { follow } from "../follow";
@@ -47,6 +47,10 @@ function koreanStamp(clock: string) {
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${half} ${hour}:${String(m).padStart(2, "0")}`;
 }
+
+/** Today, "2026년 11월 3일 화요일", and the group's earlier messages, 43–25 minutes before the song. */
+const TODAY = dateLabel("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+const EARLIER = { a: koreanStamp(clockAgo(43)), b: koreanStamp(clockAgo(42)), me: koreanStamp(clockAgo(38)), c: koreanStamp(clockAgo(25)) };
 
 type Entry =
   | { kind: "in"; key: string; at: number; friend: Friend; text: string; time: string; unread: number; arriving: boolean }
@@ -161,7 +165,7 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
         <div className={styles.rows}>
           <p className={styles.date}>
             <Glyph name="calendar" />
-            2026년 11월 3일 화요일
+            {TODAY}
           </p>
 
           <div className={styles.incoming}>
@@ -170,7 +174,7 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
               <span className={styles.name}>{a.name}</span>
               <div className={styles.line}>
                 <p className={styles.bubble} data-side="in" data-head>야 걔 또 연락왔다며?</p>
-                <Meta unread={0} time="오후 8:47" side="in" />
+                <Meta unread={0} time={EARLIER.a} side="in" />
               </div>
             </div>
           </div>
@@ -184,14 +188,14 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
               </div>
               <div className={styles.line}>
                 <p className={styles.bubble} data-side="in">답장하지마라 진짜로</p>
-                <Meta unread={0} time="오후 8:48" side="in" />
+                <Meta unread={0} time={EARLIER.b} side="in" />
               </div>
             </div>
           </div>
 
           <div className={styles.outgoing}>
             <div className={styles.line} data-side="out">
-              <Meta unread={0} time="오후 8:52" side="out" />
+              <Meta unread={0} time={EARLIER.me} side="out" />
               <p className={styles.bubble} data-side="out" data-head>ㅋㅋㅋ 안 해 이번엔</p>
             </div>
           </div>
@@ -205,7 +209,7 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
               </div>
               <div className={styles.line}>
                 <p className={styles.bubble} data-side="in">노래방 갈 사람</p>
-                <Meta unread={0} time="오후 9:05" side="in" />
+                <Meta unread={0} time={EARLIER.c} side="in" />
               </div>
             </div>
           </div>

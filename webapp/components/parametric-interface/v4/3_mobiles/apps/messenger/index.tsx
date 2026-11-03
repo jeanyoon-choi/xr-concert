@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { clockAgo, formatSongClock } from "../../clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./messenger.module.css";
 import { follow } from "../follow";
@@ -66,6 +66,9 @@ const BEFORE: readonly Row[] = [
   { kind: "in", key: "b2", text: "i can come get it this week" },
   { kind: "out", key: "b3", text: "ok", arriving: false },
 ];
+
+/** The earlier exchange's stamp: 18 minutes before the song. */
+const OPENED = clockAgo(18);
 
 function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const contact = contactFor(seat);
@@ -141,7 +144,7 @@ function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: Pho
 
       <div ref={threadRef} className={styles.thread} onScroll={paint}>
         <div className={styles.rows}>
-          <p className={styles.stamp}>Today at 21:12</p>
+          <p className={styles.stamp}>Today at {OPENED}</p>
           {rows.map((row, index) => {
             const side = sideOf(row);
             const groupedAbove = sideOf(rows[index - 1]) === side && side !== "unsent";

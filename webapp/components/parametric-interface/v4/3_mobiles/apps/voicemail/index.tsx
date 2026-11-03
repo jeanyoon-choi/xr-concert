@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useRef, useState } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { dateLabel, formatSongClock } from "../../clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./voicemail.module.css";
 import { follow } from "../follow";
@@ -51,13 +51,19 @@ function Icon({ name }: { name: Glyph }) {
 
 type Voicemail = { key: string; name: string; label: string; when: string; seconds: number; unread: boolean; transcript: string };
 
+const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth", "twenty-first", "twenty-second", "twenty-third", "twenty-fourth", "twenty-fifth", "twenty-sixth", "twenty-seventh", "twenty-eighth", "twenty-ninth", "thirtieth", "thirty-first"];
+/** Days in the list, from today: 2 and 4 days back by weekday, 6 back as a date; today's appointment as the dentist says it. */
+const weekday = (offsetDays: number) => dateLabel("en-GB", { weekday: "long" }, offsetDays);
+const WHEN = { b: weekday(-2), c: weekday(-4), d: dateLabel("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }, -6) };
+const APPOINTMENT = `${weekday(0)} the ${ORDINALS[Number(dateLabel("en-GB", { day: "numeric" })) - 1]}`;
+
 /** The voicemails already in the box: ordinary calls, one earlier from the same person. */
 function earlierFor(name: string): Voicemail[] {
   return [
     { key: "a", name, label: "mobile", when: "Yesterday", seconds: 38, unread: true, transcript: `Hey, it's me. I know it's late. I just… call me back when you get this, okay? It's nothing bad. I just want to talk.` },
-    { key: "b", name: "Mum", label: "home", when: "Sunday", seconds: 51, unread: false, transcript: "Hi love, it's Mum. Just checking you got home all right. Your dad says hello. Ring us when you're free, no rush." },
-    { key: "c", name: "Bright Smile Dental", label: "work", when: "Friday", seconds: 27, unread: false, transcript: "Hello, this is a reminder of your appointment on Tuesday the third at 9:40. Please call us if you need to reschedule. Thank you." },
-    { key: "d", name, label: "mobile", when: "28/10/2026", seconds: 14, unread: false, transcript: "Hey. Did you leave your charger at mine? I'll drop it round." },
+    { key: "b", name: "Mum", label: "home", when: WHEN.b, seconds: 51, unread: false, transcript: "Hi love, it's Mum. Just checking you got home all right. Your dad says hello. Ring us when you're free, no rush." },
+    { key: "c", name: "Bright Smile Dental", label: "work", when: WHEN.c, seconds: 27, unread: false, transcript: `Hello, this is a reminder of your appointment on ${APPOINTMENT} at 9:40. Please call us if you need to reschedule. Thank you.` },
+    { key: "d", name, label: "mobile", when: WHEN.d, seconds: 14, unread: false, transcript: "Hey. Did you leave your charger at mine? I'll drop it round." },
   ];
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useRef, useState } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { dateLabel, formatSongClock } from "../../clock-face";
 import type { PhoneStateProps } from "../types";
 import styles from "./notes.module.css";
 import { follow } from "../follow";
@@ -34,6 +34,9 @@ function Glyph({ name }: { name: "back" | "share" | "more" | "checklist" | "tabl
   }
 }
 
+/** Today as Notes writes it, "3 November 2026". */
+const DAY = dateLabel("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
 function NotesState({ seat, lines, shown, reducedMotion }: PhoneStateProps) {
   const [draft, setDraft] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -60,7 +63,7 @@ function NotesState({ seat, lines, shown, reducedMotion }: PhoneStateProps) {
       </header>
 
       <div ref={bodyRef} className={styles.body}>
-        <p className={styles.date}>3 November 2026 at {formatSongClock(title?.startMs ?? 0)}</p>
+        <p className={styles.date}>{DAY} at {formatSongClock(title?.startMs ?? 0)}</p>
         {title ? (
           <p className={styles.title} data-typing={(title.current && !draft) || undefined}>
             {title.text}

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { formatSongClock } from "../../clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./telegram.module.css";
 import { follow } from "../follow";

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { dateLabel, formatSongClock } from "../../clock-face";
 import type { SungLine } from "../../../model/lines";
 import type { PhoneStateProps } from "../types";
 import { XIcon, type XIconName } from "./icons";
@@ -47,6 +47,9 @@ function stamp(clock: string, minutes: number) {
   const hour = Math.floor(total / 60);
   return `${hour % 12 || 12}:${String(total % 60).padStart(2, "0")} ${hour < 12 ? "AM" : "PM"}`;
 }
+
+/** Today as X's detail stamp writes it: "11/3/26". */
+const DAY = dateLabel("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
 
 /** X's relative stamp: seconds, then minutes. */
 function age(ms: number) {
@@ -174,7 +177,7 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
           </div>
           <p className={styles.focalText}>ok. some things I should have said out loud a long time ago. a thread 🧵</p>
           <p className={styles.meta}>
-            {stamp(opened, 3)} · 11/3/26 · <strong>{(1204 + seat * 87).toLocaleString("en-US")}</strong> Views
+            {stamp(opened, 3)} · {DAY} · <strong>{(1204 + seat * 87).toLocaleString("en-US")}</strong> Views
           </p>
           <div className={styles.detailActions}>
             <Action icon="reply" count={4 + rows.length} label="Reply" />

@@ -1,0 +1,279 @@
+/* Blind (Korea) iOS, one 썸·연애 post (light), at native points on the 390 × 844 glass. */
+.app {
+  --tb-ink: #222;
+  --tb-gray1000: #18202a;
+  --tb-meta: #94969b;
+  --tb-rule: #eee;
+  --tb-well: #f8f8f8;
+  --tb-input: #f2f2f3;
+  --tb-company: #37acc9;
+  --tb-op: #da3238;
+  --tb-blue: #007aff;
+  --tb-red: #fb5957;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: var(--tb-ink);
+  font-family: var(--ios-font);
+}
+
+.icon {
+  display: inline-block;
+  flex: none;
+  user-select: none;
+}
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  height: 98px;
+  align-items: center;
+  padding: 54px 4px 0;
+  box-sizing: border-box;
+  background: #fff;
+  border-bottom: 1px solid var(--tb-rule);
+}
+
+.navButton {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+}
+
+.navTitle {
+  text-align: center;
+  color: var(--tb-gray1000);
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.4px;
+}
+
+.page {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.page::-webkit-scrollbar { display: none; }
+
+.head {
+  position: relative;
+  padding: 25px 20px 19px;
+}
+
+.topic {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--tb-ink);
+  font: 600 12px/16px var(--ios-font);
+}
+
+.topicDot {
+  width: 2.25px;
+  height: 2.25px;
+  margin: 0 3px;
+  border-radius: 50%;
+  background: #65696c;
+}
+
+.follow {
+  color: var(--tb-blue);
+  font: 600 14px/16px var(--ios-font);
+}
+
+.title {
+  margin: 15px 0 0;
+  font: 700 20px/28px var(--ios-font);
+  letter-spacing: -0.3px;
+  overflow-wrap: anywhere;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  margin: 14px 0 0;
+  color: var(--tb-ink);
+  font: 400 12px/16px var(--ios-font);
+}
+
+.cp { margin-right: 4px; }
+
+.point {
+  margin-right: 4px;
+  color: var(--tb-company);
+}
+
+.middot { margin-right: 4px; }
+
+.op {
+  margin-left: 4px;
+  color: var(--tb-op);
+  font: normal 400 10px/16px var(--ios-font);
+}
+
+.info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--tb-meta);
+  font: 400 12px/16px var(--ios-font);
+}
+
+.info[data-head] { margin-top: 16px; }
+
+.info > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 14px;
+}
+
+.info > span.fnc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  gap: 10px;
+  margin-right: 0;
+}
+
+.contents {
+  padding: 0 20px;
+  border-top: 1px solid var(--tb-rule);
+  overflow-wrap: anywhere;
+}
+
+.text {
+  margin: 24px 0 0;
+  font: 400 15px/1.6 var(--ios-font);
+}
+
+.articleInfo {
+  display: flex;
+  gap: 17px;
+  margin-top: 30px;
+  padding: 26px 0;
+  font: 400 14px/20px var(--ios-font);
+}
+
+.articleInfo span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comments {
+  padding: 23px 0 12px;
+  border-top: 1px solid var(--tb-rule);
+}
+
+.commentsHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 4px;
+}
+
+.commentsHead h3 {
+  margin: 0;
+  font: 700 14px/20px var(--ios-font);
+}
+
+.commentsHead span {
+  color: var(--tb-gray1000);
+  font: 400 13px/20px var(--ios-font);
+}
+
+.comment {
+  position: relative;
+  padding: 20px;
+  border-bottom: 1px solid var(--tb-rule);
+}
+
+.comment .name {
+  margin-top: 0;
+  color: var(--tb-meta);
+  font-size: 12px;
+  line-height: 1.33;
+}
+
+.comment .cp { color: var(--tb-ink); }
+
+.commentText {
+  margin: 4px 0 0;
+  font: 400 14px/1.43 var(--ios-font);
+  overflow-wrap: anywhere;
+}
+
+.replies {
+  margin-top: -1px;
+  border-top: 1px solid var(--tb-rule);
+  background: var(--tb-well);
+}
+
+.replies .comment { padding: 19px 30px; }
+.replies .info > span.fnc { right: 10px; }
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 42px 8px;
+  background: #fff;
+  border-top: 1px solid var(--tb-rule);
+}
+
+.attach {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+}
+
+.field {
+  min-width: 0;
+  flex: 1;
+}
+
+.field input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: var(--tb-input);
+  box-sizing: border-box;
+  color: var(--tb-ink);
+  font: 400 16px/20px var(--ios-font);
+}
+
+.field input::placeholder { color: var(--tb-meta); }
+
+.post {
+  height: 44px;
+  flex: none;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--tb-red);
+  font: 700 16px/1 var(--ios-font);
+}
+
+.post:disabled { color: #c1c8d0; }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

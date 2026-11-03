@@ -75,6 +75,8 @@ Any number of senders can be selected at once, each in its own shade (local copp
 
 The mixer draws one aux bus per remote; every channel except that remote's own feeds it (mix-minus). Mix-minus and the laptop as the WebRTC end for remote performers are assumptions of this drawing, not settled concert decisions. Session (idle, live, paused) is drawn as a static block. Text is 12 units or larger; only block, device, and rate labels are shown.
 
+The Options button (bottom right) toggles a panel with local, remote, and phone steppers and a Color / Mono switch; Mono draws every layer in one grey and tells senders apart by lightness. The title block sits bottom left.
+
 Selection, propagation, and draining behave as in Study 2, drawn as a plain coloured line without moving dots; two rings mark sending and receiving. Performance: the static sheet renders once per configuration and does not re-render while animating. The animation loop writes only the live routes' `stroke-dasharray` and the ring attributes. At the maximum configuration with ten senders selected (94 live routes) it measured 60 fps (p95 frame 17.5 ms).
 
 ## Open questions

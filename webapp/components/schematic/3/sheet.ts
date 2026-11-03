@@ -203,10 +203,10 @@ export function buildSheet(input: Partial<SheetConfig>): Sheet {
       wire("frame", [[BORDER.x1, yb], [1592, yb]]);
     }
   }
-  const title = { x0: 1374, x1: 1564, y0: 772, y1: 862 };
+  const title = { x0: 36, x1: 226, y0: 772, y1: 862 };
   rect("frame", title.x0, title.y0, title.x1 - title.x0, title.y1 - title.y0);
   for (const y of [790, 808, 826, 844]) wire("frame", [[title.x0, y], [title.x1, y]]);
-  wire("frame", [[1440, 790], [1440, title.y1]]);
+  wire("frame", [[title.x0 + 66, 790], [title.x0 + 66, title.y1]]);
   text(title.x0 + 6, 786, "NRF XR", 13, { strong: true, layer: "frame" });
   const rowsText: [string, string][] = [
     ["title", "schematic/3"],
@@ -216,7 +216,7 @@ export function buildSheet(input: Partial<SheetConfig>): Sheet {
   ];
   rowsText.forEach(([key, value], index) => {
     text(title.x0 + 6, 804 + index * 18, key, 12, { layer: "frame" });
-    text(1446, 804 + index * 18, value, 12, { layer: "frame" });
+    text(title.x0 + 72, 804 + index * 18, value, 12, { layer: "frame" });
   });
 
   // ── Floor plan underlay (NRF_June p.8) ───────────────────────────────────

@@ -1,0 +1,173 @@
+/* iOS 18 Mail compose page sheet, light, at native points on the 390 × 844 glass. */
+.app {
+  --blue: #007aff;
+  --secondary: #8e8e93;
+  --separator: rgb(60 60 67 / 29%);
+  position: absolute;
+  inset: 0;
+  background: #000;
+  color: #000;
+}
+
+/* The inbox, pushed back behind the sheet and dimmed. */
+.behind {
+  position: absolute;
+  top: 52px;
+  left: 17px;
+  right: 17px;
+  height: 40px;
+  border-radius: 10px 10px 0 0;
+  background: #c4c4c7;
+}
+
+.sheet {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 10px 10px 0 0;
+  background: #fff;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 16px;
+}
+
+.cancel {
+  color: var(--blue);
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+.title {
+  overflow: hidden;
+  max-width: 220px;
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.send {
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -7px;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 34px;
+  scrollbar-width: none;
+}
+
+.scroll::-webkit-scrollbar { display: none; }
+
+.field {
+  display: flex;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 0 0 16px;
+  padding: 11px 16px 11px 0;
+  border-bottom: 0.5px solid var(--separator);
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+.key {
+  flex: none;
+  color: var(--secondary);
+}
+
+.to { color: var(--blue); }
+
+.from {
+  overflow: hidden;
+  color: var(--secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.subject {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.body {
+  padding: 14px 16px 0;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+.paragraph {
+  margin: 0 0 22px;
+  overflow-wrap: anywhere;
+}
+
+.subject[data-typing]::after,
+.paragraph[data-typing]::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 1px;
+  background: var(--blue);
+  vertical-align: -0.17em;
+  animation: caret 1.06s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+.draft { display: block; }
+
+.draft textarea {
+  display: block;
+  width: 100%;
+  min-height: 22px;
+  field-sizing: content;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #000;
+  font: inherit;
+  letter-spacing: inherit;
+  outline: none;
+  resize: none;
+  caret-color: var(--blue);
+}
+
+.signature {
+  margin: 22px 0 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject[data-typing]::after,
+  .paragraph[data-typing]::after { animation: none; }
+}

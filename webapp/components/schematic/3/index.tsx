@@ -27,8 +27,16 @@ const SHADES: Record<string, readonly string[]> = {
   laptop: ["#e4dcc4"],
 };
 
-function colorOf(id: string, kind: string | undefined) {
-  const shades = kind ? SHADES[kind] : undefined;
+/** Monochrome: senders differ by lightness only. */
+const MONO_SHADES: Record<string, readonly string[]> = {
+  local: ["#f2f0e7", "#d6d3c9", "#bab7ae", "#e4e1d8", "#c8c5bc"],
+  remote: ["#a9a69e", "#c2bfb6", "#918f88", "#b6b3aa"],
+  phone: ["#8e9a9b"],
+  laptop: ["#ffffff"],
+};
+
+function colorOf(id: string, kind: string | undefined, mono = false) {
+  const shades = kind ? (mono ? MONO_SHADES : SHADES)[kind] : undefined;
   if (!shades) return "#f2f0e7";
   const index = Number(id.slice(id.lastIndexOf("-") + 1)) - 1;
   return shades[Number.isFinite(index) ? index % shades.length : 0];
@@ -120,6 +128,7 @@ export default function SchematicStudy3() {
    * released. Any number at once. Changes only on input, never per frame. */
   const [selection, setSelection] = useState<ReadonlyMap<string, Send>>(new Map());
   const [panelOpen, setPanelOpen] = useState(false);
+  const [mono, setMono] = useState(false);
 
   const sheet = useMemo(() => buildSheet(config), [config]);
   const nodeById = useMemo(() => new Map(sheet.nodes.map((node) => [node.id, node])), [sheet]);
@@ -168,7 +177,7 @@ export default function SchematicStudy3() {
         // Reveal [tail, end] of the full route with one dash.
         element.setAttribute("stroke-dasharray", visible > 0 ? `0 ${tail} ${visible} ${route.length + 1}` : `0 ${route.length + 1}`);
         if (head >= route.length && tail < route.length && !reached.has(route.to)) {
-          reached.set(route.to, colorOf(route.from, nodeById.get(route.from)?.kind));
+          reached.set(route.to, colorOf(route.from, nodeById.get(route.from)?.kind, mono));
         }
       }
 
@@ -224,7 +233,7 @@ export default function SchematicStudy3() {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [hasSelection, live, longest, nodeById, routeRefs, sendRefs, receiveRefs, fillRefs]);
+  }, [hasSelection, live, longest, nodeById, mono, routeRefs, sendRefs, receiveRefs, fillRefs]);
 
   // Event timestamps share requestAnimationFrame's time origin.
   const toggle = (id: string, time: number) => {
@@ -257,7 +266,7 @@ export default function SchematicStudy3() {
   };
 
   return (
-    <main className={styles.root}>
+    <main className={`${styles.root} ${mono ? styles.mono : ""}`}>
       <svg className={styles.svg} viewBox={`0 0 ${VIEW.width} ${VIEW.height}`} onClick={(event) => releaseAll(event.timeStamp)}>
         <Drawing marks={sheet.marks} />
 
@@ -268,7 +277,7 @@ export default function SchematicStudy3() {
               ref={register(routeRefs, index)}
               points={routePoints[index]}
               className={styles.line}
-              stroke={colorOf(route.from, nodeById.get(route.from)?.kind)}
+              stroke={colorOf(route.from, nodeById.get(route.from)?.kind, mono)}
               strokeDasharray={`0 ${route.length + 1}`}
             />
           ))}
@@ -279,7 +288,7 @@ export default function SchematicStudy3() {
               <RingSet
                 key={`send-${id}`}
                 node={node}
-                color={colorOf(id, node.kind)}
+                color={colorOf(id, node.kind, mono)}
                 receiving={false}
                 register={register(sendRefs, id)}
               />
@@ -297,7 +306,7 @@ export default function SchematicStudy3() {
 
         {sheet.nodes.map((node) => {
           const sending = isSending(node.id);
-          const fill = sending ? colorOf(node.id, node.kind) : node.kind === "laptop" ? "none" : "var(--schematic-field)";
+          const fill = sending ? colorOf(node.id, node.kind, mono) : node.kind === "laptop" ? "none" : "var(--schematic-field)";
           const body = (
             <>
               <ShapeView shape={node.shape} fill={fill} className={styles.stroke} />
@@ -348,6 +357,9 @@ export default function SchematicStudy3() {
           <Stepper label="Local" value={config.local} limits={LIMITS.local} onChange={(local) => change({ local })} />
           <Stepper label="Remote" value={config.remote} limits={LIMITS.remote} onChange={(remote) => change({ remote })} />
           <Stepper label="Phones" value={config.phones} limits={LIMITS.phones} onChange={(phones) => change({ phones })} />
+          <button type="button" className={styles.button} aria-pressed={mono} onClick={() => setMono((value) => !value)}>
+            {mono ? "Mono" : "Color"}
+          </button>
         </nav>
       ) : null}
     </main>

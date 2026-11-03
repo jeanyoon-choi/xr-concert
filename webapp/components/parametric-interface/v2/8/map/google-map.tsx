@@ -8,6 +8,7 @@ import styles from "../google-maps.module.css";
 import { POI_STYLE, readLabels, type MapLabels } from "./labels";
 import { LYRIC_LEAD_MS, useLyricCue } from "../../timeline/use-lyric-cue";
 import { journeyFor, placeName } from "./journey";
+import { LINE_FADE_MS, tripFrame, type TripFrame } from "./motion";
 import { readStreetGraph, type Rect, type StreetGraph } from "./streets";
 import { mapStyle } from "./style";
 
@@ -83,24 +84,40 @@ export default function GoogleMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [labels, setLabels] = useState<MapLabels>(EMPTY);
   const [graph, setGraph] = useState<StreetGraph | null>(null);
-  const { activeWordPosition, cueIndex, currentTimeMs, hasStarted, lyric, song } = useLyricCue();
-
-  // The line's trip and how far into it the song is. Before the first sung
-  // word the map is untouched.
-  const hasBegun = hasStarted && currentTimeMs + LYRIC_LEAD_MS >= (song.lyrics[0]?.startMs ?? 0);
+  const { activeWordPosition, cueIndex, currentTimeMs, hasStarted, lyric, reducedMotion, song } = useLyricCue();
   const [clear, setClear] = useState<Rect | null>(null);
+
+  // Every frame comes from the audio clock (the playback context updates it
+  // each animation frame while playing and on every seek), so a seek lands on
+  // exactly the frame playback would have shown. Routes are memoised per line.
+  const clockMs = currentTimeMs + LYRIC_LEAD_MS;
+  const hasBegun = hasStarted && clockMs >= (song.lyrics[0]?.startMs ?? 0);
+  const line = song.lyrics[cueIndex];
+  const previousLine = cueIndex > 0 ? song.lyrics[cueIndex - 1] : undefined;
   const journey = useMemo(
     () => journeyFor(labels.pois, graph, clear, cueIndex, lyric.length),
     [clear, cueIndex, graph, labels.pois, lyric.length],
   );
+  const previousJourney = useMemo(
+    () => (previousLine ? journeyFor(labels.pois, graph, clear, cueIndex - 1, previousLine.words.length) : null),
+    [clear, cueIndex, graph, labels.pois, previousLine],
+  );
+
   const sungCount = hasBegun ? activeWordPosition + 1 : 0;
-  const wordAt = new Map(journey.stops.slice(0, sungCount).map((id, index) => [id, index]));
-  const destination = sungCount > 0 ? journey.stops[sungCount - 1] : undefined;
-  const route = journey.legs.slice(0, Math.max(0, sungCount - 1));
-  const stopPoints = journey.stops
-    .slice(0, sungCount)
-    .map((id) => labels.pois.find((poi) => poi.id === id))
-    .filter((poi) => poi !== undefined);
+  const current = tripFrame(journey, line, song.lyrics[cueIndex + 1]?.startMs ?? song.durationMs, clockMs, sungCount, reducedMotion);
+  const lineStartMs = line?.words[0]?.startMs ?? 0;
+  const fade = reducedMotion ? 1 : (clockMs - lineStartMs) / LINE_FADE_MS;
+  const previous =
+    hasBegun && previousJourney && previousLine && fade < 1
+      ? tripFrame(previousJourney, previousLine, lineStartMs, Number.MAX_SAFE_INTEGER, previousLine.words.length, true)
+      : null;
+  const trips: { key: string; frame: TripFrame; words: readonly string[]; opacity: number }[] = [
+    ...(previous && previousLine
+      ? [{ key: `line-${cueIndex - 1}`, frame: previous, words: previousLine.words.map((word) => word.text), opacity: 1 - Math.max(0, fade) }]
+      : []),
+    { key: `line-${cueIndex}`, frame: current, words: lyric, opacity: 1 },
+  ];
+  const poiById = new Map(labels.pois.map((poi) => [poi.id, poi]));
 
   useEffect(() => {
     const container = containerRef.current;
@@ -191,64 +208,66 @@ export default function GoogleMap() {
         ))}
       </svg>
 
-      {/* Directions: the route through the places sung so far, white casing
-          under Google's route blue, as the directions view draws it. */}
-      <svg
-        aria-hidden="true"
-        className={styles.mapLabels}
-        data-components-after={graph?.componentsAfterWeld}
-        data-components-before={graph?.componentsBeforeWeld}
-        data-legs={route.filter((leg) => leg.length > 1).length}
-        data-route-expected={Math.max(0, Math.min(sungCount, journey.stops.length) - 1)}
-        data-route-stops={journey.stops.length}
-        data-route-words={lyric.length}
-      >
-        {route.map((leg, index) => (
-          <polyline className={styles.routeCasing} key={`casing-${index}`} points={leg.map((point) => `${point.x},${point.y}`).join(" ")} />
-        ))}
-        {route.map((leg, index) => (
-          <polyline className={styles.routeLine} key={`line-${index}`} points={leg.map((point) => `${point.x},${point.y}`).join(" ")} />
+      {/* Directions: each leg drawn along its streets, white casing under
+          Google's route blue, both cut to the same length. */}
+      <svg aria-hidden="true" className={styles.mapLabels}>
+        {trips.map((trip) => (
+          <g key={trip.key} opacity={trip.opacity}>
+            {trip.frame.legs.map((leg, index) => (
+              <polyline className={styles.routeCasing} key={`casing-${index}`} points={leg.map((point) => `${point.x},${point.y}`).join(" ")} />
+            ))}
+            {trip.frame.legs.map((leg, index) => (
+              <polyline className={styles.routeLine} key={`line-${index}`} points={leg.map((point) => `${point.x},${point.y}`).join(" ")} />
+            ))}
+          </g>
         ))}
       </svg>
 
+      {/* Only the places that carry sung words are on the map. */}
       <div aria-hidden="true" className={styles.pins}>
-        {labels.pois.map((poi) => {
-          const look = POI_STYLE[poi.category];
-          const wordIndex = wordAt.get(poi.id);
-          const word = wordIndex === undefined ? undefined : placeName(lyric[wordIndex] ?? "");
-          const isDestination = poi.id === destination;
+        {trips.flatMap((trip) =>
+          trip.frame.places.map((place) => {
+            const poi = poiById.get(place.id);
+            if (!poi) return null;
+            const word = placeName(trip.words[place.word] ?? "");
+            const key = `${trip.key}-${place.id}`;
 
-          if (isDestination) {
+            if (trip.frame.destination?.id === place.id) {
+              return (
+                <div className={styles.destination} key={key} style={{ left: poi.x, top: poi.y, opacity: trip.opacity }}>
+                  <svg className={styles.destinationPin} style={{ transform: `translateY(${trip.frame.destination.dropY}px)` }} viewBox="0 0 27 43">
+                    <path d="M13.5 0C6 0 0 6 0 13.4 0 23.5 13.5 43 13.5 43S27 23.5 27 13.4C27 6 21 0 13.5 0z" />
+                    <circle cx="13.5" cy="13.5" r="4.6" />
+                  </svg>
+                  <span className={styles.destinationName}>{word}</span>
+                </div>
+              );
+            }
+
+            const look = POI_STYLE[poi.category];
             return (
-              <div className={styles.destination} key={poi.id} style={{ left: poi.x, top: poi.y }}>
-                <svg className={styles.destinationPin} viewBox="0 0 27 43">
-                  <path d="M13.5 0C6 0 0 6 0 13.4 0 23.5 13.5 43 13.5 43S27 23.5 27 13.4C27 6 21 0 13.5 0z" />
-                  <circle cx="13.5" cy="13.5" r="4.6" />
-                </svg>
-                <span className={styles.destinationName}>{word}</span>
-              </div>
-            );
-          }
-
-          return (
-            <div className={styles.poi} key={poi.id} style={{ left: poi.x, top: poi.y }}>
-              {poi.category === "transit" ? (
-                <span className={styles.transitPin}>MTA</span>
-              ) : (
+              <div className={styles.poi} key={key} style={{ left: poi.x, top: poi.y, opacity: place.opacity * trip.opacity }}>
                 <span className={styles.pin} style={{ background: look.pin }}>
                   <svg viewBox={ICON_VIEWBOX}><path d={ICONS[look.icon]} /></svg>
                 </span>
-              )}
-              <span className={styles.poiName} style={{ color: look.text }}>{word ?? poi.text}</span>
-            </div>
-          );
-        })}
+                <span className={styles.poiName} style={{ color: look.text }}>{word}</span>
+              </div>
+            );
+          }),
+        )}
       </div>
 
       {/* Stops sit above the places' own icons, as on Google's directions. */}
       <svg aria-hidden="true" className={styles.mapLabels}>
-        {stopPoints.slice(0, -1).map((poi, index) => (
-          <circle className={index === 0 ? styles.routeOrigin : styles.routeStop} cx={poi.x} cy={poi.y} key={poi.id} r={index === 0 ? 7 : 6} />
+        {trips.map((trip) => (
+          <g key={trip.key} opacity={trip.opacity}>
+            {trip.frame.waypoints.map((id, index) => {
+              const poi = poiById.get(id);
+              return poi ? (
+                <circle className={index === 0 ? styles.routeOrigin : styles.routeStop} cx={poi.x} cy={poi.y} key={id} r={index === 0 ? 7 : 6} />
+              ) : null;
+            })}
+          </g>
         ))}
       </svg>
     </div>

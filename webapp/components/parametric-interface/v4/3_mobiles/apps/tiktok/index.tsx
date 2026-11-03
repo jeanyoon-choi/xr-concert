@@ -28,7 +28,7 @@ const tiktokSans = TikTok_Sans({ subsets: ["latin"], weight: ["400", "500", "600
 
 const SEND_LIMIT = 150;
 const STILL = "/parametric-interface/v4/apps/tiktok/room.svg";
-const SOUND = "toxic till the end - ROSÉ";
+const SOUND = "original sound - sunny.on.repeat";
 
 /** Each seat scrolled onto a different stranger's post. */
 const CREATORS = [
@@ -40,7 +40,7 @@ const CREATORS = [
   { handle: "samdeletedthepics", initials: "S", tint: "#6a7f5a", caption: "finally threw out the hoodie. it still smelled like him", likes: 74_100, comments: 1430, saves: 9802, shares: 5316 },
 ] as const;
 
-const TAGS = ["toxictilltheend", "rosé", "fyp"] as const;
+const TAGS = ["exes", "situationship", "fyp"] as const;
 
 type Comment = { id: string; author: string; initials: string; tint: string; body: string; time: string; likes: number };
 

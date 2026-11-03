@@ -45,6 +45,19 @@
   --layer: #8a86ae;
 }
 
+/* Monochrome: every layer in one grey, devices in chalk. */
+.mono .frame,
+.mono .plan {
+  --layer: #343c3d;
+}
+.mono .audio,
+.mono .video,
+.mono .network,
+.mono .control,
+.mono .signal {
+  --layer: #7c8384;
+}
+
 .wire {
   fill: none;
   stroke: var(--layer);
@@ -137,7 +150,7 @@
 
 .toggle {
   position: absolute;
-  left: 16px;
+  right: 16px;
   bottom: max(16px, env(safe-area-inset-bottom));
 }
 
@@ -148,7 +161,7 @@
   left: 16px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 12px;
 }
 

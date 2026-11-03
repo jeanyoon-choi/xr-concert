@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { formatSongClock } from "../../../model/clock-face";
+import { formatSongClock } from "../../clock-face";
 import { contactFor, type PhoneStateProps } from "../types";
 import { Glyph } from "./glyphs";
 import styles from "./instagram-dm.module.css";
