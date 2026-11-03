@@ -7,10 +7,15 @@ import ParametricInterfaceThree from "../3";
 import ParametricInterfaceFour from "../4";
 import ParametricInterfaceFive from "../5";
 import ParametricInterfaceSix from "../6";
+import ParametricInterfaceSeven from "../7";
+import ParametricInterfaceEight from "../8";
 import type { ParametricSong } from "../model/song";
 import { SongPlayback } from "../playback";
 
+// The ROSÉ studies 7–8 lead; the inherited v1 wrappers follow.
 const wrapperCycle: readonly { id: string; Component: ComponentType }[] = [
+  { id: "7", Component: ParametricInterfaceSeven },
+  { id: "8", Component: ParametricInterfaceEight },
   { id: "3", Component: ParametricInterfaceThree },
   { id: "4", Component: ParametricInterfaceFour },
   { id: "5", Component: ParametricInterfaceFive },

@@ -19,7 +19,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // Browser extensions write attributes such as style="visibility: visible" on <html> before
+    // hydration; this suppresses only that element's attribute diff, not the app tree's.
+    <html lang="en" suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );

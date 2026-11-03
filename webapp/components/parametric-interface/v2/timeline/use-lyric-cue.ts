@@ -6,7 +6,7 @@ import { useSongPlayback } from "../playback";
 
 // Words are chosen slightly ahead of the audio clock so the rendered word lands
 // on the sung onset despite per-frame read and render delay.
-const LYRIC_LEAD_MS = 120;
+export const LYRIC_LEAD_MS = 120;
 
 function getWordIndex(currentTimeMs: number, wordTimings: ReturnType<typeof getLyricWordTimings>) {
   let index = 0;

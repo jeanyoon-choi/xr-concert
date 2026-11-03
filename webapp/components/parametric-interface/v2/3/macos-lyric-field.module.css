@@ -103,8 +103,9 @@
 }
 
 .appName {
-  padding-right: 10px;
-  padding-left: 16px;
+  /* The gap after the Apple icon is margin so a selected pill stays symmetric. */
+  margin-left: 6px;
+  padding-inline: 10px;
   font-weight: 650;
   letter-spacing: -0.018em;
 }
@@ -112,6 +113,11 @@
 .appleButton {
   width: 22px;
   padding: 0;
+}
+
+/* Keep the app-name dropdown 10px left of its pill, like every other menu. */
+.topMenuRoot:has(> .appName) > .menuPanel {
+  left: -4px;
 }
 
 .menuButton:hover,
@@ -380,8 +386,8 @@
 }
 
 .menuBar[data-embedded-words="true"] .topMenuRoot[data-first-embedded-word="true"] .menuButton {
-  padding-right: 10px;
-  padding-left: 16px;
+  margin-left: 6px;
+  padding-inline: 10px;
   font-weight: 650;
   letter-spacing: -0.018em;
 }
@@ -396,8 +402,12 @@
   }
 
   .appName {
-    padding-right: 8px;
-    padding-left: 12px;
+    margin-left: 4px;
+    padding-inline: 8px;
+  }
+
+  .topMenuRoot:has(> .appName) > .menuPanel {
+    left: -6px;
   }
 
   .menuBar[data-embedded-words="true"] .statusGroup {
@@ -406,8 +416,8 @@
   }
 
   .menuBar[data-embedded-words="true"] .topMenuRoot[data-first-embedded-word="true"] .menuButton {
-    padding-right: 8px;
-    padding-left: 12px;
+    margin-left: 4px;
+    padding-inline: 8px;
   }
 
   .topMenuRoot[data-menu-kind="word"][data-word-index="5"],
