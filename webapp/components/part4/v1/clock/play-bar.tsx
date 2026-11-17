@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useSongClock } from ".";
 import { useSongTransport } from "./audio";
+import { isTyping } from "./keys";
 import { SECTIONS } from "../song/sections";
 import styles from "./play-bar.module.css";
 
@@ -38,16 +39,22 @@ export function PlayBar({ hidden = false }: { hidden?: boolean }) {
   // The handlers read the clock, which moves every frame; the listener is rebound with them.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      if (isTyping(event)) return;
       const action = { " ": toggle, ArrowLeft: () => step(-STEP_MS), ArrowRight: () => step(STEP_MS), ArrowUp: previous, ArrowDown: next }[event.key];
       if (!action) return;
       event.preventDefault();
       action();
     };
+    // A focused button would also "click" when Space is released; the shortcut has already acted.
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === " " && !isTyping(event)) event.preventDefault();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   });
 
   // Hidden, the bar is gone but its keys still work.
@@ -93,7 +100,7 @@ export function PlayBar({ hidden = false }: { hidden?: boolean }) {
         step={100}
         value={currentTimeMs}
         onChange={(event) => void seek(Number(event.target.value))}
-        // Keys belong to the page's shortcuts, not the slider.
+        // Keys belong to the page's shortcuts (above), not the slider: it must not also step.
         onKeyDown={(event) => event.preventDefault()}
         />
       </div>

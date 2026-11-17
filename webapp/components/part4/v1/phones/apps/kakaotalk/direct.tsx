@@ -15,6 +15,9 @@ import styles from "./kakaotalk.module.css";
 // "Tuesday, November 17, 2026" date line.
 
 const SEND_LIMIT = 80;
+
+/** A bubble set larger: type and bubble scaled together, kept on one line whatever the usual bubble width. */
+const SCALED = (scale: number) => ({ zoom: scale, maxWidth: "none", whiteSpace: "nowrap" }) as const;
 const TODAY = dateLabel("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
 /** "13:14" → "1:14 PM", KakaoTalk's English stamp. */
@@ -32,12 +35,13 @@ function KakaoTalkDirectState({ seat, lines, replies, shown, reducedMotion, act 
   const entries = useMemo(
     () =>
       [
-        ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, startMs: line.startMs })),
+        ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, startMs: line.startMs, scale: line.scale ?? 1 })),
         ...replies.map((reply) => ({
           key: `r${reply.id}`,
           at: reply.afterCue + 0.5,
           text: reply.text,
           startMs: lines.find((line) => line.cueIndex === reply.afterCue)?.startMs ?? 0,
+          scale: 1,
         })),
       ].sort((x, y) => x.at - y.at),
     [lines, replies],
@@ -80,16 +84,22 @@ function KakaoTalkDirectState({ seat, lines, replies, shown, reducedMotion, act 
             </p>
           ) : null}
 
-          {entries.map((entry, index) => (
+          {entries.map((entry, index) => {
+            // As KakaoTalk does: messages sent in the same minute share one stamp, on the last of them.
+            const time = englishStamp(formatSongClock(entry.startMs));
+            const next = entries[index + 1];
+            const stamped = !next || englishStamp(formatSongClock(next.startMs)) !== time;
+            return (
             <div key={entry.key} className={styles.outgoing} data-follow={index > 0 || undefined}>
               <div className={styles.line} data-side="out">
-                <Meta unread={1} time={englishStamp(formatSongClock(entry.startMs))} side="out" />
-                <p className={styles.bubble} data-side="out" data-head={index === 0 || undefined}>
+                <Meta unread={1} time={stamped ? time : ""} side="out" />
+                <p className={styles.bubble} data-side="out" data-head={index === 0 || undefined} style={entry.scale === 1 ? undefined : SCALED(entry.scale)}>
                   {entry.text}
                 </p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

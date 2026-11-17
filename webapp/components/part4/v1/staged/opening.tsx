@@ -11,49 +11,53 @@ import { LYRIC_LEAD_MS, type LyricWordTiming } from "../timeline/use-lyric-cue";
 import type { StagingProps } from ".";
 import styles from "./staged.module.css";
 
-// Verse 1 and Pre-Chorus 1, as one staging: phones come in one at a time,
+// Verse 1, Pre-Chorus 1 and Chorus 1, as one staging: phones come in,
 // each an empty 1:1 KakaoTalk room with the ex in which the phone's owner
 // sends her part of the lyric.
 //
 // - Verse 1: one phone takes the first two lines (to “… in the dark”); a
 //   second comes in on the right for the next two.
-// - Pre-Chorus 1: a phone each for “That you were jealous and possessive”,
-//   “So manipulatin'”, “Honestly,” and “impressive” — six in a row.
-// - “You had me participatin'”: a phone each for “You”, “had”, “me”,
-//   “part”, “icip”, “atin'”, as sung — a second row of six, 2 × 6.
-// The 2 × 6 is the phone grid's own layout for twelve, so the chorus (the
-// grid) takes over with every phone where it already is.
+// - Pre-Chorus 1: a third comes in for “That you were jealous and
+//   possessive”, a fourth for “So manipulating”. A fifth comes in on the
+//   right on “Honestly, impressive”, a sixth on “YOU” — six in a row. “Honestly, impressive” and “YOU” “HAD” “ME” “PARTICIPATING” (in capitals at twice the
+//   size, a message a word) are sent as new messages on every phone at once.
+// - Chorus 1: six more come in together as a second row — 2 × 6, twelve —
+//   and every phone sends each line of the chorus.
 //
 // Pure in the clock: a seek lands on the same picture.
 
-/** One message: words `from`–`to` of line `cue`, or one piece of a single word. */
-type MessageSpec = { cue: number; from?: number; to?: number; piece?: { text: string; at: number; until: number } };
+/** One message: words `from`–`to` of line `cue` (the whole line by default). */
+type MessageSpec = { cue: number; from?: number; to?: number; shout?: boolean };
 
 const line = (cue: number, from?: number, to?: number): MessageSpec => ({ cue, from, to });
-/** A piece of word `word` of line `cue`, sung from `at` to `until` (shares of the word's length). */
-const piece = (cue: number, word: number, text: string, at: number, until: number): MessageSpec => ({ cue, from: word, to: word, piece: { text, at, until } });
+/** The same, shouted: typed in capitals, at SHOUT_SCALE times the usual size (type and bubble). */
+const shout = (cue: number, from?: number, to?: number): MessageSpec => ({ cue, from, to, shout: true });
+const SHOUT_SCALE = 2;
 
 const APP: PhoneState = "kakaotalk-direct";
 
-/** The scenario: the phones in the order they come in, and the messages each one sends. */
-const PHONES: readonly (readonly MessageSpec[])[] = [
-  [line(0), line(1)],
-  [line(2), line(3)],
-  [line(4)],
-  [line(5)],
-  [line(6, 0, 0)],
-  [line(6, 1, 1)],
-  [line(7, 0, 0)],
-  [line(7, 1, 1)],
-  [line(7, 2, 2)],
-  // “participatin'” is one timed word; its pieces are spread over the part of it that is sung.
-  [piece(7, 3, "part", 0, 0.25)],
-  [piece(7, 3, "icip", 0.25, 0.5)],
-  [piece(7, 3, "atin'", 0.5, 0.75)],
-];
+/** Sent on every phone, after its own lines. */
+// “YOU” “HAD” “ME” “PARTICIPATING”: a message a word, as each is sung.
+const SHOUTED = [shout(7, 0, 0), shout(7, 1, 1), shout(7, 2, 2), shout(7, 3, 3)];
+/** Chorus 1, a message a line. */
+const CHORUS = [8, 9, 10, 11, 12, 13, 14, 15].map((cue) => line(cue));
+const ALL = [line(6), ...SHOUTED, ...CHORUS];
 
-/** Phones in the first row; from the next phone on, the stage is the grid for all of them. */
-const ROW = 6;
+/**
+ * The scenario: the phones as they stand left to right, and the messages
+ * each one sends. A phone comes in when its first message begins (the
+ * earliest is out from the start), wherever in the row it stands.
+ */
+const PHONES: readonly (readonly MessageSpec[])[] = [
+  [line(0), line(1), ...ALL],
+  [line(2), line(3), ...ALL],
+  [line(4), ...ALL],
+  [line(5), ...ALL],
+  [...ALL],
+  [...SHOUTED, ...CHORUS],
+  // Chorus 1: six more, the second row.
+  ...Array.from({ length: 6 }, () => CHORUS),
+];
 
 /**
  * The phones already out make room this long before the next one comes in,
@@ -66,17 +70,13 @@ const MAKE_ROOM_MS = 600;
 const CHARACTER_MS = 55;
 
 type Word = { text: string; startMs: number; durationMs: number };
-type Message = { key: number; startMs: number; words: readonly Word[] };
+type Message = { key: number; startMs: number; words: readonly Word[]; scale: number };
 
 function resolve(spec: MessageSpec, key: number, timings: readonly LyricWordTiming[]): Message {
   const words = timings
     .filter((word) => word.cueIndex === spec.cue && word.wordIndex >= (spec.from ?? 0) && word.wordIndex <= (spec.to ?? Infinity))
-    .map((word): Word => {
-      if (!spec.piece) return { text: word.word, startMs: word.startMs, durationMs: word.durationMs };
-      const { text, at, until } = spec.piece;
-      return { text, startMs: word.startMs + at * word.durationMs, durationMs: (until - at) * word.durationMs };
-    });
-  return { key, startMs: words[0]!.startMs, words };
+    .map((word): Word => ({ text: spec.shout ? word.word.toUpperCase() : word.word, startMs: word.startMs, durationMs: word.durationMs }));
+  return { key, startMs: words[0]!.startMs, words, scale: spec.shout ? SHOUT_SCALE : 1 };
 }
 
 /** How many characters of a message are typed at `timeMs` (each word from its onset). */
@@ -101,7 +101,7 @@ function toLine(message: Message, typed: number, newest: boolean): SungLine {
     begun.push(text.slice(0, left));
     left -= text.length;
   }
-  return { cueIndex: message.key, words: texts, sung: begun.length, text: begun.join(" "), full: texts.join(" "), startMs: message.startMs, current: newest };
+  return { cueIndex: message.key, words: texts, sung: begun.length, text: begun.join(" "), full: texts.join(" "), startMs: message.startMs, current: newest, scale: message.scale };
 }
 
 /** One phone of the staging; re-renders only when a character of its own is typed. */
@@ -134,22 +134,31 @@ export function Opening({ cue }: StagingProps) {
   const stage = useSurface();
   const clock = usePhoneClock(cue);
   const phones = useMemo(
-    () => PHONES.map((specs, phone) => specs.map((spec, index) => resolve(spec, phone * 10 + index, cue.wordTimings))),
+    () => PHONES.map((specs, phone) => specs.map((spec, index) => resolve(spec, phone * 100 + index, cue.wordTimings))),
     [cue.wordTimings],
   );
   const timeMs = cue.currentTimeMs + LYRIC_LEAD_MS;
-  // A phone comes in when its first message begins; the first is out from the start.
-  const out = Math.max(1, phones.filter((messages) => messages[0]!.startMs <= timeMs).length);
+  // When each phone comes in: as its first message begins; the earliest is out from the start.
+  const arrivals = useMemo(() => {
+    const starts = phones.map((messages) => messages[0]!.startMs);
+    const first = starts.indexOf(Math.min(...starts));
+    return starts.map((startMs, index) => (index === first ? -Infinity : startMs));
+  }, [phones]);
+  /** Each phone's seat number, in the order they come in: who it is (its contact, its status bar). */
+  const seats = useMemo(
+    () => arrivals.map((arrival, index) => arrivals.filter((other, at) => other < arrival || (other === arrival && at < index)).length),
+    [arrivals],
+  );
   // The stage is laid out for the phones about to come in, ahead of them.
-  const laidOut = Math.max(out, phones.filter((messages) => messages[0]!.startMs <= timeMs + MAKE_ROOM_MS).length);
+  const laidOutAt = timeMs + MAKE_ROOM_MS;
 
   // Phones are drawn once, at the size of a phone alone on the stage, and scaled to their seat.
   const base = fitPhoneGrid(stage.width, stage.height, 1).width;
-  /** Seat `index` when `count` phones are out: one row up to ROW, then the grid for all. */
+  /** Seat `index` when `count` phones are out: the phone grid's own layout for that many. */
   const seatOf = (index: number, count: number) => {
-    const layout = fitPhoneGrid(stage.width, stage.height, count <= ROW ? count : PHONES.length);
-    const columns = Math.min(layout.columns, count <= ROW ? count : PHONES.length);
-    const rows = Math.ceil((count <= ROW ? count : PHONES.length) / columns);
+    const layout = fitPhoneGrid(stage.width, stage.height, count);
+    const columns = Math.min(layout.columns, count);
+    const rows = Math.ceil(count / columns);
     const left = (stage.width - columns * layout.width - (columns - 1) * layout.gap) / 2;
     const top = (stage.height - rows * layout.height - (rows - 1) * layout.gap) / 2;
     return {
@@ -162,9 +171,12 @@ export function Opening({ cue }: StagingProps) {
   return (
     <main className={styles.stage} data-reduced-motion={cue.reducedMotion || undefined}>
       {phones.map((messages, index) => {
-        const shown = index < out;
-        // A phone not yet out waits, unseen, at the seat it will come in at.
-        const { x, y, scale } = seatOf(index, Math.max(laidOut, index + 1));
+        const shown = arrivals[index]! <= timeMs;
+        // The row is the phones laid out by now, left to right; one not yet
+        // laid out waits, unseen, where it will stand when it comes in.
+        const at = Math.max(laidOutAt, arrivals[index]!);
+        const row = arrivals.map((arrival) => arrival <= at);
+        const { x, y, scale } = seatOf(row.slice(0, index).filter(Boolean).length, row.filter(Boolean).length);
         return (
           <div
             key={index}
@@ -178,7 +190,7 @@ export function Opening({ cue }: StagingProps) {
             }}
           >
             <StagedPhone
-              seat={index}
+              seat={seats[index]!}
               width={base}
               messages={messages}
               typed={messages.map((message) => typedAt(message, timeMs)).join(",")}

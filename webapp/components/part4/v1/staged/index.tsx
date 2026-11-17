@@ -16,6 +16,7 @@ const STAGINGS: Partial<Record<SectionId, ComponentType<StagingProps>>> = {
   // One staging across both: its phones stay as the song moves from one to the other.
   "verse-1": Opening,
   "pre-chorus-1": Opening,
+  "chorus-1": Opening,
 };
 
 export function Staged({ cue, fallback }: { cue: LyricCue; fallback: React.ReactNode }) {

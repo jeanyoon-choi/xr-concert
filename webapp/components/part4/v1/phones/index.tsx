@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AudioSongClock } from "../clock/audio";
+import { isTyping } from "../clock/keys";
 import { PLAY_BAR_HEIGHT, PlayBar } from "../clock/play-bar";
 import { PlayOverlay } from "../clock/play-overlay";
 import { Staged } from "../staged";
@@ -44,9 +45,7 @@ export default function Part4() {
   const [chrome, setChrome] = useState(true);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (event.key.toLowerCase() !== "x" || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      if (event.key.toLowerCase() !== "x" || isTyping(event)) return;
       setChrome((shown) => !shown);
     };
     window.addEventListener("keydown", onKey);
