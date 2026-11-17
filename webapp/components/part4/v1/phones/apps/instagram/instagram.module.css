@@ -143,10 +143,22 @@
 
 .quote {
   margin: 0;
-  font: 400 28px/36px ui-serif, "New York", Georgia, serif;
+  padding: 0 calc(26px / var(--lyric-scale, 1));
+  /* 32 px at the page's text size 1. The page's larger text sizes zoom this
+     element; the size is divided back so that the result never passes --cap
+     (index.tsx sizeCap), the largest size at which the line still fits the
+     card with every word whole. */
+  font: 400 calc(min(32px * var(--lyric-scale, 1), var(--cap, 32px)) / var(--lyric-scale, 1)) / 1.25 ui-serif, "New York", Georgia, serif;
   letter-spacing: -0.3px;
   text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
+
+/* A new line is a new card. */
+.quote[data-arriving] { animation: quote-in 320ms ease both; }
+
+@keyframes quote-in { from { opacity: 0; } to { opacity: 1; } }
 
 .quoteHandle {
   position: absolute;

@@ -1,0 +1,325 @@
+/*
+ * The YouTube Shorts player's interface on the 390 × 844 glass (1 CSS px =
+ * 1 pt), shared by the three Shorts variants. Where each number comes from,
+ * and which are not checked against the iOS app, is in chrome.tsx.
+ */
+
+/* Roboto, YouTube's interface face, from the repo's local files rather than
+   next/font/google (which broke the production build here). */
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/google/roboto-400-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/google/roboto-500-latin.woff2") format("woff2");
+}
+
+.overlay,
+.tabBar {
+  color: #fff;
+  font-family: "Roboto", var(--ios-font);
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.overlay :where(button) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.overlay :where(p) { margin: 0; }
+
+.overlay svg,
+.tabBar svg { display: block; }
+
+/* Top bar: search and the menu, top right, under the status bar. */
+.top {
+  position: absolute;
+  top: 54px;
+  right: 4px;
+  display: flex;
+  height: 48px;
+  align-items: center;
+}
+
+.topIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+}
+
+.topIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Action rail: 56 wide, 4 from the right edge, 16 from the foot. */
+.rail {
+  position: absolute;
+  right: 4px;
+  bottom: 16px;
+  display: flex;
+  width: 56px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action {
+  display: flex;
+  width: 56px;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.overlay button.action { padding: 4px 0 8px; }
+
+.action i {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+}
+
+.action svg {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.3));
+}
+
+.action > span {
+  overflow: hidden;
+  max-width: 64px;
+  white-space: nowrap;
+}
+
+.action[data-on] svg { color: #ff0033; }
+
+.soundThumb {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin-top: 8px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Channel, title and sound, bottom left: 16 from the left and the foot,
+   clear of the rail, 8 between rows. */
+.info {
+  position: absolute;
+  right: 76px;
+  bottom: 16px;
+  left: 16px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.channel {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.handle {
+  overflow: hidden;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay button.subscribe {
+  height: 32px;
+  flex: none;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: #fff;
+  color: #000;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.overlay button.subscribe[data-done] {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.title b { font-weight: 500; }
+
+.sound {
+  display: flex;
+  width: 210px;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.sound svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.marquee {
+  overflow: hidden;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.marquee > span {
+  display: inline-flex;
+  gap: 36px;
+}
+
+.overlay[data-running] .marquee > span { animation: marquee 10s linear infinite; }
+
+@keyframes marquee { to { transform: translateX(calc(-50% - 18px)); } }
+
+/* Playback line along the foot of the video. */
+.progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: rgb(255 255 255 / 0.3);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff0033 80%, #ff2791);
+  transform-origin: 0 50%;
+}
+
+/* Tab bar: opaque black under Shorts, 48 pt over the home indicator. */
+.tabBar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: grid;
+  height: 82px;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: start;
+  padding-bottom: 34px;
+  background: #000;
+}
+
+.navItem {
+  display: flex;
+  height: 48px;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 12px;
+}
+
+.navItem > svg {
+  width: 24px;
+  height: 24px;
+}
+
+.create {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.1);
+}
+
+.create svg {
+  width: 24px;
+  height: 24px;
+}
+
+.you {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #c4c5c9;
+  color: #0f0f0f;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay .marquee > span { animation: none; }
+}

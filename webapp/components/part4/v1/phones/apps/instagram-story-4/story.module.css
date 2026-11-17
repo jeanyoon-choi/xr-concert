@@ -1,0 +1,323 @@
+/* Instagram iOS, the story viewer, at native points on the 390 × 844 glass.
+   Each face of the viewer is one account's story (9:16 card under the status
+   bar, reply row below it); faces turn as a cube between accounts. See
+   index.tsx for sources, the font mapping and what is approximated. */
+
+/* Stand-ins for Instagram's story text styles (OFL fonts; see attribution.json). */
+@font-face { font-family: "IGS4 Modern"; src: url("/part4/v1/instagram-story-4/gabarito.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "IGS4 Classic"; src: url("/part4/v1/instagram-story-4/instrument-sans.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "IGS4 Typewriter"; src: url("/part4/v1/instagram-story-4/courier-prime.woff2") format("woff2"); font-weight: 400; font-display: block; }
+@font-face { font-family: "IGS4 Strong"; src: url("/part4/v1/instagram-story-4/archivo.woff2") format("woff2"); font-weight: 800; font-style: italic; font-display: block; }
+@font-face { font-family: "IGS4 Literature"; src: url("/part4/v1/instagram-story-4/cormorant.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "IGS4 Elegant"; src: url("/part4/v1/instagram-story-4/antic-didone.woff2") format("woff2"); font-weight: 400; font-display: block; }
+@font-face { font-family: "IGS4 Squeeze"; src: url("/part4/v1/instagram-story-4/fjalla-one.woff2") format("woff2"); font-weight: 400; font-display: block; }
+
+.app {
+  --like: #ff3040;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+  perspective: 1100px;
+}
+
+.app * { box-sizing: border-box; }
+
+.app button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* One account's viewer. Between accounts the outgoing face turns away on its
+   right edge while the incoming one turns in on its left: the cube. */
+.face {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  backface-visibility: hidden;
+}
+
+.face[data-turn="in"] {
+  transform-origin: 0 50%;
+  animation: turnIn 340ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.face[data-turn="out"] {
+  transform-origin: 100% 50%;
+  animation: turnOut 340ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  pointer-events: none;
+}
+
+@keyframes turnIn {
+  from { transform: translateX(100%) rotateY(90deg); }
+  to { transform: translateX(0) rotateY(0deg); }
+}
+
+@keyframes turnOut {
+  from { transform: translateX(0) rotateY(0deg); }
+  to { transform: translateX(-100%) rotateY(-90deg); }
+}
+
+/* The story: full width, 9:16 (390 × 693.3), 8 pt corners. */
+.story {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 390px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The viewer's top scrim under the white chrome (not on a black story). */
+.story[data-scrim]::after {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 96px;
+  background: linear-gradient(rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0));
+  content: "";
+  pointer-events: none;
+}
+
+.preload { position: absolute; width: 0; height: 0; overflow: hidden; visibility: hidden; }
+
+/* The one word being sung, alone on the centre of the story (195, 346.7 in
+   the story; 396.7 on the glass). No transition and no animation: the next
+   word replaces it in the same frame.
+   Size: the largest at which the word (--w em wide, index.tsx measure) plus
+   its box's side padding (--pad em) is 350 pt wide — 20 pt from each edge of
+   the story — and never more than the style's ceiling --max (times the page's
+   text scale, which zooms this element; every length here is divided back).
+   Place: the paragraph (the text-background box, where there is one) is
+   centred on the story; the span inside is moved so that the word's ink (--a
+   above the baseline, --d below it), not its line box, sits on that centre.
+   --ascent / --descent are each face's own (metrics.ts). */
+.text {
+  --max: 150px;
+  --pad: 0;
+  --ascent: 0.97;
+  --descent: 0.25;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  color: #fff;
+  font-family: "IGS4 Classic", var(--ios-display);
+  font-size: calc(min(var(--max) * var(--lyric-scale, 1), 350px / (var(--w, 4) + var(--pad))) / var(--lyric-scale, 1));
+  font-weight: 500;
+  font-kerning: none;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.text span {
+  display: block;
+  transform: translateY(calc((var(--a, 0.7) - var(--d, 0) - var(--ascent) + var(--descent)) * 0.5em));
+}
+
+/* Instagram's text background: one rounded block that hugs the word. */
+.text[data-box] {
+  --pad: 0.64;
+  border-radius: 0.16em;
+  padding: 0.2em 0.32em;
+}
+
+.text[data-box="white"] { background: #fff; color: #000; }
+.text[data-box="black"] { background: #000; color: #fff; }
+
+.text[data-font="modern"] { --max: 150px; --ascent: 0.94; --descent: 0.26; font-family: "IGS4 Modern", var(--ios-display); font-weight: 500; }
+.text[data-font="classic"] { --max: 150px; --ascent: 0.97; --descent: 0.25; text-transform: lowercase; }
+.text[data-font="typewriter"] { --max: 132px; --ascent: 0.781; --descent: 0.342; font-family: "IGS4 Typewriter", "Courier New", monospace; font-weight: 400; text-transform: lowercase; }
+.text[data-font="strong"] { --max: 132px; --ascent: 0.878; --descent: 0.21; font-family: "IGS4 Strong", var(--ios-display); font-style: italic; font-weight: 800; text-transform: uppercase; }
+.text[data-font="literature"] { --max: 190px; --ascent: 0.924; --descent: 0.287; font-family: "IGS4 Literature", Georgia, serif; font-weight: 500; }
+.text[data-font="elegant"] { --max: 160px; --ascent: 0.94; --descent: 0.25; font-family: "IGS4 Elegant", Didot, serif; font-weight: 400; }
+.text[data-font="squeeze"] { --max: 190px; --ascent: 1.009; --descent: 0.248; font-family: "IGS4 Squeeze", "Arial Narrow", sans-serif; font-weight: 400; text-transform: uppercase; }
+
+/* Segmented progress: 2 pt bars, 8 pt from the story's top and sides. */
+.bars {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+}
+
+.bars span {
+  flex: 1;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.bars i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 1px;
+  background: #fff;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+}
+
+.bars i[data-live] { transition: transform 240ms linear; }
+
+/* Account row: 32 pt avatar, username, age; ⋯ and ✕ at the right. */
+.head {
+  position: absolute;
+  top: 20px;
+  left: 12px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  height: 32px;
+  align-items: center;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.28);
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font: 600 14px/1 var(--ios-display);
+  text-shadow: none;
+}
+
+.name {
+  margin-left: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.age {
+  margin-left: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+}
+
+.headIcons {
+  display: flex;
+  margin-left: auto;
+  gap: 14px;
+  filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.28));
+}
+
+.headIcons span { display: grid; width: 24px; height: 24px; place-items: center; }
+
+/* Reply row under the story: the "Send message" pill, like, share. */
+.reply {
+  position: absolute;
+  top: 753px;
+  left: 12px;
+  right: 14px;
+  display: flex;
+  height: 44px;
+  align-items: center;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  height: 44px;
+  flex: 1;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 22px;
+  padding: 0 6px 0 18px;
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  background: none;
+  color: #fff;
+  font: 400 16px/20px var(--ios-font);
+}
+
+.field input::placeholder { color: #fff; opacity: 1; }
+
+.send {
+  height: 32px;
+  flex: none;
+  padding: 0 10px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.icon {
+  display: grid;
+  width: 28px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+}
+
+.liked { color: var(--like); }
+
+.liked svg { animation: pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+
+/* "Sent" confirmation after a reply; plays once per reply, no timers. */
+.sent {
+  position: absolute;
+  top: 700px;
+  left: 50%;
+  z-index: 3;
+  border-radius: 16px;
+  padding: 7px 14px;
+  background: #262626;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(-50%);
+  animation: sent 1800ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.7); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sent {
+  0% { opacity: 0; }
+  10%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars i[data-live] { transition: none; }
+  .liked svg { animation: none; }
+  .face[data-turn] { animation: none; }
+  .face[data-turn="out"] { display: none; }
+}

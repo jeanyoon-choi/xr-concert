@@ -5,65 +5,47 @@ import type { PhoneStateProps } from "../types";
 import styles from "./reddit.module.css";
 import { follow } from "../follow";
 
-// Reddit for iOS, light, a post page in r/relationship_advice. The lyric is
-// a stranger asking the internet about their ex: the first line kept on the
-// phone is the post's title (typed as sung), the next two are its body, and
-// every later line arrives as a comment from a different redditor, some as
-// replies nested under the one before. Before the song the page is an
-// ordinary advice post with two comments. The "Join the conversation" bar is
-// real: the participant's comment lands in the thread after the line it
-// followed.
+// Reddit for iOS, light, a post page in r/relationship_advice — her own post,
+// seen from her phone. She is pouring it out to the internet from a throwaway
+// account: the first line kept on the phone is the post's title (typed as
+// sung) and every line after it is the next paragraph of the same post's
+// body, growing as she types. Nobody has answered: one upvote (her own), 0
+// comments, and Reddit's empty comment section. Before the song the page
+// holds a post of hers from the same night. The "Join the conversation" bar
+// is real: what the participant writes lands under the post as her own
+// comment (u/… with the OP tag). A line marked bold is set in bold.
 //
 // Sources: every glyph is Reddit's own RPL icon (upvote-outline,
 // downvote-outline, comment-outline, share-ios-outline, award-outline,
 // overflow-horizontal-fill, back-outline, search-outline, caret-down-outline,
 // reply-outline, image-post-outline, gif-post-outline) as published in
 // github.com/reddit/devvit-docs docs/assets/icons (fetched 2026-11-03).
-// Usernames follow Reddit's generated Adjective_Noun_1234 form; avatars are
-// plain discs (no Snoo portraits), the community icon Reddit's default "r/".
-// UNSURE: colours (#0F1A1C text, #576F76 meta, #E5EBEE pills, #0A449B Join,
-// #FF4500 community icon) are Reddit's web RPL values from memory, and the
-// layout metrics are not measured from an iOS capture.
+// The username follows the throwaway form; avatars are plain discs (no Snoo
+// portraits), the community icon Reddit's default "r/". No glyph is drawn
+// here.
+// UNSURE: colours (#0F1A1C text, #576F76 meta, #E5EBEE pills, #0A449B OP tag,
+// #FF4500 community icon) are Reddit's web RPL values from memory, the
+// layout metrics are not measured from an iOS capture, and the empty state
+// is the app's wording ("Be the first to comment") without its illustration.
 
 const COMMENT_LIMIT = 200;
 const PREFIX = "/part4/v0/apps/reddit";
 
-const OP = "Throwaway_2am_texts";
-
-const USERS = [
-  { user: "Lazy_Pomelo_4417", tint: "#7193ff" },
-  { user: "Moonlit_Sparrow22", tint: "#ff8717" },
-  { user: "Quiet-Ad-9812", tint: "#46d160" },
-  { user: "Spare_Dimension_310", tint: "#ffb000" },
-  { user: "HoneyedOat", tint: "#0dd3bb" },
-  { user: "Defiant_Tea_6630", tint: "#ff66ac" },
-  { user: "PaleFern_88", tint: "#8a6aff" },
-  { user: "Brief-Lettuce-2051", tint: "#24a0ed" },
-  { user: "No_Carpet_7748", tint: "#ff585b" },
-  { user: "softwhistle_", tint: "#94e044" },
+/** Her throwaway, and its avatar disc, per seat. */
+const OPS = [
+  { user: "Throwaway_2am_texts", tint: "#ea0027" },
+  { user: "throwRA_prettiestyears", tint: "#0079d3" },
+  { user: "ThrowRA-stillawake", tint: "#ff4500" },
+  { user: "throwaway_notoverit_", tint: "#46d160" },
 ] as const;
 
-const ME = [
-  { user: "Kind_Orchid_5120", tint: "#ea0027" },
-  { user: "Late-Comet-3384", tint: "#0079d3" },
-  { user: "Gentle_Mango_903", tint: "#ff4500" },
-] as const;
-
-/** The post at rest, before the song. */
+/** Her post at rest, before the song. */
 const RESTING = {
-  title: "My ex (26F) still texts me “one last time” every few weeks. How do I actually stop answering?",
-  body: "We broke up in March after two years. It was not a good relationship and everyone around me knew it before I did. Every time I think I'm out she sends something and I'm back to square one.",
+  title: "I (27F) keep rereading my ex's (28M) old texts at 2am. How do I stop?",
+  body: "We broke up in March. I know exactly how it ended and I still open the thread every night.",
 };
 
-const RESTING_COMMENTS = [
-  { key: "c0", user: "Lazy_Pomelo_4417", tint: "#7193ff", age: "3h", depth: 0, text: "Block the number. Not mute, block. You can't answer what you never see.", votes: 412 },
-  { key: "c1", user: "HoneyedOat", tint: "#0dd3bb", age: "2h", depth: 1, text: "This. And delete the thread so you can't reread it at 2am.", votes: 138 },
-] as const;
-
-/** Nesting for the lyric comments: a top comment, a reply, a reply to it, … */
-const DEPTHS = [0, 1, 2, 0, 1, 0, 1, 1] as const;
-
-type Comment = { key: string; user: string; tint: string; age: string; depth: number; text: string; votes: number; arriving?: boolean; mine?: boolean };
+type Comment = { key: string; text: string; at: number };
 
 function Icon({ name, className }: { name: string; className: string }) {
   return <span aria-hidden="true" className={className} style={{ ["--src" as string]: `url(${PREFIX}/${name}.svg)` }} />;
@@ -78,62 +60,34 @@ function age(ms: number) {
   return minutes < 1 ? "now" : `${minutes}m`;
 }
 
-function compact(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n);
-}
-
 function RedditState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
-  const me = ME[seat % ME.length]!;
+  const me = OPS[seat % OPS.length]!;
   const [draft, setDraft] = useState("");
   const [composing, setComposing] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const postRef = useRef<HTMLElement>(null);
 
   const title = lines[0];
-  const body = lines.slice(1, 3);
+  const body = lines.slice(1);
   const last = lines.at(-1);
   const nowMs = last?.startMs ?? 0;
 
-  const comments = useMemo(() => {
-    const sung = lines.slice(3).map((line, index): Comment & { at: number } => {
-      const who = USERS[(line.cueIndex + seat) % USERS.length]!;
-      return {
-        key: `l${line.cueIndex}`,
-        user: who.user,
-        tint: who.tint,
-        age: age(nowMs - line.startMs),
-        depth: DEPTHS[line.cueIndex % DEPTHS.length]!,
-        text: line.text,
-        votes: 1 + ((line.cueIndex * 7 + seat * 3) % 23) + (index === 0 ? 40 : 0),
-        arriving: line.cueIndex === last?.cueIndex,
-        at: line.cueIndex,
-      };
-    });
-    const firstCue = lines[3]?.cueIndex ?? Infinity;
-    const mine = replies
-      .slice(-12)
-      .map((reply): Comment & { at: number } => ({
-        key: `r${reply.id}`,
-        user: me.user,
-        tint: me.tint,
-        age: "now",
-        depth: 0,
-        text: reply.text,
-        votes: 1,
-        mine: true,
-        // Comments written before the comment section filled sit at its head.
-        at: Math.max(reply.afterCue, firstCue - 1) + 0.5,
-      }));
-    return [...sung, ...mine].sort((a, b) => a.at - b.at);
-  }, [lines, replies, seat, me, nowMs, last?.cueIndex]);
+  // Only she is here: what the participant writes is her own comment under her post.
+  const comments = useMemo(
+    () => replies.slice(-12).map((reply): Comment => ({ key: `r${reply.id}`, text: reply.text, at: reply.afterCue })),
+    [replies],
+  );
 
-  const count = RESTING_COMMENTS.length + comments.length + 46;
+  const lastComment = comments.at(-1)?.key;
 
-  // The newest comment stays in view; while only the post is filling, the top does.
+  // The paragraph being typed stays in view; a comment she adds brings the page to its foot.
   useLayoutEffect(() => {
     const feed = feedRef.current;
-    if (!feed || !shown) return;
-    follow(feed, comments.length ? feed.scrollHeight : 0, reducedMotion);
-  }, [comments, title?.text, shown, reducedMotion]);
+    const post = postRef.current;
+    if (!feed || !post || !shown) return;
+    const foot = lastComment ? feed.scrollHeight - feed.clientHeight : post.offsetTop + post.offsetHeight - feed.clientHeight + 12;
+    follow(feed, Math.max(0, foot), reducedMotion);
+  }, [lastComment, last?.text, last?.cueIndex, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {
     event.preventDefault();
@@ -156,27 +110,26 @@ function RedditState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
       </header>
 
       <div ref={feedRef} className={styles.feed} data-feed>
-        <article className={styles.post}>
+        <article ref={postRef} className={styles.post}>
           <div className={styles.byline}>
             <span className={styles.community} aria-hidden="true">r/</span>
             <span className={styles.bylineText}>
               <span className={styles.bylineTop}>
                 <b>r/relationship_advice</b>
                 <span className={styles.dot}>•</span>
-                {title ? age(nowMs - title.startMs) : "5h"}
+                {title ? age(nowMs - title.startMs) : "12m"}
               </span>
-              <span className={styles.author}>u/{OP}</span>
+              <span className={styles.author}>u/{me.user}</span>
             </span>
-            <span className={styles.join}>Join</span>
           </div>
 
-          <h2 className={styles.title}>{title ? title.text : RESTING.title}</h2>
+          <h2 data-lyric className={styles.title}>{title ? title.text : RESTING.title}</h2>
           <span className={styles.flair}>Breakups</span>
           {title ? (
             body.length ? (
               <div className={styles.body}>
                 {body.map((line) => (
-                  <p key={line.cueIndex}>{line.text}</p>
+                  <p data-lyric key={line.cueIndex} style={line.bold ? { fontWeight: 700 } : undefined}>{line.text}</p>
                 ))}
               </div>
             ) : null
@@ -189,12 +142,12 @@ function RedditState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
           <div className={styles.actions}>
             <span className={styles.pill}>
               <Icon name="upvote-outline" className={styles.actionIcon} />
-              <span className={styles.count}>{compact(1240 + lines.length * 17)}</span>
+              <span className={styles.count}>1</span>
               <Icon name="downvote-outline" className={styles.actionIcon} />
             </span>
             <span className={styles.pill}>
               <Icon name="comment-outline" className={styles.actionIcon} />
-              <span className={styles.count}>{count}</span>
+              <span className={styles.count}>{comments.length}</span>
             </span>
             <span className={styles.pill} data-round>
               <Icon name="award-outline" className={styles.actionIcon} />
@@ -206,44 +159,46 @@ function RedditState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
           </div>
         </article>
 
-        <div className={styles.sort}>
-          <span>Best comments</span>
-          <Icon name="caret-down-outline" className={styles.caret} />
-        </div>
-
-        <div className={styles.comments}>
-          {[...RESTING_COMMENTS, ...comments].map((comment) => (
-            <div
-              key={comment.key}
-              className={styles.comment}
-              style={{ ["--depth" as string]: comment.depth }}
-              data-arriving={("arriving" in comment && comment.arriving) || undefined}
-            >
-              {Array.from({ length: comment.depth }, (_, index) => (
-                <span key={index} className={styles.rail} style={{ left: 28 + index * 20 }} aria-hidden="true" />
-              ))}
-              <div className={styles.commentHead}>
-                <Avatar tint={comment.tint} size={24} />
-                <b>{comment.user}</b>
-                <span className={styles.dot}>•</span>
-                <span>{comment.age}</span>
-              </div>
-              <p className={styles.commentText}>{comment.text}</p>
-              <div className={styles.commentActions}>
-                <Icon name="overflow-horizontal-fill" className={styles.smallIcon} />
-                <span className={styles.reply}>
-                  <Icon name="reply-outline" className={styles.smallIcon} />
-                  Reply
-                </span>
-                <span className={styles.vote}>
-                  <Icon name="upvote-outline" className={styles.smallIcon} />
-                  <span>{comment.votes}</span>
-                  <Icon name="downvote-outline" className={styles.smallIcon} />
-                </span>
-              </div>
+        {comments.length > 0 ? (
+          <>
+            <div className={styles.sort}>
+              <span>Best comments</span>
+              <Icon name="caret-down-outline" className={styles.caret} />
             </div>
-          ))}
-        </div>
+
+            <div className={styles.comments}>
+              {comments.map((comment) => (
+                <div key={comment.key} className={styles.comment} data-arriving={comment.key === lastComment || undefined}>
+                  <div className={styles.commentHead}>
+                    <Avatar tint={me.tint} size={24} />
+                    <b>{me.user}</b>
+                    <span className={styles.op}>OP</span>
+                    <span className={styles.dot}>•</span>
+                    <span>now</span>
+                  </div>
+                  <p data-lyric className={styles.commentText}>{comment.text}</p>
+                  <div className={styles.commentActions}>
+                    <Icon name="overflow-horizontal-fill" className={styles.smallIcon} />
+                    <span className={styles.reply}>
+                      <Icon name="reply-outline" className={styles.smallIcon} />
+                      Reply
+                    </span>
+                    <span className={styles.vote}>
+                      <Icon name="upvote-outline" className={styles.smallIcon} />
+                      <span>1</span>
+                      <Icon name="downvote-outline" className={styles.smallIcon} />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className={styles.empty}>
+            <b>Be the first to comment</b>
+            <span>Nobody&apos;s responded to this post yet. Add your thoughts and get the conversation going.</span>
+          </div>
+        )}
       </div>
 
       <form className={styles.composer} onSubmit={send} data-open={composing || draft ? true : undefined}>

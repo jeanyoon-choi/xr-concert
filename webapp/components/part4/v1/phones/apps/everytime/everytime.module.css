@@ -64,6 +64,8 @@
 }
 
 .page {
+  /* The offset parent of the post, for keeping its foot in view. */
+  position: relative;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -129,6 +131,9 @@
   font: 400 15px/22px var(--ios-font);
   overflow-wrap: anywhere;
 }
+
+/* Each line of the post is its own paragraph, set solid as typed lines are. */
+.body p { margin: 0; }
 
 .counts {
   display: flex;

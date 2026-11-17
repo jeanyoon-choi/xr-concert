@@ -432,3 +432,14 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* The answers area with no answer yet. */
+.waiting {
+  margin: 0;
+  padding: 28px 24px 44px;
+  color: #8f96a3;
+  font-size: 15px;
+  line-height: 22px;
+  letter-spacing: -0.3px;
+  text-align: center;
+}

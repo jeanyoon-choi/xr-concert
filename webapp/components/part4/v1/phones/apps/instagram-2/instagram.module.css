@@ -1,0 +1,551 @@
+/* Instagram iOS 2026, Home feed scrolled to one post, light, at native points on the 390 × 844 glass.
+   Values from clone/11's measured CSS and the US App Store feed / comment frames (2.351 px/pt); see index.tsx. */
+.app {
+  --ink: #0c1014;
+  --muted: #6a717b;
+  --line: #e3e6eb;
+  --like: #ff3040;
+  --blue: #4a5df9;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app * { box-sizing: border-box; }
+
+.app button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-family: var(--ios-display);
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Header: Create · 120 pt 2026 wordmark · Activity; glyph centres x 27.6 / 363, y 76; wordmark top at 66.8. */
+.header {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  height: 44px;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  padding: 0 0 0 4px;
+  background: #fff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 48px;
+  height: 44px;
+  place-items: center;
+}
+
+.headerIcon:last-child { justify-self: end; margin-right: 3px; }
+
+.wordmark {
+  display: block;
+  width: 120px;
+  height: auto;
+  align-self: start;
+  justify-self: center;
+  margin-top: 12.8px;
+}
+
+.feed {
+  position: absolute;
+  inset: 98px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 110px;
+}
+
+.feed::-webkit-scrollbar { display: none; }
+
+/* Post header: 54 pt row, 32 pt avatar in a 40 pt slot, 14 pt semibold name. */
+.postHead {
+  display: flex;
+  height: 54px;
+  align-items: center;
+  padding: 0 9px 0 6px;
+}
+
+.postAvatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+}
+
+.accountPhoto {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.identity {
+  min-width: 0;
+  flex: 1;
+  padding-left: 7px;
+}
+
+.identity strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.identity small {
+  display: block;
+  font-size: 12px;
+  line-height: 15px;
+}
+
+.postMore {
+  display: grid;
+  width: 32px;
+  height: 44px;
+  place-items: center;
+}
+
+/* The post image: a 4:5 carousel (390 × 487.5 pt), one photograph per slide. */
+.photo {
+  position: relative;
+  width: 390px;
+  height: 487.5px;
+  overflow: hidden;
+  background: #000;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+}
+
+.slide[data-state] { visibility: visible; }
+.slide[data-state="out"] { transform: translateX(-100%); }
+.slide[data-state="out"][data-back] { transform: translateX(100%); }
+
+/* A new line swipes to the next photo, as a thumb does. */
+.slide[data-state="in"][data-moving] { animation: slide-in 380ms cubic-bezier(0.22, 0.8, 0.24, 1) both; }
+.slide[data-state="out"][data-moving] { animation: slide-out 380ms cubic-bezier(0.22, 0.8, 0.24, 1) both; }
+.slide[data-state="in"][data-moving][data-back] { animation-name: slide-in-back; }
+.slide[data-state="out"][data-moving][data-back] { animation-name: slide-out-back; }
+
+@keyframes slide-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes slide-out { from { transform: none; } to { transform: translateX(-100%); } }
+@keyframes slide-in-back { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes slide-out-back { from { transform: none; } to { transform: translateX(100%); } }
+
+.slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Taken down a stop, as people do under text. */
+  filter: brightness(0.72);
+  pointer-events: none;
+}
+
+/* The line on the photo: white, centred on both axes of the photograph. */
+.onPhoto {
+  position: relative;
+  margin: 0;
+  padding: 0 calc(22px / var(--lyric-scale, 1));
+  color: #fff;
+  /* 46 px at the page's text size 1. The page's larger text sizes zoom this
+     element; the size is divided back so that the result never passes --cap
+     (index.tsx sizeCap), the largest size at which the line still fits the
+     photograph with every word whole. */
+  font: 700 calc(min(46px * var(--lyric-scale, 1), var(--cap, 46px)) / var(--lyric-scale, 1)) / 1.087 var(--ios-display);
+  letter-spacing: -0.9px;
+  text-align: center;
+  /* Her own lowercase, as on the caption. */
+  text-transform: lowercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 14px rgb(0 0 0 / 0.45), 0 0 2px rgb(0 0 0 / 0.35);
+}
+
+/* Counter chip, top right of the media. */
+.counter {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  height: 26px;
+  border-radius: 13px;
+  padding: 0 10px;
+  background: rgb(18 18 18 / 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Page dots under the media: five full dots around the current one, the next ones shrinking away. */
+.dots {
+  display: flex;
+  height: 14px;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dots i {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin: 0 2px;
+  border-radius: 50%;
+  background: #c7cbd1;
+  transition: width 200ms, height 200ms, margin 200ms, background-color 200ms;
+}
+
+.dots i[data-active] { background: var(--blue); }
+.dots i[data-off="1"] { width: 4px; height: 4px; margin-bottom: 1px; }
+.dots i[data-off="2"] { width: 2px; height: 2px; margin-bottom: 2px; }
+.dots i[data-off="3"] { width: 0; height: 0; margin: 0; }
+
+/* Action row measured against the US feed frame: 24 pt glyphs, 6 pt to count, 18 pt between groups. */
+.actions {
+  display: flex;
+  height: 44px;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 11px 0 12px;
+}
+
+.actions button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 5px 0;
+  line-height: 1;
+}
+
+.actions button span {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+.actions svg { flex: none; }
+.actions .save { margin-left: auto; }
+
+.app .liked { color: var(--like); }
+.actions .liked span { color: var(--ink); }
+
+.copy { padding: 0 13px; }
+
+.caption,
+.preview {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.likedBy {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.likedBy b,
+.caption b,
+.preview b { font-weight: 600; }
+
+.preview { margin-bottom: 4px; }
+
+.caption span { text-transform: lowercase; }
+
+.app .viewAll {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.age {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.preview[data-arriving],
+.comment[data-arriving] { animation: arrive 260ms ease-out both; }
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Floating Prism tab bar: 340 × 60 pill, 21 pt above the edge, 66 × 54 active disc. */
+.tabs {
+  position: absolute;
+  bottom: 21px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: 340px;
+  height: 60px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  padding: 0 3px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(12 16 20 / 0.06);
+  border-radius: 30px;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 8px 28px rgb(12 16 20 / 0.12);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  color: var(--ink);
+}
+
+.tabs > span {
+  position: relative;
+  display: grid;
+  height: 54px;
+  place-items: center;
+}
+
+.tabs > span[data-active]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 27px;
+  background: rgb(12 16 20 / 0.07);
+}
+
+.tabs > span > * { position: relative; z-index: 1; }
+
+.tabAvatar { display: block; line-height: 0; }
+
+.dot {
+  position: absolute !important;
+  top: calc(50% + 6px);
+  left: calc(50% + 7px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--like);
+}
+
+/* Comments sheet, after the US comment frame: top at 415 pt, handle centre 438, title centre 461. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+}
+
+.backdrop[data-open] { display: block; }
+
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  height: 429px;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  box-shadow: 0 -1px 0 rgb(12 16 20 / 0.04);
+  transform: translateY(105%);
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sheet[data-open] { transform: none; }
+
+.app .grab {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 21px;
+}
+
+.grab span {
+  width: 32px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: #8e9298;
+}
+
+.grab strong {
+  margin-top: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.comments {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 24px 0 8px;
+}
+
+.comments::-webkit-scrollbar { display: none; }
+
+/* Comment rows: 32 pt avatar at x 12, text from x 51, like heart centred at x 362 on the text line. */
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 8px 16px 8px 12px;
+}
+
+.comment > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.meta b { font-weight: 600; }
+.meta span { color: var(--muted); }
+
+.body {
+  margin: 2px 0 0;
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.reply {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+}
+
+.app .commentLike {
+  display: grid;
+  width: 24px;
+  flex: none;
+  justify-items: center;
+  margin-top: 20px;
+  color: var(--muted);
+}
+
+.app .commentLike.liked { color: var(--like); }
+
+/* Emoji row under a rule at 738 pt, centres from x 24 to 366. */
+.emoji {
+  display: flex;
+  height: 49px;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 11px;
+  border-top: 1px solid var(--line);
+}
+
+.app .emoji button {
+  width: 26px;
+  font-size: 25px;
+  line-height: 1;
+}
+
+/* Composer: 42 pt avatar at x 16, field x 72–378, 10 pt above the bottom edge. */
+.form {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 13.7px;
+  margin-top: 4px;
+  padding: 0 12px 10px 16px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  height: 42px;
+  flex: 1;
+  align-items: center;
+  border: 1.5px solid #dbdee3;
+  border-radius: 21px;
+  padding: 0 9px 0 10px;
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 16px/20px var(--ios-font);
+  outline: none;
+  caret-color: var(--blue);
+}
+
+.field input::placeholder { color: var(--muted); }
+
+.sticker {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+
+.app .postButton {
+  padding: 0 3px;
+  color: var(--blue);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; }
+  .preview[data-arriving],
+  .comment[data-arriving] { animation: none; }
+  .dots i { transition: none; }
+}

@@ -30,21 +30,21 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 20px;
 }
 
 .body {
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 20px 24px;
+  padding: 0 16px 24px;
   scrollbar-width: none;
 }
 
 .body::-webkit-scrollbar { display: none; }
 
 .date {
-  margin: 2px 0 14px;
-  color: #8e8e93;
+  margin: 4px 0 12px;
+  color: rgb(60 60 67 / 60%);
   font: 400 13px/18px var(--ios-font);
   letter-spacing: -0.08px;
   text-align: center;
@@ -66,6 +66,19 @@
   font: 400 17px/22px var(--ios-font);
   letter-spacing: -0.41px;
 }
+
+.title[data-bold],
+.line[data-bold] { font-weight: 700; }
+
+/* Scaled (a scenario's few phrases, or the page's text size): the first line
+   is Body like the rest, so every line is one size. */
+:global([data-lyric-scaled]) .title {
+  margin-bottom: 0;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+:global([data-lyric-scaled]) .title[data-bold] { font-weight: 700; }
 
 /* The line being typed carries the caret, Notes' own yellow. */
 .title[data-typing]::after,
@@ -105,9 +118,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 49px;
+  height: 44px;
   margin-bottom: 34px;
-  padding: 0 22px;
+  padding: 0 20px;
   color: var(--notes-tint);
 }
 

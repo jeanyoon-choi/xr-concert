@@ -7,14 +7,14 @@ import { Glyph } from "./glyphs";
 import styles from "./instagram-dm.module.css";
 import { follow } from "../follow";
 
-// Instagram iOS, a Direct thread (light) with the ex. The lyric is the ex
-// replying to YOUR story: when the song starts, the thread shows "Replied to
-// your story" over a thumbnail of your (text) story, then each sung line
-// arrives as an incoming grey bubble that fills word by word; consecutive
-// lines group, with the avatar at the end of the group, as Instagram does.
-// The composer is real: what the participant sends lands as an outgoing
-// bubble after the line it answered, with "Seen" under the last one.
-// Double-tapping any bubble hearts it, as in the app.
+// Instagram iOS, a Direct thread (light) with the ex, new: nothing above the
+// first message but the profile block Direct opens a conversation with.
+// Every sung line is a message this phone's owner sends — her own gradient
+// bubbles, one after another, each filling as it is typed; consecutive ones
+// group (4 pt inner corners), as Instagram does — and the ex never answers:
+// no "Seen" ever appears under the last one. What the participant sends from
+// the composer is one more bubble, in order with the lines. A line marked
+// bold is set in bold. Double-tapping any bubble hearts it, as in the app.
 //
 // Sources
 // - Glyphs: Instagram IGDS icon modules served by static.cdninstagram.com,
@@ -32,10 +32,6 @@ import { follow } from "../follow";
 //   thread viewport, each bubble showing its slice, as Instagram's is.
 
 type Reaction = Readonly<Record<string, true>>;
-
-type Row =
-  | { kind: "in"; key: string; text: string; first: boolean; last: boolean; arriving: boolean }
-  | { kind: "out"; key: string; text: string; first: boolean; last: boolean; seen: boolean };
 
 const SEND_LIMIT = 80;
 
@@ -55,21 +51,16 @@ function InstagramDmState({ seat, lines, replies, shown, reducedMotion, act }: P
   const [hearts, setHearts] = useState<Reaction>({});
   const threadRef = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo(() => {
-    const merged = [
-      ...lines.map((line) => ({ at: line.cueIndex, kind: "in" as const, text: line.text, key: `l${line.cueIndex}` })),
-      ...replies.map((reply) => ({ at: reply.afterCue + 0.5, kind: "out" as const, text: reply.text, key: `r${reply.id}` })),
-    ].sort((a, b) => a.at - b.at);
-    const lastLine = lines.at(-1);
-    const lastReply = replies.at(-1);
-    return merged.map((entry, index): Row => {
-      const first = merged[index - 1]?.kind !== entry.kind;
-      const last = merged[index + 1]?.kind !== entry.kind;
-      return entry.kind === "in"
-        ? { kind: "in", key: entry.key, text: entry.text, first, last, arriving: !!lastLine && entry.key === `l${lastLine.cueIndex}` && lastLine.current }
-        : { kind: "out", key: entry.key, text: entry.text, first, last, seen: !!lastReply && entry.key === `r${lastReply.id}` };
-    });
-  }, [lines, replies]);
+  // The sung lines and whatever the participant sends, in the order sent: all hers.
+  const rows = useMemo(
+    () =>
+      [
+        ...lines.map((line) => ({ at: line.cueIndex, key: `l${line.cueIndex}`, text: line.text, bold: Boolean(line.bold) })),
+        ...replies.map((reply) => ({ at: reply.afterCue + 0.5, key: `r${reply.id}`, text: reply.text, bold: false })),
+      ].sort((a, b) => a.at - b.at),
+    [lines, replies],
+  );
+  const firstMs = lines[0]?.startMs ?? 0;
 
   // Sent bubbles show their slice of one gradient spanning the thread viewport
   // (the thread is their offsetParent, so offsetTop is in scroll coordinates).
@@ -108,37 +99,6 @@ function InstagramDmState({ seat, lines, replies, shown, reducedMotion, act }: P
     setDraft("");
   };
 
-  const bubble = (key: string, side: "in" | "out", text: string, first: boolean, last: boolean, arriving = false) => (
-    <p
-      className={styles.bubble}
-      data-side={side}
-      data-first={first || undefined}
-      data-last={last || undefined}
-      data-arriving={arriving || undefined}
-      data-reacted={hearts[key] || undefined}
-      onDoubleClick={() => toggleHeart(key)}
-    >
-      {text}
-      {hearts[key] ? (
-        <span className={styles.reaction} aria-label="Reacted with heart">
-          ❤️
-        </span>
-      ) : null}
-    </p>
-  );
-
-  const avatar = (visible: boolean) => (
-    <span className={styles.rowAvatar} aria-hidden="true">
-      {visible ? (
-        <span className={styles.monogram} style={{ background: contact.tint }}>
-          {contact.initials}
-        </span>
-      ) : null}
-    </span>
-  );
-
-  const hasSent = replies.length > 0;
-
   return (
     <section className={styles.app} aria-label={`Instagram chat with ${contact.name}`} inert={!shown}>
       <header className={styles.header}>
@@ -173,44 +133,29 @@ function InstagramDmState({ seat, lines, replies, shown, reducedMotion, act }: P
             <span className={styles.viewProfile}>View profile</span>
           </div>
 
-          <p className={styles.stamp}>Aug 23, 01:12</p>
-          <div className={styles.inRow}>
-            {avatar(false)}
-            {bubble("p1", "in", "you up?", true, false)}
-          </div>
-          <div className={styles.inRow}>
-            {avatar(true)}
-            {bubble("p2", "in", "i saw your playlist lol", false, true)}
-          </div>
-          <div className={styles.outRow}>{bubble("p3", "out", "go to sleep", true, true)}</div>
-          {!hasSent ? <span className={styles.seen}>Seen</span> : null}
+          {rows.length ? <p className={styles.stamp}>Today {formatSongClock(firstMs)}</p> : null}
 
-          {lines.length ? (
-            <>
-              <p className={styles.stamp}>Today {formatSongClock(lines[0]!.startMs)}</p>
-              <p className={styles.storyLabel}>Replied to your story</p>
-              <div className={styles.storyQuote}>
-                <span className={styles.storyBar} aria-hidden="true" />
-                <span className={styles.story} aria-label="Your story">
-                  <span>never been better</span>
-                </span>
-              </div>
-            </>
-          ) : null}
-
-          {rows.map((row) =>
-            row.kind === "in" ? (
-              <div key={row.key} className={styles.inRow} data-gap={row.first || undefined}>
-                {avatar(row.last)}
-                {bubble(row.key, "in", row.text, row.first, row.last, row.arriving && !reducedMotion)}
-              </div>
-            ) : (
-              <div key={row.key} className={styles.outGroup} data-gap={row.first || undefined}>
-                <div className={styles.outRow}>{bubble(row.key, "out", row.text, row.first, row.last)}</div>
-                {row.seen ? <span className={styles.seen}>Seen</span> : null}
-              </div>
-            ),
-          )}
+          {rows.map((row, index) => (
+            <div key={row.key} className={styles.outRow}>
+              <p
+                data-lyric
+                className={styles.bubble}
+                data-side="out"
+                data-first={index === 0 || undefined}
+                data-last={index === rows.length - 1 || undefined}
+                data-reacted={hearts[row.key] || undefined}
+                style={row.bold ? { fontWeight: 700 } : undefined}
+                onDoubleClick={() => toggleHeart(row.key)}
+              >
+                {row.text}
+                {hearts[row.key] ? (
+                  <span className={styles.reaction} aria-label="Reacted with heart">
+                    ❤️
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

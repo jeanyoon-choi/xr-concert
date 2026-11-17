@@ -1,10 +1,11 @@
 "use client";
 
-import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import type { PhoneStateProps } from "../types";
 import { Glyph } from "./glyphs";
 import styles from "./instagram.module.css";
 import { follow } from "../follow";
+import { LyricWords } from "../lyric-words";
 
 // Instagram iOS, the Home feed (light) scrolled to one post: a text-on-colour
 // quote card from a quote account, the kind of post such accounts make. The
@@ -33,8 +34,9 @@ import { follow } from "../follow";
 
 const HISTORY_PREVIEW = 3;
 const COMMENT_LIMIT = 80;
-const POST_ACCOUNT = "slowerdays.club";
-const PRIOR_CAPTION = "save this for the next time you think about texting them 🤍";
+/** Her own account, one per phone: a private person, not a quote page. */
+const ACCOUNTS = ["yeri.jpg", "mina_0412", "jules.kwon", "sunny__97", "ari_0803", "noor.k"] as const;
+const PRIOR_CAPTION = "anyway";
 const STRANGERS = [
   "hana__lee",
   "tessa.mp3",
@@ -52,7 +54,8 @@ const STRANGERS = [
 const ME = ["jules.park", "minjee_o", "the.ruiz", "callumxo", "yuna.hwang", "dev.anand"] as const;
 const TINTS = ["#8e96a8", "#a99486", "#8aa39a", "#9c8fb0", "#b09a7c", "#7f9bb3", "#a58c96", "#8c9d84"] as const;
 const EMOJIS = ["❤️", "🙌", "🔥", "👏", "😢", "😍", "😮", "😂"] as const;
-const BASE = { likes: 48_213, comments: 749, reposts: 612, shares: 3_140 };
+/** A private account's numbers. */
+const BASE = { likes: 37, comments: 4, reposts: 0, shares: 2 };
 
 type Comment = { key: string; author: string; text: string; age: string; arriving: boolean; mine: boolean };
 
@@ -74,7 +77,21 @@ function Avatar({ name, size }: { name: string; size: number }) {
   );
 }
 
+/**
+ * The largest size (px, after the page's text scale) at which a line still
+ * sits inside the card with every word whole: its longest word must fit the
+ * column, and the wrapped block must not grow taller than the clear part of
+ * the card. It only bites at the page's larger text sizes.
+ */
+function sizeCap(text: string) {
+  const longest = Math.max(1, ...text.split(" ").map((word) => word.length));
+  return Math.floor(Math.min(620 / longest, Math.sqrt(120_000 / Math.max(1, text.length))));
+}
+
 function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
+  const POST_ACCOUNT = ACCOUNTS[seat % ACCOUNTS.length]!;
+  const newest = lines.at(-1);
+  const quote = newest ? newest.text : "you can miss someone and still not want them back.";
   const me = ME[seat % ME.length]!;
   const [draft, setDraft] = useState("");
   const [sheet, setSheet] = useState(false);
@@ -152,7 +169,7 @@ function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: Pho
         <article className={styles.post}>
           <div className={styles.postHead}>
             <span className={styles.postAvatar}>
-              <span className={styles.accountMark} aria-hidden="true">sd</span>
+              <span className={styles.accountMark} aria-hidden="true">{POST_ACCOUNT[0]!.toUpperCase()}</span>
             </span>
             <span className={styles.identity}>
               <strong>{POST_ACCOUNT}</strong>
@@ -162,13 +179,17 @@ function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: Pho
             </span>
           </div>
 
-          <div className={styles.photo} role="img" aria-label="Text post: you can miss someone and still not want them back." onDoubleClick={() => setLiked(true)}>
-            <p className={styles.quote}>
-              you can miss someone
-              <br />
-              and still not want
-              <br />
-              them back.
+          {/* The quote card: the line being sung, set as the account's quote; before the song, its own. */}
+          <div className={styles.photo} role="img" aria-label={`Text post: ${quote}`} onDoubleClick={() => setLiked(true)}>
+            <p
+              key={newest?.cueIndex ?? "rest"}
+              data-lyric
+              className={styles.quote}
+              data-arriving={(newest && motion) || undefined}
+              style={{ "--cap": `${sizeCap(newest ? newest.full : quote)}px` } as CSSProperties}
+            >
+              {/* The whole line is laid out from its first word; each word eases in. */}
+              {newest ? <LyricWords line={newest} /> : quote}
             </p>
             <span className={styles.quoteHandle}>@{POST_ACCOUNT}</span>
           </div>
@@ -196,14 +217,14 @@ function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: Pho
           </div>
 
           <div className={styles.copy}>
-            <p className={styles.caption}>
+            <p data-lyric className={styles.caption}>
               <b>{POST_ACCOUNT}</b> <span data-typing={captionTyping || undefined}>{caption ?? PRIOR_CAPTION}</span>
             </p>
             <button type="button" className={styles.viewAll} onClick={() => setSheet(true)}>
               View all {commentCount.toLocaleString("en-US")} comments
             </button>
             {comments.slice(0, HISTORY_PREVIEW).map((comment) => (
-              <p key={comment.key} className={styles.preview} data-arriving={(comment.arriving && motion) || undefined}>
+              <p data-lyric key={comment.key} className={styles.preview} data-arriving={(comment.arriving && motion) || undefined}>
                 <b>{comment.author}</b> {comment.text}
               </p>
             ))}
@@ -234,7 +255,7 @@ function InstagramState({ seat, lines, replies, shown, reducedMotion, act }: Pho
                 <p className={styles.meta}>
                   <b>{comment.author}</b> <span>{comment.age}</span>
                 </p>
-                <p className={styles.body}>{comment.text}</p>
+                <p data-lyric className={styles.body}>{comment.text}</p>
                 <span className={styles.reply}>Reply</span>
               </div>
               <button

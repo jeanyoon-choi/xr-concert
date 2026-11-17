@@ -1,0 +1,119 @@
+/*
+ * YouTube Shorts, iOS, on the 390 × 844 glass (1 CSS px = 1 pt). Safe areas
+ * are fixed at 54 pt (status bar) and 34 pt (home indicator). The tab bar is
+ * opaque black (48 pt + 34 pt) and the video stops on it. The interface over
+ * the video and the tab bar are ../youtube-shorts/chrome.module.css; this
+ * file is the video.
+ */
+.app {
+  --nav: 82px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.feed {
+  position: absolute;
+  inset: 0 0 var(--nav);
+  overflow: hidden;
+  background: #000;
+}
+
+/* The video: home-video stills, one per sung line, cut on the new line. */
+.video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* The stills, 8% over the frame so the drift never shows an edge: a slow,
+   uneven handheld wander of a few points. */
+.stills {
+  position: absolute;
+  inset: -4%;
+  animation: handheld 17s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.app[data-running] .stills { animation-play-state: running; }
+
+.stills span {
+  position: absolute;
+  inset: 0;
+  background: #000 center / cover no-repeat;
+  opacity: 0;
+}
+
+.stills span[data-on] { opacity: 1; }
+
+@keyframes handheld {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  17% { transform: translate(5px, -3px) rotate(0.25deg); }
+  38% { transform: translate(-3px, -7px) rotate(-0.2deg); }
+  56% { transform: translate(-7px, 2px) rotate(0.15deg); }
+  79% { transform: translate(3px, 6px) rotate(-0.3deg); }
+}
+
+/* A flat dim, as much as the white word and the white interface need. */
+.video::after {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.46);
+  content: "";
+}
+
+/* The word's box: centred on the video frame on both axes (x 195, y 381 of
+   the 390 × 762 frame), 254 pt wide so it clears the rail (its buttons start at x 334) by 12 pt on the right and
+   keeps the same margin on the left. Its insets are divided by the lyric
+   scale (phone.module.css), so the box never moves or grows; it is the size
+   container the word is fitted to. */
+.lyric {
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  top: calc(110px / var(--lyric-scale, 1));
+  bottom: calc(110px / var(--lyric-scale, 1));
+  left: calc(68px / var(--lyric-scale, 1));
+  right: calc(68px / var(--lyric-scale, 1));
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  container-type: size;
+  pointer-events: none;
+}
+
+/* The word. Size: the box's width over the word's width in em (--len), so a
+   long word fills the box and never clips or wraps; short words stop at
+   132 pt. The text-size option zooms the box's contents, which raises that
+   132 pt cap (2× = 264 pt) but not the cqw / cqh terms — they are measured
+   against the zoomed box — so a bigger setting grows short words only up to
+   the box and leaves long ones filling it.
+   Type: lowercase at weight 800 with tight tracking — one word alone reads as
+   a shape, and heavy lowercase holds that shape on a 200 px phone without
+   shouting the way capitals do. */
+.lyric span {
+  display: block;
+  padding-left: 0.035em; /* the tracking's trailing gap, mirrored: the glyphs stay centred */
+  color: #fff;
+  font-family: var(--ios-display);
+  font-size: min(calc(100cqw / var(--len, 4)), 45cqh, 132px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  /* Centre the x-height band, not the line box, on the frame's centre. */
+  transform: translateY(-0.09em);
+}
+
+/* A hard cut: the word has no transition or animation of its own. */
+
+@media (prefers-reduced-motion: reduce) {
+  .stills { animation: none; }
+}

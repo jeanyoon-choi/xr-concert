@@ -1,19 +1,21 @@
 "use client";
 
-import { memo, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { dateLabel } from "../../../clock/wall-clock";
 import type { PhoneStateProps } from "../types";
 import { follow } from "../follow";
 import { SafariBar } from "../safari/chrome";
 import styles from "./naver.module.css";
 
-// 네이버 지식iN (m.kin.naver.com) in iOS 18 Safari: one question page. She
-// asks strangers about the ex. The song's first line, once sung, is the
-// question's title (Q); the lines after it are the question body; the line
-// being sung is an answer someone else is typing under “답변 n개”. Before the
-// song the page holds an ordinary question with its answers. The answer
-// field (“답변을 입력해주세요”) is real: what the participant writes is posted
-// as their own answer.
+// 네이버 지식iN (m.kin.naver.com) in iOS 18 Safari: one question page — her
+// own question, seen from her phone. She is asking strangers about the ex,
+// 비공개: the song's first line, once sung, is the question's title (Q) and
+// every line after it is the next line of the same question's body, growing
+// as she types. Nobody has answered: “답변 0개”, a handful of views, and the
+// page still waiting for its first answer. Before the song the page holds a
+// question of hers from the same night. The field under the answer count is
+// real: what the participant writes is added to her question as a further
+// line of its body. A line marked bold is set in bold.
 //
 // Sources: m.kin.naver.com question page as served to iOS Safari (Nov 2026,
 // fe-kin.pstatic.net 2026.11.2): its CSS modules (Header theme1 #2f54b5 with
@@ -25,29 +27,19 @@ import styles from "./naver.module.css";
 // dropdown arrow). Avatars are kin's own default avatar PNGs
 // (ssl.pstatic.net/static/kin/09renewal/avatar). The served header is
 // kin's current blue theme, not NAVER green; the green is only in the logo.
+// No glyph is drawn here.
+// UNSURE: the wording of the no-answer state (“답변을 기다리고 있어요”) is
+// not copied from a served page.
 
 const ASSETS = "/part4/v0/apps/naver";
 const SEND_LIMIT = 300;
-/** Kin's "2026.11.03." for today, and for the day before. */
-const kinDate = (offsetDays: number) => dateLabel("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }, offsetDays).replace(/\s/g, "");
-const DATE = kinDate(0);
-const YESTERDAY = kinDate(-1);
+/** Kin's "2026.11.03." for today. */
+const DATE = dateLabel("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\s/g, "");
 
-/** Who answers on this seat's page, by kin nickname. */
-const ANSWERERS = ["새벽세시반", "고민해결사", "구름빵", "연애상담소", "달빛토끼", "익명의답변러"] as const;
-
-/** The question the page holds before the song: ordinary 연애 상담. */
+/** Her question before the song. */
 const REST = {
-  title: "헤어진 전 애인이 차단을 풀고 다시 연락하는데 어떻게 해야 할까요?",
-  body: "6개월 전에 헤어졌는데 어제 갑자기 인스타 차단을 풀고 '잘 지내?'라고 연락이 왔어요. 사귈 때 질투가 심하고 제 친구들도 싫어해서 많이 힘들었는데, 막상 연락이 오니까 마음이 흔들립니다. 답장해도 될까요?",
-  answers: [
-    {
-      name: "비공개 사용자 답변",
-      avatar: "answer-blue.png",
-      badge: "물신",
-      text: "흔들리는 마음은 자연스러운 거예요. 그런데 헤어진 이유가 질투와 집착이었다면 그 부분은 6개월 만에 잘 바뀌지 않아요. 답장을 하더라도 짧게, 천천히 하세요.",
-    },
-  ],
+  title: "헤어진 지 반년인데 아직도 새벽마다 생각나요. 저만 이런가요?",
+  body: "사귈 때 정말 많이 힘들었는데, 막상 끝나고 나니까 계속 생각이 납니다. 어떻게 해야 잊을 수 있을까요?",
 } as const;
 
 function Glyph({ name }: { name: "naver" | "kin" | "expert" | "pen" | "comment" | "alert" | "share" | "more" | "up" | "down" | "arrow" }) {
@@ -77,69 +69,33 @@ function Glyph({ name }: { name: "naver" | "kin" | "expert" | "pen" | "comment" 
   }
 }
 
-type Answer = { key: string; name: string; avatar: string; badge?: string; text: string; date: string; up?: number };
-
-function AnswerItem({ answer }: { answer: Answer }) {
-  return (
-    <article className={styles.answer}>
-      <div className={styles.profile}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.avatar} src={`${ASSETS}/${answer.avatar}`} alt="" width={48} height={48} />
-        <div className={styles.info}>
-          <div className={styles.infoTop}>
-            <span className={styles.name}>{answer.name}</span>
-            {answer.badge ? <span className={styles.badge}>{answer.badge}</span> : null}
-          </div>
-          <div className={styles.infoBottom}>{answer.date}</div>
-        </div>
-        <span className={styles.more}><Glyph name="more" /></span>
-      </div>
-      <p className={styles.answerText}>
-        {answer.text}
-      </p>
-      <div className={styles.buttons} aria-hidden="true">
-        <span className={styles.endButton}>
-          <Glyph name="up" />
-          <span className={styles.count}>{answer.up ? answer.up : ""}</span>
-        </span>
-        <span className={styles.endButton}><Glyph name="down" /></span>
-        <span className={styles.endButton}><Glyph name="comment" /></span>
-      </div>
-    </article>
-  );
-}
+type Paragraph = { key: string; at: number; text: string; bold: boolean };
 
 function NaverState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const [draft, setDraft] = useState("");
   const pageRef = useRef<HTMLDivElement>(null);
+  const questionRef = useRef<HTMLDivElement>(null);
 
-  const [first, ...after] = lines;
-  const live = after.at(-1);
-  const body = after.slice(0, -1);
-  const answerer = ANSWERERS[seat % ANSWERERS.length]!;
+  const first = lines[0];
+  const last = lines.at(-1);
 
-  const mine: Answer[] = replies
-    .slice(-4)
-    .reverse()
-    .map((reply) => ({ key: `r${reply.id}`, name: "pin****", avatar: "profile-placeholder.png", text: reply.text, date: DATE }));
-  const answers: Answer[] = first
-    ? [
-        ...(live
-          ? [{ key: `l${live.cueIndex}`, name: answerer, avatar: "avatar-3d.png", badge: "별신", text: live.text, date: DATE }]
-          : []),
-        ...mine,
-      ]
-    : [
-        ...mine,
-        ...REST.answers.map((answer, index) => ({ ...answer, key: `rest${index}`, date: YESTERDAY, up: 4 })),
-      ];
+  // The question's body: every line after the title, and what the participant added, in order.
+  const body = useMemo(
+    () =>
+      [
+        ...lines.slice(1).map((line): Paragraph => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, bold: Boolean(line.bold) })),
+        ...replies.slice(-12).map((reply): Paragraph => ({ key: `r${reply.id}`, at: reply.afterCue + 0.5, text: reply.text, bold: false })),
+      ].sort((a, b) => a.at - b.at),
+    [lines, replies],
+  );
 
-  // The page keeps the answer being written in view, as the reader scrolls to follow it.
+  // The page keeps the line being written in view, as she scrolls to follow it.
   useLayoutEffect(() => {
     const page = pageRef.current;
-    if (!page || !shown || lines.length === 0) return;
-    follow(page, page.scrollHeight - page.clientHeight, reducedMotion);
-  }, [lines, replies, shown, reducedMotion]);
+    const question = questionRef.current;
+    if (!page || !question || !shown || lines.length === 0) return;
+    follow(page, Math.max(0, question.offsetTop + question.offsetHeight - page.clientHeight + 142), reducedMotion);
+  }, [last?.text, last?.cueIndex, replies, lines.length, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {
     event.preventDefault();
@@ -177,21 +133,23 @@ function NaverState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
           </nav>
         </header>
 
-        <div className={styles.question}>
+        <div ref={questionRef} className={styles.question}>
           <span className={styles.tag}>Q&amp;A</span>
-          <h2 className={styles.title}>
+          <h2 data-lyric className={styles.title}>
             {first ? first.text : REST.title}
           </h2>
           <div className={styles.userInfo}>
             <span className={styles.head}>비공개</span>
-            <span className={styles.item}>조회수 {first ? 3 + lines.length * 2 : 41}</span>
-            <span className={styles.item}>{first ? DATE : YESTERDAY}</span>
+            <span className={styles.item}>조회수 {1 + (seat % 3) + Math.min(9, lines.length)}</span>
+            <span className={styles.item}>{DATE}</span>
           </div>
           {first ? (
             body.length > 0 ? (
               <div className={styles.detail}>
-                {body.map((line) => (
-                  <p key={line.cueIndex}>{line.text}</p>
+                {body.map((paragraph) => (
+                  <p data-lyric key={paragraph.key} style={paragraph.bold ? { fontWeight: 700 } : undefined}>
+                    {paragraph.text}
+                  </p>
                 ))}
               </div>
             ) : null
@@ -203,7 +161,7 @@ function NaverState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
           <div className={styles.tags}>
             <span>#연애상담</span>
             <span>#전남친</span>
-            <span>#재회</span>
+            <span>#이별</span>
           </div>
           <div className={styles.questionButtons} aria-hidden="true">
             <span className={styles.endButton}><Glyph name="comment" /></span>
@@ -215,7 +173,7 @@ function NaverState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
         <div className={styles.answers}>
           <div className={styles.answersHeader}>
             <div className={styles.titleArea}>
-              <span className={styles.answersTitle}>답변 {answers.length}개</span>
+              <span className={styles.answersTitle}>답변 0개</span>
               <span className={styles.sort}>
                 추천순
                 <span className={styles.sortArrow}><Glyph name="arrow" /></span>
@@ -230,9 +188,7 @@ function NaverState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
               </label>
             </form>
           </div>
-          {answers.map((answer) => (
-            <AnswerItem key={answer.key} answer={answer} />
-          ))}
+          <p className={styles.waiting}>답변을 기다리고 있어요</p>
         </div>
       </div>
       {/* Safari tints the status-bar strip with the page's own header colour. */}

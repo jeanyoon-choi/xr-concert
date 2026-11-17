@@ -1,0 +1,389 @@
+@font-face {
+  font-family: "IGS3 Classic";
+  src: url("/part4/v1/instagram-story-3/instrument-sans-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IGS3 Modern";
+  src: url("/part4/v1/instagram-story-3/gabarito-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IGS3 Typewriter";
+  src: url("/part4/v1/instagram-story-3/courier-prime-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IGS3 Literature";
+  src: url("/part4/v1/instagram-story-3/cormorant-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IGS3 Strong";
+  src: url("/part4/v1/instagram-story-3/racing-sans-one-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IGS3 Squeeze";
+  src: url("/part4/v1/instagram-story-3/fjalla-one-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Instagram iOS 2026, the story viewer, at native points on the 390 × 844 glass.
+   The 9:16 story (390 × 693) sits under the status bar; the reply row is on black below it. */
+.app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app * { box-sizing: border-box; }
+
+.app button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.viewer {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  width: 390px;
+  height: 693px;
+  perspective: 1100px;
+}
+
+.ahead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* One story: a face of the cube. */
+.story {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  backface-visibility: hidden;
+}
+
+/* To the next account: the outgoing face turns away on its far edge as the incoming turns in. */
+.story[data-role="out"] {
+  transform-origin: 100% 50%;
+  animation: turnOut 320ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.story[data-role="in"] {
+  transform-origin: 0 50%;
+  animation: turnIn 320ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.viewer[data-back] .story[data-role="out"] { transform-origin: 0 50%; animation-name: turnOutBack; }
+.viewer[data-back] .story[data-role="in"] { transform-origin: 100% 50%; animation-name: turnInBack; }
+
+@keyframes turnOut {
+  from { transform: translateX(0) rotateY(0deg); }
+  to { transform: translateX(-100%) rotateY(-90deg); }
+}
+
+@keyframes turnIn {
+  from { transform: translateX(100%) rotateY(90deg); }
+  to { transform: translateX(0) rotateY(0deg); }
+}
+
+@keyframes turnOutBack {
+  from { transform: translateX(0) rotateY(0deg); }
+  to { transform: translateX(100%) rotateY(90deg); }
+}
+
+@keyframes turnInBack {
+  from { transform: translateX(-100%) rotateY(-90deg); }
+  to { transform: translateX(0) rotateY(0deg); }
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Under her text the picture is taken down, flat, as she would have done to
+   make it read: the amount is per picture (index.tsx WOMEN, `dim`). */
+
+/* A still is held in a hand: it drifts, slowly (transform only). */
+.story[data-running] img.photo { animation: handheld 13s ease-in-out infinite alternate; }
+
+@keyframes handheld {
+  from { transform: scale(1.05) translate(-0.7%, 0.5%); }
+  to { transform: scale(1.09) translate(0.9%, -0.8%); }
+}
+
+/* Segmented progress: 2 pt bars, 8 pt from the story's top and sides.
+   The current one fills with the words sung. */
+.bars {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  gap: 3px;
+  height: 2px;
+}
+
+.bars span {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.bars i {
+  display: block;
+  height: 100%;
+  background: #fff;
+  transition: width 240ms linear;
+}
+
+/* Account row: 32 pt avatar inside the close-friends ring, username, age; ⋯ and ✕ at the right. */
+.head {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 6px 0 10px;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.ring {
+  display: grid;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 2px solid #1cd14f;
+  border-radius: 50%;
+}
+
+.ring img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: -0.1px;
+}
+
+.age {
+  margin-left: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.headIcons {
+  display: flex;
+  margin-left: auto;
+}
+
+.headIcons span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+}
+
+/* The line as her story text. Six story types (index.tsx KINDS); no shadow. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px;
+  pointer-events: none;
+}
+
+/* Classic (Instrument Sans for Instagram Sans). */
+.line {
+  margin: 0;
+  max-width: 100%;
+  font-family: "IGS3 Classic", var(--ios-font);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 38px;
+  letter-spacing: -0.3px;
+  text-align: center;
+  text-transform: lowercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.stage[data-kind="classic-low"],
+.stage[data-kind="strong-box"] {
+  align-items: flex-end;
+  padding-bottom: 132px;
+}
+
+/* The text background: one rounded box per line, lines touching. */
+.stage[data-kind="strong-box"] .line > span,
+.stage[data-kind="modern-box"] .line > span {
+  padding: 3px 9px 4px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Strong on the solid background. */
+.stage[data-kind="strong-box"] .line {
+  font-family: "IGS3 Strong", var(--ios-font);
+  font-size: 31px;
+  font-weight: 400;
+  line-height: 40px;
+  letter-spacing: 0;
+}
+
+.stage[data-kind="strong-box"] .line > span {
+  background: #fff;
+  color: #000;
+}
+
+/* Modern on the translucent background. */
+.stage[data-kind="modern-box"] .line {
+  font-family: "IGS3 Modern", var(--ios-font);
+  letter-spacing: -0.2px;
+}
+
+/* Literature. */
+.stage[data-kind="literature"] .line {
+  font-family: "IGS3 Literature", "Times New Roman", serif;
+  font-size: 38px;
+  line-height: 43px;
+  letter-spacing: 0;
+}
+
+/* Typewriter, small and left-aligned. */
+.stage[data-kind="type-left"] {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 236px;
+}
+
+.stage[data-kind="type-left"] .line,
+.stage[data-kind="black-type"] .line {
+  font-family: "IGS3 Typewriter", Courier, monospace;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 36px;
+  letter-spacing: -1px;
+}
+
+.stage[data-kind="type-left"] .line,
+.stage[data-kind="squeeze-left"] .line {
+  text-align: left;
+  text-wrap: wrap;
+}
+
+/* Squeeze, left-aligned low. */
+.stage[data-kind="squeeze-left"] {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: 150px;
+}
+
+.stage[data-kind="squeeze-left"] .line {
+  font-family: "IGS3 Squeeze", var(--ios-font);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 40px;
+  letter-spacing: 0;
+}
+
+/* Plain black stories: one line, small. */
+.stage[data-kind="black-classic"] .line {
+  font-size: 27px;
+  line-height: 35px;
+  letter-spacing: -0.2px;
+}
+
+.stage[data-kind="black-type"] .line {
+  font-size: 26px;
+  line-height: 34px;
+}
+
+/* Reply row on black under the story: Send message pill, like, share. */
+.reply {
+  position: absolute;
+  top: 757px;
+  left: 12px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 22px;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font: 400 15px/20px var(--ios-font);
+}
+
+.field::placeholder { color: #fff; opacity: 1; }
+
+.reply button {
+  display: grid;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+}
+
+.reply button:first-of-type { margin-left: 4px; }
+.reply .liked { color: #ff3040; }

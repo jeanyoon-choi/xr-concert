@@ -11,6 +11,17 @@ import { follow } from "../follow";
 // caret at its end. Notes makes the first line the note's title. The note is
 // real text: the participant can keep writing under the song's lines, and
 // what they write stays in the note.
+//
+// Metrics (points on the 390-pt glass, UIKit's): 44 pt navigation bar with the
+// back chevron 8 pt from the edge and the bar buttons 16 pt from the other;
+// 16 pt side margins in the editor; date line 13/18 centred; title 28/34
+// bold, body 17/22; 44 pt toolbar above the 34 pt home-indicator inset.
+// A line with `bold` is a bold paragraph. Where the page or a scenario scales
+// the lyric (data-lyric-scaled), the first line is set in Body like the
+// others, so the lines read at one size and only the bold one stands out.
+// Glyphs drawn here after SF Symbols: chevron.backward, square.and.arrow.up,
+// ellipsis.circle, checklist, tablecells, paperclip, pencil.tip.crop.circle,
+// square.and.pencil.
 
 function Glyph({ name }: { name: "back" | "share" | "more" | "checklist" | "table" | "attach" | "markup" | "compose" }) {
   const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -18,9 +29,9 @@ function Glyph({ name }: { name: "back" | "share" | "more" | "checklist" | "tabl
     case "back":
       return <svg aria-hidden="true" viewBox="0 0 12 21" width="12" height="21"><path d="M10.5 1.5 1.8 10.5l8.7 9" {...stroke} strokeWidth={2.6} /></svg>;
     case "share":
-      return <svg aria-hidden="true" viewBox="0 0 20 26" width="19" height="25"><path d="M10 16V2M5.5 6.2 10 1.8l4.5 4.4" {...stroke} /><path d="M6.5 10H3.8A1.8 1.8 0 0 0 2 11.8v10.4A1.8 1.8 0 0 0 3.8 24h12.4a1.8 1.8 0 0 0 1.8-1.8V11.8A1.8 1.8 0 0 0 16.2 10h-2.7" {...stroke} /></svg>;
+      return <svg aria-hidden="true" viewBox="0 0 20 26" width="18" height="23.4"><path d="M10 16V2M5.5 6.2 10 1.8l4.5 4.4" {...stroke} /><path d="M6.5 10H3.8A1.8 1.8 0 0 0 2 11.8v10.4A1.8 1.8 0 0 0 3.8 24h12.4a1.8 1.8 0 0 0 1.8-1.8V11.8A1.8 1.8 0 0 0 16.2 10h-2.7" {...stroke} /></svg>;
     case "more":
-      return <svg aria-hidden="true" viewBox="0 0 26 26" width="25" height="25"><circle cx="13" cy="13" r="11.5" {...stroke} strokeWidth={1.7} /><circle cx="8" cy="13" r="1.5" fill="currentColor" /><circle cx="13" cy="13" r="1.5" fill="currentColor" /><circle cx="18" cy="13" r="1.5" fill="currentColor" /></svg>;
+      return <svg aria-hidden="true" viewBox="0 0 26 26" width="22" height="22"><circle cx="13" cy="13" r="11.5" {...stroke} strokeWidth={1.7} /><circle cx="8" cy="13" r="1.5" fill="currentColor" /><circle cx="13" cy="13" r="1.5" fill="currentColor" /><circle cx="18" cy="13" r="1.5" fill="currentColor" /></svg>;
     case "checklist":
       return <svg aria-hidden="true" viewBox="0 0 26 24" width="25" height="23"><circle cx="5" cy="6" r="3.2" {...stroke} strokeWidth={1.6} /><path d="m3.4 6 1.2 1.2 2.2-2.4" {...stroke} strokeWidth={1.4} /><circle cx="5" cy="17" r="3.2" {...stroke} strokeWidth={1.6} /><path d="M12 6h12M12 17h12" {...stroke} /></svg>;
     case "table":
@@ -65,12 +76,12 @@ function NotesState({ seat, lines, shown, reducedMotion }: PhoneStateProps) {
       <div ref={bodyRef} className={styles.body}>
         <p className={styles.date}>{DAY} at {formatSongClock(title?.startMs ?? 0)}</p>
         {title ? (
-          <p className={styles.title} data-typing={(title.current && !draft) || undefined}>
+          <p data-lyric className={styles.title} data-bold={title.bold || undefined} data-typing={(title.current && !draft) || undefined}>
             {title.text}
           </p>
         ) : null}
         {rest.map((line) => (
-          <p key={line.cueIndex} className={styles.line} data-typing={(line.current && !draft) || undefined}>
+          <p data-lyric key={line.cueIndex} className={styles.line} data-bold={line.bold || undefined} data-typing={(line.current && !draft) || undefined}>
             {line.text}
           </p>
         ))}

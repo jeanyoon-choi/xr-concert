@@ -28,15 +28,15 @@ function Glyph({ name }: { name: "padlock" | "flashlight" | "camera" }) {
   }
 }
 
-function Card({ notice, age }: { notice: Notice; age: string }) {
+/** A notification: the app's icon and name, and under the name the sung line. */
+function Card({ notice }: { notice: Notice }) {
   return (
     <span className={styles.card}>
       <span className={styles.icon}>
         {notice.icon ? <img src={notice.icon} alt="" width={38} height={38} decoding="sync" /> : <MessagesIcon />}
       </span>
       <span className={styles.title}>{notice.title}</span>
-      <span className={styles.age}>{age}</span>
-      <span className={styles.body}>{notice.body}</span>
+      <span data-lyric className={styles.body}>{notice.body}</span>
     </span>
   );
 }
@@ -62,7 +62,7 @@ function LockState({ seat, lines, clock, shown, act, source }: PhoneStateProps) 
   const newest = lines.at(-1);
   // The group: the newest notification in front, up to two tucked beneath.
   const tucked = Math.min(2, lines.length - 1);
-  const notice = newest ? noticeOf(app, seat, newest) : null;
+  const notice = newest ? noticeOf(app, newest) : null;
 
   return (
     <section className={styles.lock} aria-label="Lock screen" inert={!shown} style={{ backgroundImage: wallpaperOf(seat).image }}>
@@ -77,13 +77,13 @@ function LockState({ seat, lines, clock, shown, act, source }: PhoneStateProps) 
           type="button"
           className={styles.stack}
           data-tucked={tucked}
-          aria-label={`${tucked + 1} notifications from ${notice.title}`}
+          aria-label={`${tucked + 1} notifications`}
           onClick={() => act({ kind: "open", state: notice.state })}
         >
           {tucked > 1 ? <span className={styles.under} data-depth="2" /> : null}
           {tucked > 0 ? <span className={styles.under} data-depth="1" /> : null}
           <span key={newest!.cueIndex} className={styles.front}>
-            <Card notice={notice} age="now" />
+            <Card notice={notice} />
           </span>
         </button>
       ) : null}

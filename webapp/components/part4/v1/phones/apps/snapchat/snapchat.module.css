@@ -103,7 +103,6 @@
 }
 
 .group[data-kind="me"] { --side: #f23c57; }
-.group[data-kind="them"] { --side: #0fadff; }
 
 .sender {
   margin: 0 0 2px;
@@ -112,42 +111,29 @@
   letter-spacing: 0.2px;
 }
 
-/* Each chat line hangs off a 2 pt bar in the sender's colour. */
-.chat,
-.snap {
+/* Each chat hangs off a 2 pt bar in the sender's colour; saved in chat, it stands on the grey ground. */
+.chat {
   margin: 0;
   border-left: 2px solid var(--side);
-  padding: 1px 0 1px 9px;
+  padding: 3px 8px 3px 9px;
+  background: rgb(0 0 0 / 0.05);
   color: #16191c;
   font: 400 16px/21px var(--ios-font);
   overflow-wrap: anywhere;
 }
 
-.chat + .chat { padding-top: 3px; }
-
-.snap {
+/* Sent and not opened: the filled chat arrow and "Delivered" under the last chat. */
+.delivered {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #656d78;
-  font-weight: 600;
-  font-size: 14px;
+  gap: 5px;
+  margin: 6px 0 0;
+  color: #9a9fa7;
+  font: 700 11px/14px var(--ios-font);
+  letter-spacing: 0.2px;
 }
 
-/* An opened snap: the empty red square. */
-.snapIcon {
-  width: 13px;
-  height: 13px;
-  border: 2px solid #f23c57;
-  border-radius: 2px;
-}
-
-.chat[data-arriving] { animation: arrive 200ms ease-out both; }
-
-@keyframes arrive {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+.delivered svg { color: #0fadff; }
 
 .composer {
   display: flex;
@@ -216,8 +202,4 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chat[data-arriving] { animation: none; }
 }

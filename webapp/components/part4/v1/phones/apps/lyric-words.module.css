@@ -1,0 +1,13 @@
+/* A sung word: fully there. It eases up from where it stood unsung. */
+.word {
+  opacity: 1;
+  transition: opacity 480ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Words of the line not yet sung: in the layout, unseen or faint. */
+.word[data-rest="hold"] { opacity: 0; }
+.word[data-rest="dim"] { opacity: 0.32; }
+
+@media (prefers-reduced-motion: reduce) {
+  .word { transition: none; }
+}

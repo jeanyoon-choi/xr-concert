@@ -19,8 +19,8 @@ export type SungLine = {
   readonly startMs: number;
   /** True while this line is being sung. */
   readonly current: boolean;
-  /** How large to set it, where a surface can: 2 is twice its usual size (default 1). */
-  readonly scale?: number;
+  /** Set it in bold, where a surface can. */
+  readonly bold?: boolean;
 };
 
 /**

@@ -1,0 +1,19 @@
+{
+  "license": "Unsplash License (https://unsplash.com/license)",
+  "photos": [
+    { "file": "01-dinner.jpg", "source": "https://unsplash.com/photos/DRTqdLhJe9E", "photographer": "Andrew Amelianovich" },
+    { "file": "02-behind.jpg", "source": "https://unsplash.com/photos/4T_Sk3lkulw", "photographer": "CS J0ke" },
+    { "file": "03-wheel.jpg", "source": "https://unsplash.com/photos/T0fEP7v7lfg", "photographer": "Mark Aliiev" },
+    { "file": "04-mirror.jpg", "source": "https://unsplash.com/photos/ECY-tZHowi8", "photographer": "Phoenix Williams" },
+    { "file": "05-street.jpg", "source": "https://unsplash.com/photos/oKyZoJy03ZA", "photographer": "Branislav Rodman" },
+    { "file": "06-hands.jpg", "source": "https://unsplash.com/photos/4kCvtVEimDk", "photographer": "Valentina Kondrasyuk" },
+    { "file": "07-dessert.jpg", "source": "https://unsplash.com/photos/qZuMXaf1Rc4", "photographer": "Ruben Mavarez" },
+    { "file": "08-him.jpg", "source": "https://unsplash.com/photos/-uQLY4qL0xc", "photographer": "iwin" },
+    { "file": "09-cars.jpg", "source": "https://unsplash.com/photos/M7Y3n_6AWtQ", "photographer": "Anderson Rhom" },
+    { "file": "10-candles.jpg", "source": "https://unsplash.com/photos/Woue_isymNU", "photographer": "Andrii Solok" },
+    { "file": "11-alley.jpg", "source": "https://unsplash.com/photos/6r8aej69Vlw", "photographer": "Hoseung Han" },
+    { "file": "12-table.jpg", "source": "https://unsplash.com/photos/jV5YrbYw35k", "photographer": "Nikita Pishchugin" },
+    { "file": "avatar.jpg", "source": "https://unsplash.com/photos/_EvhuH9V6jA", "photographer": "Christina Radevich" },
+    { "file": "avatar-2.jpg", "source": "https://unsplash.com/photos/0OK7BXl8S4c", "photographer": "Blond Fox" }
+  ]
+}

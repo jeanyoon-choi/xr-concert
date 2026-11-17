@@ -48,6 +48,8 @@
 }
 
 .feed {
+  /* The offset parent of the post, for keeping its foot in view. */
+  position: relative;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -185,7 +187,7 @@
 
 .comment {
   position: relative;
-  padding: 8px 16px 0 calc(16px + var(--depth) * 20px);
+  padding: 8px 16px 0;
 }
 
 /* The thread rail for each level of nesting. */
@@ -210,11 +212,34 @@
   font-weight: 600;
 }
 
+/* Insets of a lyric element are divided by the lyric scale (phone.module.css), so it keeps its place when it grows. */
 .commentText {
-  margin: 4px 0 0 30px;
+  margin: 4px 0 0 calc(30px / var(--lyric-scale, 1));
   color: #0f1a1c;
   font: 400 14px/20px var(--ios-font);
   overflow-wrap: anywhere;
+}
+
+/* Reddit's tag on the post author's own comments. */
+.op {
+  color: #0a449b;
+  font-weight: 700;
+}
+
+/* The comment section with nothing in it. */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px 40px 28px;
+  color: #576f76;
+  font: 400 13px/18px var(--ios-font);
+  text-align: center;
+}
+
+.empty b {
+  color: #0f1a1c;
+  font: 600 15px/20px var(--ios-font);
 }
 
 .commentActions {

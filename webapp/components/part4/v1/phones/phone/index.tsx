@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { SungLine } from "../../song/lines";
 import { PhoneSurface } from "../../surface";
-import type { PhoneState } from "../states";
+import { STATE_GROUPS, type PhoneState } from "../states";
 import { PHONE_STATES } from "../apps/registry";
 import type { PhoneAction, Reply } from "../apps/types";
 import { MOVE_MS } from "../score";
@@ -18,6 +18,23 @@ import styles from "./phone.module.css";
 // Drawn at native points (404 × 858, glass 390 × 844) on a phone surface,
 // which shows it at whatever width the phone is given.
 
+/**
+ * How every phone sets the lyric. Only the element holding the lyric changes
+ * (an app marks it `data-lyric`): at a scale other than 1 its type and its
+ * own bubble or box grow together, and `bold` sets it in bold. The rest of
+ * the interface keeps its size. Applied here, for every app at once
+ * (phone.module.css); no app knows the values.
+ */
+export type LyricStyle = { readonly scale: number; readonly bold: boolean };
+export const PhoneLyricStyle = createContext<LyricStyle>({ scale: 1, bold: false });
+export const TEXT_SCALES = [1, 1.2, 1.5, 2] as const;
+
+/**
+ * The media apps set a line word by word — each word whole, at its onset —
+ * rather than typed character by character as a chat is.
+ */
+const WORD_BY_WORD: ReadonlySet<PhoneState> = new Set(STATE_GROUPS.find((group) => group.id === "media")!.states);
+
 /** Lines a phone needs: the longest history any state keeps. */
 export const PHONE_HISTORY = Math.max(...Object.values(PHONE_STATES).map((state) => state.history));
 
@@ -27,6 +44,10 @@ type Props = {
   width: number;
   /** The sung lines, oldest first, at most PHONE_HISTORY; shared by every phone. */
   lines: readonly SungLine[];
+  /** Apps that keep lines of their own instead of the sung ones (a staged scenario's), whenever the phone is in them. */
+  held?: readonly { readonly app: PhoneState; readonly lines: readonly SungLine[]; /** Sets the lyric this many times larger in that app, on top of the page's text size. */ readonly scale?: number }[] | null;
+  /** Sets the lyric this many times larger on this phone, on top of the page's text size (default 1). */
+  lyricScale?: number;
   /** The app the phone is in. */
   app: PhoneState;
   /** The app it will move to next, mounted out of sight ahead of the move (null: none coming). */
@@ -84,41 +105,42 @@ function Wifi({ arcs }: { arcs: number }) {
  * the move starts nothing mounts: the layer only starts moving. The old app
  * is dropped as soon as the move ends.
  */
-function Slide({ id, children, next }: { id: string; children: ReactNode; next: { id: string; node: ReactNode } | null }) {
-  const [current, setCurrent] = useState({ id, node: children });
-  const [leaving, setLeaving] = useState<{ id: string; node: ReactNode } | null>(null);
-  if (current.id !== id) {
-    setLeaving({ id: current.id, node: current.node });
-    setCurrent({ id, node: children });
+function Slide<Id extends string>({ id, next, render }: { id: Id; next: Id | null; render: (id: Id, shown: boolean) => ReactNode }) {
+  const [current, setCurrent] = useState(id);
+  const [leaving, setLeaving] = useState<Id | null>(null);
+  if (current !== id) {
+    setLeaving(current);
+    setCurrent(id);
   }
-  const node = current.id === id ? children : current.node;
+  // Every layer is drawn from what the phone holds now, so the app being
+  // carried off still shows what it showed, not what it was mounted with.
   return (
     <>
-      {leaving ? (
-        <div key={leaving.id} className={styles.slideLayer} data-phase="out">
-          {leaving.node}
+      {leaving && leaving !== id ? (
+        <div key={leaving} className={styles.slideLayer} data-phase="out">
+          {render(leaving, false)}
         </div>
       ) : null}
       <div
         key={id}
         className={styles.slideLayer}
-        data-phase={leaving ? "in" : undefined}
+        data-phase={leaving && leaving !== id ? "in" : undefined}
         onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) setLeaving(null);
         }}
       >
-        {node}
+        {render(id, true)}
       </div>
-      {next && next.id !== id && next.id !== leaving?.id ? (
-        <div key={next.id} className={styles.slideLayer} data-phase="waiting" aria-hidden="true">
-          {next.node}
+      {next && next !== id && next !== leaving ? (
+        <div key={next} className={styles.slideLayer} data-phase="waiting" aria-hidden="true">
+          {render(next, false)}
         </div>
       ) : null}
     </>
   );
 }
 
-function PhoneView({ seat, width, lines, app, upcoming, locked, lineKey, clock, reducedMotion }: Props) {
+function PhoneView({ seat, width, lines, held, lyricScale = 1, app, upcoming, locked, lineKey, clock, reducedMotion }: Props) {
   const [replies, setReplies] = useState<readonly Reply[]>([]);
   const [opened, setOpened] = useState<{ lineKey: string; state: PhoneState } | null>(null);
   const openedNow = opened && opened.lineKey === lineKey ? opened.state : null;
@@ -126,6 +148,8 @@ function PhoneView({ seat, width, lines, app, upcoming, locked, lineKey, clock, 
   const lockShown = locked && !openedNow;
   const appShown = openedNow && openedNow !== "lock" ? openedNow : app;
   const status = useMemo(() => statusOf(seat), [seat]);
+  const page = useContext(PhoneLyricStyle);
+  const lyric = { ...page, scale: page.scale * lyricScale };
 
   // The line a reply follows is read when the reply is sent, so `act` keeps
   // its identity while the line is typed.
@@ -147,14 +171,30 @@ function PhoneView({ seat, width, lines, app, upcoming, locked, lineKey, clock, 
     [lineKey],
   );
 
+  // The same lines with the newest word whole instead of half typed, for the apps that set words whole.
+  const wordLines = useMemo(
+    () => lines.map((line) => (line.current ? { ...line, text: line.words.slice(0, line.sung).join(" ") } : line)),
+    [lines],
+  );
   const slice = (state: PhoneState) => {
+    const own = held?.find((entry) => entry.app === state);
+    if (own) return own.lines;
     const { history } = PHONE_STATES[state];
-    return lines.length > history ? lines.slice(-history) : lines;
+    const all = WORD_BY_WORD.has(state) ? wordLines : lines;
+    return all.length > history ? all.slice(-history) : all;
   };
   const renderApp = (state: PhoneState, shown: boolean) => {
     const { Screen } = PHONE_STATES[state];
+    // An app holding a scenario's lines may set them larger than the rest of the phone does.
+    const scale = lyric.scale * (held?.find((entry) => entry.app === state)?.scale ?? 1);
     return (
-      <div className={styles.layer} data-state={state} data-shown={shown || undefined}>
+      <div
+        className={styles.layer}
+        data-state={state}
+        data-shown={shown || undefined}
+        data-lyric-scaled={scale !== 1 || undefined}
+        style={scale !== lyric.scale ? ({ "--lyric-scale": scale } as CSSProperties) : undefined}
+      >
         <Screen seat={seat} lines={slice(state)} replies={replies} clock={clock} shown={shown} reducedMotion={reducedMotion} act={act} />
       </div>
     );
@@ -164,11 +204,15 @@ function PhoneView({ seat, width, lines, app, upcoming, locked, lineKey, clock, 
 
   return (
     <PhoneSurface width={width}>
-    <div className={styles.phone} style={{ "--move-ms": `${MOVE_MS}ms` } as CSSProperties} data-reduced-motion={reducedMotion || undefined}>
+    <div
+      className={styles.phone}
+      style={{ "--move-ms": `${MOVE_MS}ms`, "--lyric-scale": lyric.scale } as CSSProperties}
+      data-lyric-scaled={lyric.scale !== 1 || undefined}
+      data-lyric-bold={lyric.bold || undefined}
+      data-reduced-motion={reducedMotion || undefined}
+    >
       <div className={styles.glass}>
-        <Slide id={appShown} next={upcoming && !openedNow ? { id: upcoming, node: renderApp(upcoming, false) } : null}>
-          {renderApp(appShown, !lockShown)}
-        </Slide>
+        <Slide id={appShown} next={upcoming && !openedNow ? upcoming : null} render={(state, current) => renderApp(state, current && !lockShown)} />
         <div className={styles.lockLayer} data-state="lock" data-shown={lockShown || undefined}>
           <Lock seat={seat} lines={slice("lock")} replies={replies} clock={clock} shown={lockShown} reducedMotion={reducedMotion} act={act} source={app} />
         </div>

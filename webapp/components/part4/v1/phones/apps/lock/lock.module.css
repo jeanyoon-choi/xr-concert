@@ -91,7 +91,7 @@
 
 .card {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: 38px minmax(0, 1fr);
   column-gap: 10px;
   align-items: start;
   padding: 12px 14px 13px 12px;
@@ -108,7 +108,6 @@
   grid-row: span 2;
   width: 38px;
   height: 38px;
-  margin-top: 1px;
   overflow: hidden;
   border-radius: 9px;
 }
@@ -120,22 +119,25 @@
   height: 100%;
 }
 
+/* Under the name, the sung line: regular weight, as iOS sets a
+   notification's message, at 1.2 times its 15 pt. */
+/* The app's name, as iOS sets a notification's title. */
 .title {
   overflow: hidden;
+  font-size: 15px;
+  line-height: 20px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.age {
-  color: rgb(60 60 67 / 60%);
-  font-size: 13px;
-}
-
 .body {
-  grid-column: 2 / 4;
+  grid-column: 2;
   display: -webkit-box;
   overflow: hidden;
+  font-size: 18px;
+  line-height: 23px;
+  font-weight: 400;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }

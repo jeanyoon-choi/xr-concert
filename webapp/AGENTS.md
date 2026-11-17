@@ -61,6 +61,11 @@
 - Put durable repo-wide notes under `docs/harness/` or `docs/foundations/`; put experiment notes under `docs/experiments/<id>/`; put rehearsal procedures under `docs/tutorials/`.
 - Update `docs/README.md` and `llm.txt` when adding a durable document or experiment.
 
+## Shorthand the user writes
+
+- `pc` — pre-chorus (`pc1`, `pc2`: Pre-Chorus 1, 2 of “toxic till the end”; sections are listed in `components/part4/v1/song/sections.ts`).
+- `yhmp` — the line “You had me participating” (the last line of each pre-chorus).
+
 ## Verification
 
 - Protocol tests must cover validation, duplicate/stale rejection, lifecycle end, bounded aggregation, and absence of presentation fields.

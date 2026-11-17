@@ -34,13 +34,19 @@
 }
 
 /* The newest capture lands the way Photos fades a new item in. */
-.cell[data-new] {
-  animation: arrive 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+/* A new capture arrives softly: the photograph fades in, then the bar and the word just after. Nothing moves. */
+.cell[data-new] .frame {
+  animation: arrive 450ms ease both;
+}
+
+.cell[data-new] .censor,
+.cell[data-new] .word {
+  animation: arrive 450ms ease 120ms both;
 }
 
 @keyframes arrive {
-  from { opacity: 0; transform: scale(0.86); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .tile {
@@ -51,181 +57,55 @@
   margin: 0;
   padding: 0;
   border: 0;
-  background: #1c1c1e;
+  background: none;
   cursor: pointer;
   font: inherit;
   color: inherit;
   text-align: inherit;
-  /* The word inside is sized to the tile (cqw) and to its own length (--len). */
+  /* The bar's word is sized in cqmin of the tile. */
   container-type: size;
 }
 
-.photo,
-.note,
-.message,
-.recording {
+/* The tile is a square window onto the photograph. */
+.frame {
   position: absolute;
   inset: 0;
-  display: flex;
+  display: block;
   overflow: hidden;
-}
-
-.photo {
-  align-items: center;
-  justify-content: center;
-  background-color: #2c2c2e;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-/* Instagram story text, "Classic" with the background on: a white rounded slab, bold black type. */
-.story {
-  max-width: 86%;
-  padding: 2.5cqw 5cqw 3cqw;
-  border-radius: 4cqw;
-  background: #fff;
-  color: #000;
-  font: 700 min(20cqw, calc(130cqw / var(--len))) / 1.12 var(--ios-display);
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-  text-align: center;
-  box-decoration-break: clone;
-}
-
-/* Story text without a background: heavy white type set into the photo. */
-.overlay {
-  max-width: 90%;
-  color: #fff;
-  font: 800 min(24cqw, calc(150cqw / var(--len))) / 0.95 var(--ios-display);
-  letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
-  text-align: center;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
-}
-
-/* Snapchat caption band across the snap. */
-.band {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 56%;
-  padding: 2cqw 4cqw 2.5cqw;
-  background: rgb(0 0 0 / 55%);
-  color: #fff;
-  font: 500 min(11cqw, calc(100cqw / var(--len))) / 1.2 var(--ios-font);
-  overflow-wrap: anywhere;
-  text-align: center;
-}
-
-/* A clip with the word burnt in as its subtitle, on a dark slab. */
-.caption {
-  position: absolute;
-  left: 8cqw;
-  right: 8cqw;
-  bottom: 18cqw;
-  display: flex;
-  justify-content: center;
-}
-
-.caption::before { content: none; }
-
-.photo .caption {
-  color: #fff;
-  font: 700 min(12cqw, calc(100cqw / var(--len))) / 1.15 var(--ios-font);
-  overflow-wrap: anywhere;
-  text-align: center;
-  text-shadow: 0 0 2px #000, 0 1px 3px #000;
-}
-
-/* Screenshot of a note: the Notes bar, then the word as the note's title. */
-.note {
-  flex-direction: column;
-  align-items: stretch;
-  background: #fff;
-}
-
-.noteBar {
-  display: flex;
-  align-items: center;
-  height: 16cqw;
-  padding: 0 5cqw;
-  color: #e2a400;
-  font: 400 8cqw/1 var(--ios-font);
-}
-
-.noteWord {
-  padding: 4cqw 7cqw 0;
-  color: #000;
-  font: 700 min(20cqw, calc(140cqw / var(--len))) / 1.05 var(--ios-display);
-  letter-spacing: -0.01em;
-  overflow-wrap: anywhere;
-}
-
-/* Screenshot of a thread: one incoming bubble, zoomed in as a screenshot crop is. */
-.message {
-  align-items: center;
-  padding: 0 7cqw 0 10cqw;
-  background: #fff;
-}
-
-.bubble {
-  position: relative;
-  max-width: 100%;
-  padding: 3.5cqw 7cqw 4cqw;
-  border-radius: 10cqw;
-  background: #e9e9eb;
-  color: #000;
-  font: 400 min(17cqw, calc(120cqw / var(--len))) / 1.18 var(--ios-font);
-  letter-spacing: -0.01em;
-  overflow-wrap: anywhere;
-}
-
-.bubble::before {
-  content: "";
-  position: absolute;
-  left: -3cqw;
-  bottom: 0;
-  width: 9cqw;
-  height: 9cqw;
-  border-bottom-right-radius: 7cqw;
-  background: #e9e9eb;
-}
-
-.bubble::after {
-  content: "";
-  position: absolute;
-  left: -6cqw;
-  bottom: 0;
-  width: 6cqw;
-  height: 9cqw;
-  border-bottom-right-radius: 5cqw;
-  background: #fff;
-}
-
-/* Screen recording: a black screen with the word on it, the red recording pill top left. */
-.recording {
-  align-items: center;
-  justify-content: center;
-  padding: 0 8cqw;
   background: #000;
 }
 
-.recordingDot {
+/* The photograph at its own proportions; the bar is placed in the same box, so it stays on the eyes however the tile crops. */
+.shot {
   position: absolute;
-  top: 6cqw;
-  left: 6cqw;
-  width: 12cqw;
-  height: 6cqw;
-  border-radius: 3cqw;
-  background: #ff3b30;
+  display: block;
+  background-color: #000;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
-.recordingWord {
+/* The censor bar over the eyes: plain black, nothing in it. */
+.censor {
+  position: absolute;
+  display: block;
+  background: #000;
+}
+
+/* The sung word, below: white on a flat black strip along the foot of the photograph, one line. */
+.word {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
   color: #fff;
-  font: 600 min(17cqw, calc(130cqw / var(--len))) / 1.1 var(--ios-font);
-  overflow-wrap: anywhere;
-  text-align: center;
+  font-family: var(--ios-display);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 /* Photos marks a video with its length, bottom right, white. */
@@ -388,16 +268,13 @@
   inset: 0;
 }
 
-.viewerImage .story { font-size: 30px; line-height: 38px; padding: 6px 14px 8px; border-radius: 10px; }
-.viewerImage .band { font-size: 22px; line-height: 28px; padding: 6px 12px; }
-.viewerImage .caption { left: 24px; right: 24px; bottom: 180px; font-size: 30px; line-height: 36px; }
-.viewerImage .note { padding: 150px 20px 0; }
-.viewerImage .noteWord { font-size: 28px; line-height: 34px; }
-.viewerImage .message { padding: 0 16px; }
-.viewerImage .bubble { padding: 7px 12px 8px; border-radius: 18px; font-size: 17px; line-height: 22px; }
-.viewerImage .recordingWord { font-size: 34px; line-height: 41px; }
-.viewerImage .note,
-.viewerImage .message { box-shadow: none; }
+/* Full screen the whole photograph is shown, fitted to the width as Photos does. */
+.viewerImage .frame {
+  inset: 50% 0 auto;
+  transform: translateY(-50%);
+  background: none;
+  container-type: size;
+}
 
 .viewerBar {
   position: absolute;
@@ -474,7 +351,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cell[data-new] { animation: none; }
+  .cell[data-new] .frame,
+  .cell[data-new] .censor,
+  .cell[data-new] .word { animation: none; }
 }
 
 /* Over the dark fade the header's controls are dark glass with white glyphs. */

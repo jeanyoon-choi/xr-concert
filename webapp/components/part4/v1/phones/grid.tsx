@@ -2,7 +2,6 @@
 
 import { memo } from "react";
 import type { SungLine } from "../song/lines";
-import type { StateMode } from "./controls";
 import { fitPhoneGrid } from "./layout";
 import { Phone } from "./phone";
 import type { PhoneScore } from "./score";
@@ -18,7 +17,8 @@ type Props = {
   width: number;
   height: number;
   phones: number;
-  mode: StateMode;
+  /** Hold every phone on its lock screen, whatever is sung. */
+  locked: boolean;
   score: PhoneScore;
   /** The sung lines, oldest first; shared by every phone. */
   lines: readonly SungLine[];
@@ -28,12 +28,9 @@ type Props = {
   reducedMotion: boolean;
 };
 
-function PhoneGridView({ width, height, phones, mode, score, lines, lineKey, clock, reducedMotion }: Props) {
+function PhoneGridView({ width, height, phones, locked, score, lines, lineKey, clock, reducedMotion }: Props) {
   const layout = fitPhoneGrid(width, height, phones);
   if (layout.width <= 0) return null;
-  // "score" and "lock" follow the score's apps; any other mode pins every phone to that app.
-  const scored = mode === "score" || mode === "lock";
-  const locked = mode === "lock" || (mode === "score" && score.locked);
 
   return (
     <div className={styles.box}>
@@ -47,9 +44,9 @@ function PhoneGridView({ width, height, phones, mode, score, lines, lineKey, clo
               seat={seat}
               width={layout.width}
               lines={lines}
-              app={scored ? score.apps[seat]! : mode}
-              upcoming={scored ? score.upcoming[seat]! : null}
-              locked={locked}
+              app={score.apps[seat]!}
+              upcoming={score.upcoming[seat]!}
+              locked={locked || score.locked}
               lineKey={lineKey}
               clock={clock}
               reducedMotion={reducedMotion}

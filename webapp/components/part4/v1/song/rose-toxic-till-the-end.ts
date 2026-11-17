@@ -26,7 +26,7 @@ export const roseToxicTillTheEnd: ParametricSong = {
     line(43_480, 46_260, "You heard, \"Baby, can you pull me in closer?\"", [43_480, 43_700, 44_520, 44_980, 45_100, 45_240, 45_460, 45_640, 45_840]),
     line(46_260, 49_600, "You were plotting how to stay in my head", [46_260, 46_540, 47_080, 47_740, 47_980, 48_100, 48_360, 48_520, 48_780]),
     line(49_600, 52_340, "We were toxic 'til the end", [49_600, 49_900, 50_100, 50_540, 51_060, 51_360]),
-    line(52_340, 58_040, "Ladies and gentlemen, I present to you: the ex", [52_340, 52_700, 52_980, 53_940, 54_300, 54_420, 54_700, 55_740, 55_880]),
+    line(52_340, 58_040, "Ladies and gentlemen I present to you The ex", [52_340, 52_700, 52_980, 53_940, 54_300, 54_420, 54_700, 55_740, 55_880]),
     line(58_040, 61_760, "His favorite game is chess, who would ever guess?", [58_040, 58_180, 58_420, 58_700, 58_880, 59_660, 59_800, 59_980, 60_160]),
     line(61_760, 63_820, "Playing with the pieces in my chest", [61_760, 61_960, 62_260, 62_380, 62_740, 63_000, 63_200]),
     line(63_820, 67_300, "Now he's on the screen and saying, \"Don't leave\"", [63_820, 63_980, 64_260, 64_420, 64_580, 64_960, 65_220, 65_780, 66_040]),

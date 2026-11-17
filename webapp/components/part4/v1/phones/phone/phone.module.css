@@ -187,3 +187,23 @@
 }
 
 .homeIndicator[data-tone="light"] { background: #fff; }
+
+/*
+ * Text size and weight (index.tsx PhoneLyricStyle): only the element an app marks
+ * data-lyric grows — type and its own bubble or box together — and it never
+ * grows wider than the row it sits in. The rest of the interface keeps its
+ * size.
+ */
+.phone[data-lyric-scaled] [data-lyric],
+.phone [data-lyric-scaled] [data-lyric] {
+  zoom: var(--lyric-scale);
+  max-width: 100%;
+}
+
+/* Something inside the lyric's element that is not the lyric (a bubble's
+   time stamp, its ticks) is marked data-lyric-keep and keeps its size. */
+.phone[data-lyric-scaled] [data-lyric] [data-lyric-keep],
+.phone [data-lyric-scaled] [data-lyric] [data-lyric-keep] { zoom: calc(1 / var(--lyric-scale)); }
+
+.phone[data-lyric-bold] [data-lyric] { font-weight: 700; }
+.phone[data-lyric-bold] [data-lyric] [data-lyric-keep] { font-weight: 400; }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { PhoneState } from "../states";
-import { PHONE_STATE_ORDER, PHONE_STATES } from "../apps/registry";
+import { ALL_APPS, STATE_GROUPS, type PhoneState } from "../states";
+import { PHONE_STATES } from "../apps/registry";
+import { TEXT_SCALES, type LyricStyle } from "../phone";
 import styles from "./controls.module.css";
 
 // The page's one option control, bottom right (experiments-jyc design
@@ -10,7 +11,6 @@ import styles from "./controls.module.css";
 // panel with a heading and option chips). It never covers the play control.
 
 export const PHONE_COUNTS = [1, 2, 4, 6, 9, 12, 16, 24] as const;
-export type StateMode = "score" | PhoneState;
 /** What the page shows: the phone grid, or the song staged section by section. */
 export type View = "phones" | "staged";
 const VIEWS: readonly { id: View; label: string }[] = [
@@ -20,18 +20,29 @@ const VIEWS: readonly { id: View; label: string }[] = [
 
 export function Controls({
   view,
+  lyric,
   phones,
-  mode,
+  pool,
+  locked,
   onView,
+  onLyric,
   onPhones,
-  onMode,
+  onPool,
+  onLocked,
 }: {
   view: View;
   onView: (view: View) => void;
+  /** How every phone sets the lyric (phone/index.tsx PhoneLyricStyle). */
+  lyric: LyricStyle;
+  onLyric: (lyric: LyricStyle) => void;
   phones: number;
-  mode: StateMode;
+  /** The apps the phones are dealt from; empty deals the default. */
+  pool: readonly PhoneState[];
+  /** Hold every phone on its lock screen. */
+  locked: boolean;
   onPhones: (phones: number) => void;
-  onMode: (mode: StateMode) => void;
+  onPool: (pool: readonly PhoneState[]) => void;
+  onLocked: (locked: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -47,6 +58,17 @@ export function Controls({
               </button>
             ))}
           </div>
+          <p className={styles.heading}>Text size</p>
+          <div className={styles.chips} role="group" aria-label="Text size">
+            {TEXT_SCALES.map((scale) => (
+              <button key={scale} type="button" aria-pressed={lyric.scale === scale} onClick={() => onLyric({ ...lyric, scale })}>
+                {scale}×
+              </button>
+            ))}
+            <button type="button" aria-pressed={lyric.bold} onClick={() => onLyric({ ...lyric, bold: !lyric.bold })}>
+              Bold
+            </button>
+          </div>
           <p className={styles.heading}>Phones</p>
           <div className={styles.chips} role="group" aria-label="Phone count">
             {PHONE_COUNTS.map((count) => (
@@ -55,17 +77,46 @@ export function Controls({
               </button>
             ))}
           </div>
-          <p className={styles.heading}>State</p>
-          <div className={styles.chips} role="group" aria-label="Phone state">
-            <button type="button" aria-pressed={mode === "score"} onClick={() => onMode("score")}>
-              Score
+          {/* Apps: the pool the phones are dealt from. A chip puts an app in or
+              takes it out; a group's name does the same for the whole group. */}
+          <p className={styles.heading}>Apps</p>
+          <div className={styles.chips} role="group" aria-label="All apps">
+            <button type="button" aria-pressed={pool.length === ALL_APPS.length} onClick={() => onPool(ALL_APPS)}>
+              All
             </button>
-            {PHONE_STATE_ORDER.map((id) => (
-              <button key={id} type="button" aria-pressed={mode === id} onClick={() => onMode(id)}>
-                {PHONE_STATES[id].label}
-              </button>
-            ))}
+            <button type="button" aria-pressed={pool.length === 0} onClick={() => onPool([])}>
+              None
+            </button>
+            <button type="button" aria-pressed={locked} onClick={() => onLocked(!locked)}>
+              {PHONE_STATES.lock.label}
+            </button>
           </div>
+          {STATE_GROUPS.map((group) => {
+            const apps = group.states.filter((id): id is PhoneState => id !== "lock");
+            const chosen = apps.filter((id) => pool.includes(id));
+            // Kept in group order, so the same choice always deals the same grid.
+            const set = (ids: readonly PhoneState[], on: boolean) =>
+              onPool(ALL_APPS.filter((id) => (ids.includes(id) ? on : pool.includes(id))));
+            return (
+              <div key={group.id} className={styles.group} role="group" aria-label={group.label}>
+                <button
+                  type="button"
+                  className={styles.groupName}
+                  aria-pressed={chosen.length === apps.length ? true : chosen.length > 0 ? "mixed" : false}
+                  onClick={() => set(apps, chosen.length < apps.length)}
+                >
+                  {group.label}
+                </button>
+                <div className={styles.chips}>
+                  {apps.map((id) => (
+                    <button key={id} type="button" aria-pressed={pool.includes(id)} onClick={() => set([id], !pool.includes(id))}>
+                      {PHONE_STATES[id].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : null}
       <button

@@ -6,13 +6,13 @@ import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./whatsapp.module.css";
 import { follow } from "../follow";
 
-// WhatsApp for iOS, light theme, one 1:1 chat with the seat's ex. Unlike
-// Messages (the ex's words fill a bubble while sung), WhatsApp never shows a
-// draft: while a line is being sung the ex is "typing…" — in the header
-// subtitle and as the in-chat typing bubble — and the line lands as one
-// incoming message only once it has been sung whole. The composer is real:
-// what the participant sends lands as an outgoing bubble whose ticks stay grey
-// until the ex starts on the next line (read: blue).
+// WhatsApp for iOS, light theme, one 1:1 chat with the seat's ex, empty
+// until the song. Every sung line is a message this phone's owner sends — her
+// own green bubbles, one after another, each filling as it is typed, the tail
+// on the last of the run — and the ex never answers or opens them: every
+// bubble keeps its time and two grey ticks (delivered), never blue. What the
+// participant sends from the composer is one more green bubble, in order with
+// the lines. A line marked bold is set in bold.
 //
 // Sources. Every glyph, the bubble images and the chat doodle are WhatsApp's
 // own, exported from the iOS app's asset catalogs as shipped in the Mac
@@ -22,17 +22,11 @@ import { follow } from "../follow";
 // phone-handset_Outline_24, ChatBarAttachMedia, ic_stickers, ChatBarCamera,
 // ChatBarMicrophone, wds_ic_read, checkmark, IconSend, PersonalChatRoundSmall.
 // Bubble slices and outsets are measured from those 2x images (body inset
-// 5 pt, tail side 15 pt). Colours: #EFEAE2 chat ground, #53BDEB read ticks
+// 5 pt, tail side 15 pt). Colours: #EFEAE2 chat ground, #8C9196 unread ticks
 // (WhatsApp design values; the asset catalog holds only AccentColor #1B934C).
 
 const SEND_LIMIT = 80;
 const PREFIX = "/part4/v0/apps/whatsapp";
-
-type Entry =
-  | { kind: "in"; key: string; text: string; time: string; at: number; arriving: boolean }
-  | { kind: "out"; key: string; text: string; time: string; at: number; read: boolean };
-
-type Row = Entry & { tail: boolean };
 
 function Icon({ name, className }: { name: string; className: string }) {
   return <span aria-hidden="true" className={className} style={{ ["--src" as string]: `url(${PREFIX}/${name}@2x.png)` }} />;
@@ -43,41 +37,16 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
 
-  const last = lines.at(-1);
-  // The ex types while a line is being sung; the message is sent when it ends.
-  const typing = Boolean(last && last.current && last.sung < last.words.length);
-
+  // The sung lines and whatever the participant sends, in the order sent: all hers.
   const rows = useMemo(() => {
-    const landed = lines.filter((line) => !(line.current && line.sung < line.words.length));
     const startOf = new Map(lines.map((line) => [line.cueIndex, line.startMs]));
-    const lastLanded = landed.at(-1)?.cueIndex;
-    const entries: Entry[] = [
-      ...landed.map((line): Entry => ({
-        kind: "in",
-        key: `l${line.cueIndex}`,
-        text: line.full,
-        time: formatSongClock(line.startMs),
-        at: line.cueIndex,
-        arriving: line.cueIndex === lastLanded,
-      })),
-      ...replies.slice(-24).map((reply): Entry => {
+    return [
+      ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, time: formatSongClock(line.startMs), bold: Boolean(line.bold) })),
+      ...replies.slice(-24).map((reply) => {
         const startMs = startOf.get(reply.afterCue);
-        return {
-          kind: "out",
-          key: `r${reply.id}`,
-          text: reply.text,
-          time: startMs === undefined ? clock : formatSongClock(startMs),
-          at: reply.afterCue + 0.5,
-          // Seen once the ex starts on a later line.
-          read: lines.some((line) => line.cueIndex > reply.afterCue),
-        };
+        return { key: `r${reply.id}`, at: reply.afterCue + 0.5, text: reply.text, time: startMs === undefined ? clock : formatSongClock(startMs), bold: false };
       }),
     ].sort((a, b) => a.at - b.at);
-
-    return entries.map((entry, index): Row => {
-      const next = entries[index + 1];
-      return { ...entry, tail: !next || next.kind !== entry.kind };
-    });
   }, [lines, replies, clock]);
 
   // The chat keeps its newest message in view, as WhatsApp does.
@@ -85,7 +54,7 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
     const thread = threadRef.current;
     if (!thread || !shown) return;
     follow(thread, thread.scrollHeight, reducedMotion);
-  }, [rows, typing, shown, reducedMotion]);
+  }, [rows, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {
     event.preventDefault();
@@ -94,9 +63,6 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
     act({ kind: "reply", text });
     setDraft("");
   };
-
-  const subtitle = typing ? "typing…" : lines.length ? "online" : "last seen yesterday at 23:52";
-  const firstLine = lines[0];
 
   return (
     <section className={styles.app} aria-label={`WhatsApp chat with ${contact.name}`} inert={!shown} data-reduced-motion={reducedMotion || undefined}>
@@ -109,7 +75,7 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
           <span className={styles.avatar} aria-hidden="true" />
           <span className={styles.peerText}>
             <span className={styles.peerName}>{contact.name}</span>
-            <span className={styles.peerStatus}>{subtitle}</span>
+            <span className={styles.peerStatus}>last seen yesterday at 23:52</span>
           </span>
         </span>
         <span className={styles.calls}>
@@ -120,40 +86,20 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
 
       <div ref={threadRef} className={styles.thread} data-feed>
         <div className={styles.rows}>
-          <p className={styles.day}><span>Yesterday</span></p>
-          <p className={styles.bubble} data-side="in">
-            you left your hoodie here
-            <Meta time="23:41" />
-          </p>
-          <p className={styles.bubble} data-side="in" data-tail>
-            should i just keep it
-            <Meta time="23:41" />
-          </p>
-          <p className={styles.bubble} data-side="out" data-tail>
-            Keep it. Don&apos;t text me.
-            <Meta time="23:50" status="read" />
-          </p>
-          {firstLine ? <p className={styles.day}><span>Today</span></p> : null}
-          {rows.map((row) =>
-            row.kind === "in" ? (
-              <p key={row.key} className={styles.bubble} data-side="in" data-tail={row.tail || undefined} data-arriving={row.arriving || undefined}>
-                {row.text}
-                <Meta time={row.time} />
-              </p>
-            ) : (
-              <p key={row.key} className={styles.bubble} data-side="out" data-tail={row.tail || undefined}>
-                {row.text}
-                <Meta time={row.time} status={row.read ? "read" : "delivered"} />
-              </p>
-            ),
-          )}
-          {typing ? (
-            <p className={styles.typing} data-side="in" data-tail aria-label={`${contact.name} is typing`}>
-              <i />
-              <i />
-              <i />
+          {rows.length ? <p className={styles.day}><span>Today</span></p> : null}
+          {rows.map((row, index) => (
+            <p
+              data-lyric
+              key={row.key}
+              className={styles.bubble}
+              data-side="out"
+              data-tail={index === rows.length - 1 || undefined}
+              style={row.bold ? { fontWeight: 700 } : undefined}
+            >
+              {row.text}
+              <Meta time={row.time} />
             </p>
-          ) : null}
+          ))}
         </div>
       </div>
 
@@ -187,18 +133,18 @@ function WhatsAppState({ seat, lines, replies, clock, shown, reducedMotion, act 
   );
 }
 
-/** Time and ticks, bottom-right inside the bubble; an invisible twin reserves their room on the last line. */
-function Meta({ time, status }: { time: string; status?: "delivered" | "read" }) {
+/** Time and the two grey ticks (delivered, never read), bottom-right inside the bubble; an invisible twin reserves their room on the last line. */
+function Meta({ time }: { time: string }) {
   const content = (
     <>
       {time}
-      {status ? <span className={styles.ticks} data-status={status} /> : null}
+      <span className={styles.ticks} />
     </>
   );
   return (
     <>
-      <span className={styles.metaSpace} aria-hidden="true">{content}</span>
-      <span className={styles.meta}>{content}</span>
+      <span data-lyric-keep className={styles.metaSpace} aria-hidden="true">{content}</span>
+      <span data-lyric-keep className={styles.meta}>{content}</span>
     </>
   );
 }

@@ -5,15 +5,15 @@ import type { PhoneStateProps } from "../types";
 import { follow } from "../follow";
 import styles from "./blind.module.css";
 
-// Blind (블라인드, Korea, iOS, light), one post in the 썸·연애 topic. The
-// song is an office worker posting about their ex after hours: the first sung
-// line is the post's title, the next two its body, and every later line is a
-// comment from another company's employee — company · masked nickname, as
-// Blind shows them. Every third line is a 대댓글 in the grey reply well under
-// the comment above it, half of those from the writer (작성자). Views and
-// 좋아요 accrue as the thread grows. The comment bar is real: the
-// participant's comment goes in under their own company tag after the line
-// it followed. Before the song the screen shows an ordinary 썸·연애 post.
+// Blind (블라인드, Korea, iOS, light), one post in the 썸·연애 topic — her
+// own post, seen from her phone. She is an office worker pouring it out
+// after hours under her company tag: the first sung line is the post's
+// title, every line after it is the next line of the same post's body,
+// growing as she types. It was posted 방금 and nobody has reacted: a handful
+// of views, 좋아요 0, 댓글 0, no comments from anyone. The comment bar is
+// real: what the participant writes lands under the post as her own comment
+// (her tag with 작성자). Before the song the screen holds a post of hers from
+// the same night. A line marked bold is set in bold.
 //
 // Sources: icons are 16 pt crops of Blind's served sprite
 // (https://static.teamblind.com/img/www_kr/sp-kr-new.png?time=july202507,
@@ -24,12 +24,12 @@ import styles from "./blind.module.css";
 // body 15 × 1.6, comment padding 20, cmt-txt 14 × 1.43, reply well #F8F8F8
 // with 30 pt inset, company link #37ACC9, 작성자 #DA3238 10 pt, meta
 // #94969B, rules #EEE, ink #222, input well #F2F2F3. The iOS nav bar and
-// fixed comment bar follow the app and are not measured from a capture.
+// fixed comment bar follow the app and are not measured from a capture. No
+// glyph is drawn here.
 
 const ASSET = "/part4/v0/apps/blind";
 const COMMENT_LIMIT = 300;
 const KEEP = 28;
-const POST_LINES = 3;
 
 type Tag = { readonly company: string; readonly nick: string; readonly linked: boolean };
 
@@ -43,54 +43,13 @@ const WRITERS: readonly Tag[] = [
   { company: "새회사", nick: "I*********", linked: false },
 ];
 
-/** Who comments: other companies, in turn. */
-const COMMENTERS: readonly Tag[] = [
-  { company: "SK하이닉스", nick: "k*****", linked: true },
-  { company: "쿠팡", nick: "퇴****", linked: true },
-  { company: "토스", nick: "m******", linked: true },
-  { company: "공무원", nick: "9**", linked: false },
-  { company: "대한항공", nick: "b****", linked: true },
-  { company: "신한은행", nick: "y*******", linked: true },
-  { company: "배달의민족", nick: "치****", linked: true },
-  { company: "약사", nick: "악*", linked: false },
-  { company: "CJ제일제당", nick: "r*****", linked: true },
-  { company: "KT", nick: "w****", linked: true },
-  { company: "아모레퍼시픽", nick: "d******", linked: true },
-  { company: "새회사", nick: "1*******", linked: false },
-];
-
-/** The participant's own tag, per seat. */
-const ME: readonly Tag[] = [
-  { company: "LG유플러스", nick: "n*****", linked: true },
-  { company: "롯데쇼핑", nick: "p****", linked: true },
-  { company: "한국전력공사", nick: "e******", linked: true },
-  { company: "넥슨", nick: "q*****", linked: true },
-];
-
+/** Her post at rest, before the song. */
 const RESTING = {
   title: "헤어진 지 반년인데 아직도 생각나는 거 정상임?",
-  body: ["회사에선 멀쩡한데 퇴근하고 집 오면 그냥 생각남", "다들 얼마나 걸렸음?"],
-  date: "1시간",
-  views: 1284,
-  likes: 9,
-  comments: [
-    { tag: 0, text: "1년은 걸리더라", date: "52분", likes: 14, reply: false, op: false },
-    { tag: -1, text: "1년이요..?", date: "50분", likes: 0, reply: true, op: true },
-    { tag: 1, text: "운동 시작해 진짜 그게 답임", date: "41분", likes: 8, reply: false, op: false },
-    { tag: 2, text: "정상임. 생각나는 거랑 다시 만나는 건 다른 문제", date: "23분", likes: 21, reply: false, op: false },
-  ],
+  body: ["회사에선 멀쩡한데 퇴근하고 집 오면 그냥 생각남", "나만 이럼?"],
 } as const;
 
-type Comment = {
-  key: string;
-  at: number;
-  tag: Tag;
-  op: boolean;
-  text: string;
-  date: string;
-  likes: number;
-  reply: boolean;
-};
+type Comment = { key: string; text: string; date: string };
 
 /** Blind's relative stamp: "방금", then minutes. */
 function ago(ms: number) {
@@ -117,94 +76,39 @@ function Name({ tag, op }: { tag: Tag; op: boolean }) {
 function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const [draft, setDraft] = useState("");
   const pageRef = useRef<HTMLDivElement>(null);
+  const contentsRef = useRef<HTMLDivElement>(null);
   const writer = WRITERS[seat % WRITERS.length]!;
-  const me = ME[seat % ME.length]!;
 
   const resting = lines.length === 0;
-  const base = lines[0]?.cueIndex ?? 0;
+  const first = lines[0];
   const last = lines.at(-1);
   const now = last?.startMs ?? 0;
-  const postLines = lines.filter((line) => line.cueIndex < base + POST_LINES);
-  const title = resting ? RESTING.title : postLines[0]!.text;
-  const body = resting ? RESTING.body : postLines.slice(1).map((line) => line.text);
+  const body = lines.slice(1);
 
-  const comments = useMemo(() => {
-    const list: Comment[] = [];
-    if (resting) {
-      RESTING.comments.forEach((comment, index) =>
-        list.push({
-          key: `rest${index}`,
-          at: -10 + index,
-          tag: comment.tag < 0 ? writer : COMMENTERS[(seat + comment.tag) % COMMENTERS.length]!,
-          op: comment.op,
-          text: comment.text,
-          date: comment.date,
-          likes: comment.likes,
-          reply: comment.reply,
-        }),
-      );
-    }
-    const lastCue = last?.cueIndex ?? -1;
-    for (const line of lines) {
-      const ordinal = line.cueIndex - base - POST_LINES;
-      if (ordinal < 0) continue;
-      const reply = ordinal % 3 === 2;
-      const op = reply && ordinal % 6 === 2;
-      const age = lastCue - line.cueIndex;
-      list.push({
-        key: `l${line.cueIndex}`,
-        at: line.cueIndex,
-        tag: op ? writer : COMMENTERS[(seat * 5 + ordinal) % COMMENTERS.length]!,
-        op,
-        text: line.text,
-        date: ago(now - line.startMs),
-        likes: age < 1 ? 0 : Math.min(age, 1 + ((line.cueIndex * 5) % 7)),
-        reply,
-      });
-    }
-    replies.forEach((reply) => {
-      const after = lines.find((line) => line.cueIndex === reply.afterCue);
-      list.push({
-        key: `r${reply.id}`,
-        at: reply.afterCue + 0.5,
-        tag: me,
-        op: false,
-        text: reply.text,
-        date: after ? ago(now - after.startMs) : "방금",
-        likes: 0,
-        reply: false,
-      });
-    });
-    list.sort((x, y) => x.at - y.at);
-    if (list[0]?.reply) list[0] = { ...list[0], reply: false };
-    return list;
-  }, [base, last, lines, me, now, replies, resting, seat, writer]);
+  // Only she is here: what the participant writes is the writer's own comment.
+  const comments = useMemo(
+    () =>
+      replies.map((reply): Comment => {
+        const after = lines.find((line) => line.cueIndex === reply.afterCue);
+        return { key: `r${reply.id}`, text: reply.text, date: after ? ago(now - after.startMs) : "방금" };
+      }),
+    [lines, now, replies],
+  );
 
   const total = comments.length;
   const visible = comments.slice(Math.max(0, total - KEEP));
-  // Each top-level comment counts the 대댓글 under it.
-  const replyCounts = new Map<string, number>();
-  let parentKey = "";
-  for (const comment of comments) {
-    if (comment.reply) replyCounts.set(parentKey, (replyCounts.get(parentKey) ?? 0) + 1);
-    else parentKey = comment.key;
-  }
-  // Group the visible comments: each parent with the replies in its well.
-  const groups: { parent: Comment | null; replies: Comment[] }[] = [];
-  for (const comment of visible) {
-    if (!comment.reply || groups.length === 0) groups.push({ parent: comment.reply ? null : comment, replies: comment.reply ? [comment] : [] });
-    else groups.at(-1)!.replies.push(comment);
-  }
+  const lastComment = comments.at(-1)?.key;
+  const views = 2 + (seat % 4) + Math.min(9, lines.length);
+  const postDate = first ? ago(now - first.startMs) : "방금";
 
-  const views = resting ? RESTING.views : 37 + total * 41 + lines.length * 13;
-  const likes = resting ? RESTING.likes : Math.floor(total / 2);
-  const postDate = resting ? RESTING.date : ago(now - lines[0]!.startMs);
-
+  // The line being typed stays in view; a comment she adds brings the page to its foot.
   useLayoutEffect(() => {
     const page = pageRef.current;
-    if (!page || !shown || resting) return;
-    follow(page, page.scrollHeight - page.clientHeight, reducedMotion);
-  }, [comments, title, shown, reducedMotion, resting]);
+    const contents = contentsRef.current;
+    if (!page || !contents || !shown || resting) return;
+    const foot = lastComment ? page.scrollHeight - page.clientHeight : contents.offsetTop + contents.offsetHeight - page.clientHeight;
+    follow(page, Math.max(0, foot), reducedMotion);
+  }, [lastComment, last?.text, last?.cueIndex, shown, reducedMotion, resting]);
 
   const send = (event: FormEvent) => {
     event.preventDefault();
@@ -216,8 +120,8 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
 
   const renderComment = (comment: Comment) => (
     <div key={comment.key} className={styles.comment}>
-      <Name tag={comment.tag} op={comment.op} />
-      <p className={styles.commentText}>{comment.text}</p>
+      <Name tag={writer} op />
+      <p data-lyric className={styles.commentText}>{comment.text}</p>
       <div className={styles.info}>
         <span>
           <Icon name="date" />
@@ -225,19 +129,11 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
         </span>
         <span>
           <Icon name="like" />
-          {comment.likes > 0 ? comment.likes : "좋아요"}
+          좋아요
         </span>
-        {!comment.reply && (replyCounts.get(comment.key) ?? 0) > 0 ? (
-          <span>
-            <Icon name="cmt" />
-            {replyCounts.get(comment.key)}
-          </span>
-        ) : null}
-        {comment.reply ? null : (
-          <span className={styles.fnc}>
-            <Icon name="more" size={16} />
-          </span>
-        )}
+        <span className={styles.fnc}>
+          <Icon name="more" size={16} />
+        </span>
       </div>
     </div>
   );
@@ -261,7 +157,7 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
             <span className={styles.topicDot} aria-hidden="true" />
             <span className={styles.follow}>팔로우</span>
           </h2>
-          <h1 className={styles.title}>{title}</h1>
+          <h1 data-lyric className={styles.title}>{first ? first.text : RESTING.title}</h1>
           <Name tag={writer} op={false} />
           <div className={styles.info} data-head>
             <span>
@@ -270,7 +166,7 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
             </span>
             <span>
               <Icon name="pv" />
-              {views.toLocaleString("ko-KR")}
+              {views}
             </span>
             <span>
               <Icon name="cmt" />
@@ -283,21 +179,28 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
           </div>
         </div>
 
-        <div className={styles.contents}>
-          {body.length > 0 ? (
-            <p className={styles.text}>
-              {body.map((text, index) => (
-                <span key={index}>
-                  {text}
-                  {index < body.length - 1 ? <br /> : null}
-                </span>
+        <div ref={contentsRef} className={styles.contents}>
+          {first ? (
+            body.length > 0 ? (
+              <div className={styles.text}>
+                {body.map((line) => (
+                  <p data-lyric key={line.cueIndex} style={line.bold ? { fontWeight: 700 } : undefined}>
+                    {line.text}
+                  </p>
+                ))}
+              </div>
+            ) : null
+          ) : (
+            <div className={styles.text}>
+              {RESTING.body.map((text) => (
+                <p data-lyric key={text}>{text}</p>
               ))}
-            </p>
-          ) : null}
+            </div>
+          )}
           <div className={styles.articleInfo}>
             <span>
               <Icon name="like" />
-              {likes}
+              0
             </span>
             <span>
               <Icon name="cmt" />
@@ -311,12 +214,7 @@ function BlindState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSt
             <h3>댓글 {total}</h3>
             <span>최신순</span>
           </div>
-          {groups.map((group, index) => (
-            <div key={group.parent?.key ?? `g${index}`}>
-              {group.parent ? renderComment(group.parent) : null}
-              {group.replies.length > 0 ? <div className={styles.replies}>{group.replies.map(renderComment)}</div> : null}
-            </div>
-          ))}
+          {visible.map(renderComment)}
         </div>
       </div>
 

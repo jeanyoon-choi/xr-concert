@@ -86,26 +86,47 @@
 
 .app[data-sheet] .shade { opacity: 0; }
 
-/* Auto-captions: centred white text on a dark rounded backing, one box per line. */
-.autoCaption {
+/* A video of the feed: the picture, the rail and the caption block, as one
+   sheet. A new line is the next video: it rises as the one before is
+   carried up. */
+.post {
   position: absolute;
-  left: 40px;
-  right: 40px;
-  bottom: 196px;
-  text-align: center;
-  font-size: 17px;
-  line-height: 25px;
-  font-weight: 600;
-  color: #fff;
-  pointer-events: none;
+  inset: 0;
 }
 
-.autoCaption span {
-  padding: 3px 8px;
-  border-radius: 5px;
-  background: rgb(0 0 0 / 0.62);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+.post[data-phase="in"] { z-index: 2; animation: feed-in 420ms cubic-bezier(0.3, 0.7, 0.2, 1) both; }
+.post[data-phase="out"] { z-index: 1; animation: feed-out 420ms cubic-bezier(0.3, 0.7, 0.2, 1) both; }
+
+@keyframes feed-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes feed-out { from { transform: none; } to { transform: translateY(-100%); } }
+
+/* The line, set on the video as TikTok's text tool sets it: large, white,
+   centred in the frame. Its insets are divided by the lyric scale
+   (phone.module.css), so it keeps its place when it grows. */
+.autoCaption {
+  position: absolute;
+  /* Dead centre of the video, both ways: equal insets on all four sides, clear of the rail. */
+  top: 0;
+  bottom: 0;
+  left: calc(68px / var(--lyric-scale, 1));
+  right: calc(68px / var(--lyric-scale, 1));
+  display: grid;
+  place-content: center;
+  margin: 0;
+  text-align: center;
+  /* 26 px at the page's text size 1. The page's larger text sizes zoom this
+     element; the size is divided back so that the result never passes --cap
+     (index.tsx sizeCap), the largest size at which the line still fits the
+     clear zone with every word whole. */
+  font-size: calc(min(26px * var(--lyric-scale, 1), var(--cap, 26px)) / var(--lyric-scale, 1));
+  line-height: 1.231;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  text-wrap: balance;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.5);
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
 
 /* Top bar */

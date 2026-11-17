@@ -1,0 +1,17 @@
+{
+  "note": "Real photographs, Pexels License (https://www.pexels.com/license/), each cropped by Pexels' image server to 860 x 1680 for the TikTok video area. Photographer is the Pexels profile slug from the download filename; display names were not looked up.",
+  "photos": [
+    { "file": "unmade-bed.jpg", "source": "https://www.pexels.com/photo/photo-of-a-bed-8017404/", "photographer": "Pexels user \"budoy-oro-60340132\"", "license": "Pexels License" },
+    { "file": "blinds.jpg", "source": "https://www.pexels.com/photo/roller-blind-in-window-24182748/", "photographer": "Pexels user \"tizzy\"", "license": "Pexels License" },
+    { "file": "her-hand.jpg", "source": "https://www.pexels.com/photo/a-hand-in-the-mattress-9497929/", "photographer": "Pexels user \"ron-lach\"", "license": "Pexels License" },
+    { "file": "duvet.jpg", "source": "https://www.pexels.com/photo/close-up-of-white-bedclothes-8645247/", "photographer": "Pexels user \"ivanxolod\"", "license": "Pexels License" },
+    { "file": "bathroom-mirror.jpg", "source": "https://www.pexels.com/photo/view-of-a-sink-and-mirror-in-a-modern-bathroom-19991812/", "photographer": "Pexels user \"alex-tyson\"", "license": "Pexels License" },
+    { "file": "phone-face-down.jpg", "source": "https://www.pexels.com/photo/laptop-and-phone-on-a-bed-21263369/", "photographer": "Pexels user \"laurachouette\"", "license": "Pexels License" },
+    { "file": "pillows.jpg", "source": "https://www.pexels.com/photo/a-bed-with-white-pillow-and-creased-linen-10061393/", "photographer": "Pexels user \"cottonbro\"", "license": "Pexels License" },
+    { "file": "curtains.jpg", "source": "https://www.pexels.com/photo/elegant-window-drapes-with-soft-sunlight-35979770/", "photographer": "Pexels user \"liuuu-_61\"", "license": "Pexels License" },
+    { "file": "feet-sheets.jpg", "source": "https://www.pexels.com/photo/feet-girl-bed-bedroom-4045594/", "photographer": "Pexels user \"cottonbro\"", "license": "Pexels License" },
+    { "file": "sheets-white.jpg", "source": "https://www.pexels.com/photo/messy-bed-linen-8793483/", "photographer": "Pexels user \"vitalina\"", "license": "Pexels License" },
+    { "file": "hand-and-knee.jpg", "source": "https://www.pexels.com/photo/legs-and-hand-of-woman-on-bed-9916958/", "photographer": "Pexels user \"jovan-barretto-120533105\"", "license": "Pexels License" },
+    { "file": "sheets-light.jpg", "source": "https://www.pexels.com/photo/cozy-white-bedding-in-soft-morning-light-28513848/", "photographer": "Pexels user \"didsss\"", "license": "Pexels License" }
+  ]
+}

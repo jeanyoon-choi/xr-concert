@@ -14,40 +14,77 @@
 // Lyric slot: the video's auto-captions. The sung line is the creator's
 // voice in the clip, so it appears as TikTok's on-video caption — white
 // text on a dark rounded backing, centred over the lower third — word by
-// word, and leaves when the line ends, as captions do. The post itself uses
+// word, and leaves when the line ends, as captions do. The whole line is laid
+// out from its first word (../lyric-words), so it never reflows; each word
+// eases in. The post itself uses
 // the song's sound ("toxic till the end - ROSÉ"), shown in the ♫ marquee.
 // The comment sheet is real: what the participant posts goes through `act`
 // and stays at the top of the sheet as their own comment.
 
-import { memo, useState, type FormEvent } from "react";
+import { memo, useState, type CSSProperties, type FormEvent } from "react";
 import type { PhoneStateProps } from "../types";
 import { Icon, type IconName } from "./icons";
+import { LyricWords } from "../lyric-words";
 import styles from "./tiktok.module.css";
 
 const SEND_LIMIT = 150;
 const STILL = "/part4/v0/apps/tiktok/room.svg";
-const SOUND = "original sound - sunny.on.repeat";
 
-/** Each seat scrolled onto a different stranger's post. */
-const CREATORS = [
-  { handle: "mina.afterdark", initials: "M", tint: "#6f5b8f", caption: "pov: you finally stopped answering his 2am texts", likes: 248_300, comments: 3104, saves: 41_200, shares: 18_900 },
-  { handle: "julesrewrites", initials: "J", tint: "#8d6a52", caption: "the way i defended him to my friends for 2 years", likes: 96_400, comments: 1872, saves: 12_700, shares: 6408 },
-  { handle: "sunny.on.repeat", initials: "S", tint: "#4f7a71", caption: "blocked, unblocked, blocked again. healing isnt linear", likes: 512_000, comments: 8731, saves: 77_900, shares: 40_100 },
-  { handle: "theo.leaves.early", initials: "T", tint: "#5b6f94", caption: "me pretending i dont still check his close friends story", likes: 33_800, comments: 912, saves: 4410, shares: 2087 },
-  { handle: "ari.in.her.era", initials: "A", tint: "#94705a", caption: "this song came on in the uber and i had to sit with it", likes: 187_600, comments: 2655, saves: 25_300, shares: 11_400 },
-  { handle: "samdeletedthepics", initials: "S", tint: "#6a7f5a", caption: "finally threw out the hoodie. it still smelled like him", likes: 74_100, comments: 1430, saves: 9802, shares: 5316 },
+/**
+ * The feed is one private person's: the woman of the song, posting about her
+ * ex. One handle per phone; each sung line is her next video, with its own
+ * caption and its own small counts.
+ */
+const HANDLES = ["mina_0412", "jules.kwon", "sunny__97", "yeri.jpg", "ari_0803", "sam.h_", "noor.k", "wren_02", "kit__lee", "dahlia.p", "leah_0119", "june.cho"] as const;
+const TINTS = ["#6f5b8f", "#8d6a52", "#4f7a71", "#5b6f94", "#94705a", "#6a7f5a"] as const;
+const CAPTIONS = [
+  "posting this so i dont text him",
+  "anyway",
+  "",
+  "delete later",
+  "he knows",
+  "its fine im fine",
+  "",
+  "not about anyone",
+  "day 12",
+  "should've made this close friends only",
 ] as const;
 
-const TAGS = ["exes", "situationship", "fyp"] as const;
+function hash(value: number) {
+  let h = (value ^ 0x9e3779b9) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+/** The video a seat is on at line `cue`: fixed by (seat, cue), so a seek lands on the same post. */
+function postOf(seat: number, cue: number) {
+  const h = hash(seat * 131 + cue * 17 + 5);
+  const roll = (salt: number) => (hash(h + salt) % 10_000) / 10_000;
+  const handle = HANDLES[seat % HANDLES.length]!;
+  // A private account's numbers: a few to a few hundred likes, a handful of comments.
+  const likes = Math.round(4 * 75 ** roll(1));
+  return {
+    key: cue,
+    handle,
+    initials: handle[0]!.toUpperCase(),
+    tint: TINTS[seat % TINTS.length]!,
+    caption: CAPTIONS[(h >>> 9) % CAPTIONS.length]!,
+    sound: `original sound - ${handle}`,
+    likes,
+    comments: Math.round(likes * roll(2) * 0.07),
+    saves: Math.round(likes * roll(3) * 0.05),
+    shares: Math.round(likes * roll(4) * 0.03),
+  };
+}
 
 type Comment = { id: string; author: string; initials: string; tint: string; body: string; time: string; likes: number };
 
+/** A few friends, under her videos. */
 const SEED_COMMENTS: readonly Comment[] = [
-  { id: "c1", author: "hyejin", initials: "H", tint: "#7d8aa3", body: "why is this literally my last relationship", time: "2h", likes: 4812 },
-  { id: "c2", author: "noah.k", initials: "N", tint: "#9a8070", body: "the sound choice is personal at this point", time: "5h", likes: 2209 },
-  { id: "c3", author: "dani 🌙", initials: "D", tint: "#7a9488", body: "go no contact bestie we are so proud of you", time: "6h", likes: 1377 },
-  { id: "c4", author: "kiraaa", initials: "K", tint: "#9384a8", body: "he’s not coming back and that’s the good part", time: "1d", likes: 968 },
-  { id: "c5", author: "lou", initials: "L", tint: "#a39274", body: "saving this for when i get the urge to text him", time: "1d", likes: 512 },
+  { id: "c1", author: "hyejin", initials: "H", tint: "#7d8aa3", body: "girl. call me", time: "2h", likes: 3 },
+  { id: "c2", author: "noah.k", initials: "N", tint: "#9a8070", body: "we never liked him btw", time: "5h", likes: 6 },
+  { id: "c3", author: "dani", initials: "D", tint: "#7a9488", body: "proud of you", time: "6h", likes: 2 },
 ];
 
 /** TikTok counts: no comma under 10K, then one decimal K / M. */
@@ -77,8 +114,47 @@ function NavItem({ label, icon, active, badge }: { label: string; icon: IconName
   );
 }
 
+/** The video the feed is scrolling away from: its picture and who posted it, carried up and off. */
+function LeavingPost({ post }: { post: ReturnType<typeof postOf> }) {
+  return (
+    <div className={styles.post} data-phase="out" aria-hidden="true">
+      <div className={styles.stage}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- a still stands in for the playing video */}
+        <img className={styles.video} src={STILL} alt="" draggable={false} />
+        <div className={styles.shade} />
+      </div>
+      <div className={styles.info}>
+        <strong className={styles.handle}>{post.handle}</strong>
+        <p className={styles.caption}>{post.caption}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The largest size (px, after the page's text scale) at which a line still
+ * sits in the clear zone of the video — under the top tabs, over the caption
+ * block, 8 pt clear of the rail — with every word whole: its longest word
+ * must fit the column, and the wrapped block must not grow taller than the
+ * zone. It only bites at the page's larger text sizes.
+ */
+function sizeCap(words: readonly string[]) {
+  const longest = Math.max(1, ...words.map((word) => word.length));
+  const length = Math.max(1, words.join(" ").length);
+  return Math.floor(Math.min(440 / longest, Math.sqrt(150_000 / length)));
+}
+
 function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
-  const creator = CREATORS[seat % CREATORS.length]!;
+  // The video on screen is the newest line's; before the song, the seat's own first video.
+  const line = lines.at(-1);
+  const creator = postOf(seat, line?.cueIndex ?? -1);
+  // When the line changes the feed scrolls: the video before is carried up as the new one rises.
+  const [post, setPost] = useState(creator.key);
+  const [leaving, setLeaving] = useState<number | null>(null);
+  if (post !== creator.key) {
+    setLeaving(post);
+    setPost(creator.key);
+  }
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [followed, setFollowed] = useState(false);
@@ -86,9 +162,6 @@ function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
   const [draft, setDraft] = useState("");
   const [likedComments, setLikedComments] = useState<readonly string[]>([]);
 
-  // Captions show the line being sung, and clear once it is over.
-  const line = lines.at(-1);
-  const caption = line?.current ? line.text : null;
 
   // The participant's comments sit on top, newest first, as TikTok pins your own.
   const own = [...replies].reverse();
@@ -114,15 +187,84 @@ function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
       data-sheet={sheet || undefined}
     >
       <div className={styles.feed}>
-        <div className={styles.stage}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- a local still stands in for the playing video */}
-          <img className={styles.video} src={STILL} alt="" draggable={false} />
-          <div className={styles.shade} aria-hidden="true" />
-          {caption ? (
-            <p className={styles.autoCaption} aria-live="off">
-              <span>{caption}</span>
-            </p>
-          ) : null}
+        {leaving !== null && leaving !== post ? <LeavingPost key={leaving} post={postOf(seat, leaving)} /> : null}
+        <div
+          key={post}
+          className={styles.post}
+          data-phase={leaving !== null && leaving !== post && !reducedMotion ? "in" : undefined}
+          onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget) setLeaving(null);
+          }}
+        >
+          <div className={styles.stage}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- a still stands in for the playing video */}
+            <img className={styles.video} src={STILL} alt="" draggable={false} />
+            <div className={styles.shade} aria-hidden="true" />
+            {/* The line is the text set on the video, in the middle, large. */}
+            {line ? (
+              <p key={line.cueIndex} data-lyric className={styles.autoCaption} aria-live="off" style={{ "--cap": `${sizeCap(line.words)}px` } as CSSProperties}>
+                {/* One grid item, so the words wrap as running text. */}
+                <span>
+                  <LyricWords line={line} />
+                </span>
+              </p>
+            ) : null}
+          </div>
+          <div className={styles.rail}>
+            <div className={styles.creator}>
+              <span className={styles.railAvatar}>
+                <Avatar initials={creator.initials} tint={creator.tint} size="medium" />
+              </span>
+              <button
+                type="button"
+                className={styles.follow}
+                data-done={followed || undefined}
+                onClick={() => setFollowed(true)}
+                aria-label={followed ? `Following ${creator.handle}` : `Follow ${creator.handle}`}
+              >
+                <Icon name={followed ? "check" : "plus"} />
+              </button>
+            </div>
+            <button type="button" className={styles.action} data-on={liked ? "like" : undefined} aria-pressed={liked} aria-label="Like" onClick={() => setLiked((value) => !value)}>
+              <Icon name="heart" />
+              <span>{count(creator.likes + Number(liked))}</span>
+            </button>
+            <button type="button" className={styles.action} aria-label="Comments" onClick={() => setSheet(true)}>
+              <Icon name="comment" />
+              <span>{count(commentTotal)}</span>
+            </button>
+            <button type="button" className={styles.action} data-on={saved ? "save" : undefined} aria-pressed={saved} aria-label="Favorites" onClick={() => setSaved((value) => !value)}>
+              <Icon name="bookmark" />
+              <span>{count(creator.saves + Number(saved))}</span>
+            </button>
+            <span className={styles.action}>
+              <Icon name="share" />
+              <span>{count(creator.shares)}</span>
+            </span>
+            <span className={styles.record} aria-hidden="true">
+              <span className={styles.notes}>
+                <i>♪</i>
+                <i>♫</i>
+              </span>
+              <span className={styles.disc}>
+                <Avatar initials={creator.initials} tint={creator.tint} size="tiny" />
+              </span>
+            </span>
+          </div>
+
+          <div className={styles.info}>
+            <strong className={styles.handle}>{creator.handle}</strong>
+            {creator.caption ? <p className={styles.caption}>{creator.caption}</p> : null}
+            <div className={styles.sound}>
+              <Icon name="note" />
+              <span className={styles.marquee}>
+                <span>
+                  <span>{creator.sound}</span>
+                  <span aria-hidden="true">{creator.sound}</span>
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <header className={styles.top}>
@@ -142,67 +284,6 @@ function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
             <Icon name="search" />
           </span>
         </header>
-
-        <div className={styles.rail}>
-          <div className={styles.creator}>
-            <span className={styles.railAvatar}>
-              <Avatar initials={creator.initials} tint={creator.tint} size="medium" />
-            </span>
-            <button
-              type="button"
-              className={styles.follow}
-              data-done={followed || undefined}
-              onClick={() => setFollowed(true)}
-              aria-label={followed ? `Following ${creator.handle}` : `Follow ${creator.handle}`}
-            >
-              <Icon name={followed ? "check" : "plus"} />
-            </button>
-          </div>
-          <button type="button" className={styles.action} data-on={liked ? "like" : undefined} aria-pressed={liked} aria-label="Like" onClick={() => setLiked((value) => !value)}>
-            <Icon name="heart" />
-            <span>{count(creator.likes + Number(liked))}</span>
-          </button>
-          <button type="button" className={styles.action} aria-label="Comments" onClick={() => setSheet(true)}>
-            <Icon name="comment" />
-            <span>{count(commentTotal)}</span>
-          </button>
-          <button type="button" className={styles.action} data-on={saved ? "save" : undefined} aria-pressed={saved} aria-label="Favorites" onClick={() => setSaved((value) => !value)}>
-            <Icon name="bookmark" />
-            <span>{count(creator.saves + Number(saved))}</span>
-          </button>
-          <span className={styles.action}>
-            <Icon name="share" />
-            <span>{count(creator.shares)}</span>
-          </span>
-          <span className={styles.record} aria-hidden="true">
-            <span className={styles.notes}>
-              <i>♪</i>
-              <i>♫</i>
-            </span>
-            <span className={styles.disc}>
-              <Avatar initials={creator.initials} tint={creator.tint} size="tiny" />
-            </span>
-          </span>
-        </div>
-
-        <div className={styles.info}>
-          <strong className={styles.handle}>{creator.handle}</strong>
-          <p className={styles.caption}>
-            {creator.caption}{" "}
-            {TAGS.map((tag) => (
-              <b key={tag}>#{tag} </b>
-            ))}
-          </p>
-          <div className={styles.sound}>
-            <Icon name="note" />
-            <span className={styles.marquee}>
-              <span>
-                <span>{SOUND}</span>
-                <span aria-hidden="true">{SOUND}</span>
-              </span>
-            </span>
-          </div>
-        </div>
 
         <span className={styles.progress} aria-hidden="true">
           <span />
@@ -237,7 +318,7 @@ function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
                   <Avatar initials="Y" tint="#c4c5c9" size="small" />
                   <div className={styles.commentBody}>
                     <strong>you</strong>
-                    <p>{reply.text}</p>
+                    <p data-lyric>{reply.text}</p>
                     <small>
                       Just now<span>Reply</span>
                     </small>

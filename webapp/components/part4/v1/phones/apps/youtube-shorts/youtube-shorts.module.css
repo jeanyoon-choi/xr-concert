@@ -1,0 +1,108 @@
+/*
+ * YouTube Shorts, iOS, on the 390 × 844 glass (1 CSS px = 1 pt). Safe areas
+ * are fixed at 54 pt (status bar) and 34 pt (home indicator). The tab bar is
+ * opaque black (48 pt + 34 pt) and the video stops on it. The interface over
+ * the video and the tab bar are chrome.module.css; this file is the video.
+ */
+.app {
+  --nav: 82px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.feed {
+  position: absolute;
+  inset: 0 0 var(--nav);
+  overflow: hidden;
+  background: #000;
+}
+
+/* The video: night footage. Each still drifts very slowly (transform only)
+   and fades in over the one before it; both run only while the phone is
+   shown and motion is allowed. */
+.video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.06);
+}
+
+.app[data-running] .still { animation: drift-a 22s ease-in-out infinite alternate, still-in 400ms ease-out both; }
+
+.app[data-running] .still[data-drift="b"] { animation-name: drift-b, still-in; }
+
+@keyframes drift-a {
+  from { transform: scale(1.06) translate3d(-1%, 0.6%, 0); }
+  to { transform: scale(1.15) translate3d(1.2%, -1%, 0); }
+}
+
+@keyframes drift-b {
+  from { transform: scale(1.15) translate3d(1%, -0.6%, 0); }
+  to { transform: scale(1.06) translate3d(-1.2%, 0.8%, 0); }
+}
+
+@keyframes still-in { from { opacity: 0; } }
+
+.ahead { display: none; }
+
+/* One even dim over the footage for the white type, and the player's own
+   shade under the top bar and the caption block. */
+.dim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgb(0 0 0 / 0.3), transparent 16%, transparent 64%, rgb(0 0 0 / 0.55) 100%),
+    rgb(0 0 0 / 0.38);
+  pointer-events: none;
+}
+
+/* The line, exactly in the middle of the video area on both axes at every
+   text size: equal left and right insets (clear of the rail), equal top and
+   bottom insets (clear of the top bar and the caption block). The insets are
+   divided by the lyric scale (phone.module.css), so the box keeps its place
+   when the type grows. The whole line is laid out from its first word, the
+   words to come dim (../lyric-words), so no word moves as it is sung; a
+   word is never broken, and a line too large for the box has its type fitted
+   down (--fit, fit.ts) rather than being cut. */
+.lyric {
+  position: absolute;
+  top: calc(140px / var(--lyric-scale, 1));
+  bottom: calc(140px / var(--lyric-scale, 1));
+  left: calc(68px / var(--lyric-scale, 1));
+  right: calc(68px / var(--lyric-scale, 1));
+  display: grid;
+  margin: 0;
+  place-content: safe center;
+  overflow: hidden;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  font-family: var(--ios-display);
+  font-size: calc(33px * var(--fit, 1));
+  font-weight: 700;
+  line-height: calc(38px * var(--fit, 1));
+  letter-spacing: -0.4px;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: normal;
+  pointer-events: none;
+}
+
+.app[data-running] .lyric { animation: line-in 220ms ease-out both; }
+
+@keyframes line-in { from { opacity: 0; } }

@@ -1,17 +1,23 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { SungLine } from "../../../song/lines";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./snapchat.module.css";
 import { follow } from "../follow";
 
-// Snapchat for iOS, light, the Chat screen with the seat's ex. The lyric is
-// what the ex says that will not stay: the line being sung is the ex's chat,
-// under their blue name; when the next line starts the previous one is gone,
-// as Snapchat deletes viewed chats, and only the new one stands. What the
-// participant sends stays under the red ME (their own side of the thread).
-// Before the song the thread holds an ordinary, finished exchange: a snap
-// from the ex already Opened and a short reply.
+// Snapchat for iOS, light, the Chat screen with the seat's ex, empty until
+// the song. Every sung line is a chat this phone's owner sends — under the
+// red ME, on its red bar, one after another, each filling as it is typed —
+// and they stay: each is saved in chat (Snapchat's grey ground behind a saved
+// chat), so the lines sent so far can be read. The ex never answers or opens
+// them: "Delivered" stands under the last one. What the participant sends
+// from the composer is one more chat under ME, in order with the lines. A
+// line marked bold is set in bold.
+//
+// The registry hands this state one line at a time, so the chat keeps the
+// lines it has been given itself (KEPT of them), dropping them when the song
+// is moved back or jumps.
 //
 // Sources: colours and type are Snap's own design tokens, published in
 // github.com/Snapchat/Valdi_Widgets (valdi_modules/widgets/src/ColorSpec.ts,
@@ -20,18 +26,23 @@ import { follow } from "../follow";
 // textSecondary #656D78, textTertiary #9A9FA7, backgroundObject
 // rgba(0,0,0,0.05), body 16 regular, caption 12 bold, headline 18 bold.
 // UNSURE: Snap publishes no app glyph set; the header and composer glyphs
-// (back, phone, video, camera, mic, sticker) are drawn here to match the iOS
-// app and are not taken from served assets, and the layout metrics are not
+// (back, phone, video, camera, mic, sticker) and the Delivered arrow are drawn
+// here to match the iOS app and are not taken from served assets, and the
+// layout metrics (the saved ground and the Delivered line included) are not
 // measured from a capture.
 
 const SEND_LIMIT = 80;
 
-type Entry =
-  | { kind: "them"; key: string; text: string; at: number; arriving: boolean }
-  | { kind: "me"; key: string; text: string; at: number };
+const KEPT = 24;
 
-function Glyph({ name }: { name: "back" | "phone" | "video" | "camera" | "mic" | "sticker" | "send" }) {
+type Sent = Pick<SungLine, "cueIndex" | "full" | "bold">;
+
+const sameCues = (a: readonly Sent[], b: readonly Sent[]) => a.length === b.length && a.every((line, index) => line.cueIndex === b[index]!.cueIndex);
+
+function Glyph({ name }: { name: "back" | "phone" | "video" | "camera" | "mic" | "sticker" | "send" | "delivered" }) {
   switch (name) {
+    case "delivered":
+      return <svg aria-hidden="true" viewBox="0 0 14 14" width="13" height="13"><path d="M1.6 1.5 12.6 7 1.6 12.5 3.6 7Z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>;
     case "back":
       return <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M15 4.5 7.5 12l7.5 7.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
     case "phone":
@@ -62,35 +73,35 @@ function Silhouette({ tint, size }: { tint: string; size: number }) {
 
 function SnapchatState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const contact = contactFor(seat);
-  const name = contact.name.toUpperCase();
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
 
-  // Only the line being sung is still in the chat; the viewed ones were deleted.
-  const groups = useMemo(() => {
-    const last = lines.at(-1);
-    const entries: Entry[] = [
-      ...(last ? [{ kind: "them" as const, key: `l${last.cueIndex}`, text: last.text, at: last.cueIndex, arriving: true }] : []),
-      ...replies.slice(-12).map((reply): Entry => ({ kind: "me", key: `r${reply.id}`, text: reply.text, at: reply.afterCue + 0.5 })),
+  // The chats sent before the ones handed in now: kept here, since they are saved in chat.
+  const [memory, setMemory] = useState<{ past: readonly Sent[]; latest: readonly Sent[] }>({ past: [], latest: [] });
+  if (!sameCues(memory.latest, lines)) {
+    const first = lines[0];
+    let past = first ? [...memory.past, ...memory.latest].filter((line) => line.cueIndex < first.cueIndex).slice(-(KEPT - 1)) : [];
+    // A jump in the song (not the next line): the earlier chats are not the ones before this.
+    if (first && past.length && past.at(-1)!.cueIndex !== first.cueIndex - 1) past = [];
+    setMemory({ past, latest: lines.map(({ cueIndex, full, bold }) => ({ cueIndex, full, bold })) });
+  }
+  const past = memory.past;
+
+  // The sung lines and whatever the participant sends, in the order sent: all hers.
+  const chats = useMemo(() => {
+    const first = lines[0];
+    return [
+      ...(first ? past.filter((line) => line.cueIndex < first.cueIndex) : []).map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.full, bold: Boolean(line.bold) })),
+      ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, bold: Boolean(line.bold) })),
+      ...replies.slice(-12).map((reply) => ({ key: `r${reply.id}`, at: reply.afterCue + 0.5, text: reply.text, bold: false })),
     ].sort((a, b) => a.at - b.at);
-
-    // Consecutive chats from one sender share one name header, as in Snapchat.
-    const out: { kind: Entry["kind"]; key: string; items: Entry[] }[] = [];
-    for (const entry of entries) {
-      const group = out.at(-1);
-      if (group && group.kind === entry.kind) group.items.push(entry);
-      else out.push({ kind: entry.kind, key: entry.key, items: [entry] });
-    }
-    return out;
-  }, [lines, replies]);
-
-  const typing = Boolean(lines.at(-1)?.current);
+  }, [past, lines, replies]);
 
   useLayoutEffect(() => {
     const thread = threadRef.current;
     if (!thread || !shown) return;
     follow(thread, thread.scrollHeight, reducedMotion);
-  }, [groups, shown, reducedMotion]);
+  }, [chats, shown, reducedMotion]);
 
   const send = (event: FormEvent) => {
     event.preventDefault();
@@ -110,7 +121,6 @@ function SnapchatState({ seat, lines, replies, shown, reducedMotion, act }: Phon
           <Silhouette tint={contact.tint} size={36} />
           <span className={styles.peerText}>
             <span className={styles.peerName}>{contact.name}</span>
-            {typing ? <span className={styles.peerStatus}>Typing...</span> : null}
           </span>
         </span>
         <span className={styles.calls}>
@@ -121,29 +131,23 @@ function SnapchatState({ seat, lines, replies, shown, reducedMotion, act }: Phon
 
       <div ref={threadRef} className={styles.thread} data-feed>
         <div className={styles.rows}>
-          <p className={styles.day}>YESTERDAY</p>
-          <div className={styles.group} data-kind="them">
-            <p className={styles.sender}>{name}</p>
-            <p className={styles.snap}>
-              <span className={styles.snapIcon} aria-hidden="true" />
-              Opened
-            </p>
-          </div>
-          <div className={styles.group} data-kind="me">
-            <p className={styles.sender}>ME</p>
-            <p className={styles.chat}>don&apos;t send me those anymore</p>
-          </div>
-          {groups.length ? <p className={styles.day}>TODAY</p> : null}
-          {groups.map((group) => (
-            <div key={group.key} className={styles.group} data-kind={group.kind}>
-              <p className={styles.sender}>{group.kind === "me" ? "ME" : name}</p>
-              {group.items.map((item) => (
-                <p key={item.key} className={styles.chat} data-arriving={(item.kind === "them" && item.arriving) || undefined}>
-                  {item.text}
+          {chats.length ? (
+            <>
+              <p className={styles.day}>TODAY</p>
+              <div className={styles.group} data-kind="me">
+                <p className={styles.sender}>ME</p>
+                {chats.map((chat) => (
+                  <p data-lyric key={chat.key} className={styles.chat} style={chat.bold ? { fontWeight: 700 } : undefined}>
+                    {chat.text}
+                  </p>
+                ))}
+                <p className={styles.delivered}>
+                  <Glyph name="delivered" />
+                  Delivered
                 </p>
-              ))}
-            </div>
-          ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
 

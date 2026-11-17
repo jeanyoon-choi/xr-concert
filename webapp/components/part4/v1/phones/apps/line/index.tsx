@@ -2,35 +2,26 @@
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { formatSongClock } from "../../../clock/wall-clock";
-import type { SungLine } from "../../../song/lines";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./line.module.css";
 import { follow } from "../follow";
 
-// LINE (iOS, English UI, light), a 1:1 chat with the ex. Here the phone's own
-// side is the singer: the line being sung is typed into the composer word by
-// word, and when the next line starts it is sent — a green bubble on the
-// right, "Read" beside it at once. The ex answers rarely and briefly ("?",
-// "what", "ok"), as a person does to a string of texts at night. The
-// participant can type and send too; their messages are green bubbles after
-// the line they followed.
+// LINE (iOS, English UI, light), a 1:1 chat with the ex, empty until the
+// song. Every sung line is a message this phone's owner sends — her own green
+// bubbles on the right, one after another, each filling as it is typed — and
+// the ex never answers: no bubble ever gets LINE's "Read" over its time.
+// Stamps follow LINE's rule: messages sent in the same minute share one time,
+// beside the last; the bubble tail is on the first of a run. What the
+// participant sends from the composer is one more green bubble, in order with
+// the lines. A line marked bold is set in bold.
 //
 // Sources: layout, colours and metrics from current LINE iOS chat frames
-// (default chat background, white incoming bubbles with a round profile,
-// green own bubbles with "Read" over the time, the + / camera / photo
-// composer with the "Aa" field and smiley, mic → send). LINE publishes only
-// its logo; the bar glyphs are drawn to those frames, not downloaded. The
-// profile is a monogram rather than a photo.
+// (default chat background, green own bubbles with the time beside them, the
+// date pill, the + / camera / photo composer with the "Aa" field and smiley,
+// mic → send). LINE publishes only its logo; the bar glyphs are drawn to
+// those frames, not downloaded.
 
 const SEND_LIMIT = 80;
-
-/** The ex's few replies, said after a sent line now and then. */
-const EX_SAYS = ["?", "what", "ok", "lol what", "are you drunk", "stop", "…"] as const;
-
-function exReplyAfter(cueIndex: number, seat: number) {
-  if ((cueIndex * 7 + seat * 3) % 9 !== 4) return null;
-  return EX_SAYS[(cueIndex + seat) % EX_SAYS.length]!;
-}
 
 /** "21:31" → "9:31 PM". */
 function englishStamp(clock: string) {
@@ -38,10 +29,6 @@ function englishStamp(clock: string) {
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
-
-type Entry =
-  | { kind: "out"; key: string; at: number; text: string; time: string }
-  | { kind: "in"; key: string; at: number; text: string; time: string };
 
 function Glyph({ name }: { name: "back" | "search" | "call" | "menu" | "plus" | "camera" | "photo" | "emoji" | "mic" | "send" | "more" }) {
   const stroke = { fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -74,29 +61,24 @@ function Glyph({ name }: { name: "back" | "search" | "call" | "menu" | "plus" | 
 function LineState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const contact = contactFor(seat);
   const [draft, setDraft] = useState("");
-  const [focused, setFocused] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
+  const hasText = draft.trim().length > 0;
 
-  const typing: SungLine | undefined = lines.at(-1)?.current ? lines.at(-1) : undefined;
-  const composing = focused || draft.length > 0;
-  const lyricInField = !composing && typing ? typing.text : "";
-  const hasText = composing ? draft.trim().length > 0 : lyricInField.length > 0;
-
-  const entries = useMemo(() => {
-    const list: Entry[] = [];
-    for (const line of lines) {
-      if (line.current) continue;
-      const time = englishStamp(formatSongClock(line.startMs));
-      list.push({ kind: "out", key: `l${line.cueIndex}`, at: line.cueIndex, text: line.full, time });
-      const said = exReplyAfter(line.cueIndex, seat);
-      if (said) list.push({ kind: "in", key: `x${line.cueIndex}`, at: line.cueIndex + 0.7, text: said, time });
-    }
-    for (const reply of replies) {
-      const after = lines.find((line) => line.cueIndex === reply.afterCue);
-      list.push({ kind: "out", key: `r${reply.id}`, at: reply.afterCue + 0.5, text: reply.text, time: englishStamp(formatSongClock(after?.startMs ?? 0)) });
-    }
-    return list.sort((a, b) => a.at - b.at);
-  }, [lines, replies, seat]);
+  // The sung lines and whatever the participant sends, in the order sent: all hers.
+  const entries = useMemo(
+    () =>
+      [
+        ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, startMs: line.startMs, bold: Boolean(line.bold) })),
+        ...replies.map((reply) => ({
+          key: `r${reply.id}`,
+          at: reply.afterCue + 0.5,
+          text: reply.text,
+          startMs: lines.find((line) => line.cueIndex === reply.afterCue)?.startMs ?? 0,
+          bold: false,
+        })),
+      ].sort((a, b) => a.at - b.at),
+    [lines, replies],
+  );
 
   // The chat keeps its newest message in view, as LINE does.
   useLayoutEffect(() => {
@@ -130,48 +112,19 @@ function LineState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSta
 
       <div ref={threadRef} className={styles.thread} data-feed>
         <div className={styles.rows}>
-          <p className={styles.date}>Yesterday</p>
-          <div className={styles.incoming}>
-            <span className={styles.avatar} aria-hidden="true" style={{ background: contact.tint }}>{contact.initials}</span>
-            <div className={styles.column}>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in" data-head>did you get the box</p>
-              </div>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in">your stuff is all in there</p>
-                <span className={styles.meta}><span>6:12 PM</span></span>
-              </div>
-            </div>
-          </div>
-          <div className={styles.line} data-side="out">
-            <span className={styles.meta} data-side="out"><span>Read</span><span>6:40 PM</span></span>
-            <p className={styles.bubble} data-side="out" data-head>yeah. thanks</p>
-          </div>
-
-          {lines.length ? <p className={styles.date}>Today</p> : null}
+          {entries.length ? <p className={styles.date}>Today</p> : null}
 
           {entries.map((entry, index) => {
-            const previous = index > 0 ? entries[index - 1] : undefined;
-            const head = previous?.kind !== entry.kind;
-            if (entry.kind === "out") {
-              return (
-                <div key={entry.key} className={styles.line} data-side="out" data-follow={!head || undefined}>
-                  <span className={styles.meta} data-side="out"><span>Read</span><span>{entry.time}</span></span>
-                  <p className={styles.bubble} data-side="out" data-head={head || undefined} data-arriving={index === entries.length - 1 || undefined}>
-                    {entry.text}
-                  </p>
-                </div>
-              );
-            }
+            // As LINE does: messages sent in the same minute share one time, beside the last of them.
+            const time = englishStamp(formatSongClock(entry.startMs));
+            const next = entries[index + 1];
+            const stamped = !next || englishStamp(formatSongClock(next.startMs)) !== time;
             return (
-              <div key={entry.key} className={styles.incoming}>
-                <span className={styles.avatar} aria-hidden="true" style={{ background: contact.tint }}>{contact.initials}</span>
-                <div className={styles.column}>
-                  <div className={styles.line}>
-                    <p className={styles.bubble} data-side="in" data-head>{entry.text}</p>
-                    <span className={styles.meta}><span>{entry.time}</span></span>
-                  </div>
-                </div>
+              <div key={entry.key} className={styles.line} data-side="out" data-follow={index > 0 || undefined}>
+                <span className={styles.meta} data-side="out">{stamped ? <span>{time}</span> : null}</span>
+                <p data-lyric className={styles.bubble} data-side="out" data-head={index === 0 || undefined} style={entry.bold ? { fontWeight: 700 } : undefined}>
+                  {entry.text}
+                </p>
               </div>
             );
           })}
@@ -188,23 +141,20 @@ function LineState({ seat, lines, replies, shown, reducedMotion, act }: PhoneSta
             <span className={styles.tool} aria-hidden="true"><Glyph name="photo" /></span>
           </>
         )}
-        <label className={styles.field} data-lyric={lyricInField ? true : undefined}>
+        <label className={styles.field}>
           <span className={styles.visuallyHidden}>Message {contact.name}</span>
-          {lyricInField ? <span className={styles.typed} aria-hidden="true">{lyricInField}</span> : null}
           <input
             value={draft}
             maxLength={SEND_LIMIT}
             onChange={(event) => setDraft(event.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder={lyricInField ? "" : "Aa"}
+            placeholder="Aa"
             enterKeyHint="send"
             autoComplete="off"
           />
           <span className={styles.emoji} aria-hidden="true"><Glyph name="emoji" /></span>
         </label>
         {hasText ? (
-          <button type="submit" className={styles.send} aria-label="Send" disabled={!composing}>
+          <button type="submit" className={styles.send} aria-label="Send">
             <Glyph name="send" />
           </button>
         ) : (

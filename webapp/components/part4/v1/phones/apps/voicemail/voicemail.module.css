@@ -55,18 +55,19 @@
   left: 32px;
   right: 0;
   bottom: 0;
-  height: 0.5px;
+  height: 0.33px;
   background: var(--separator);
 }
 
 .head {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto 34px;
+  grid-template-columns: 32px minmax(0, 1fr) auto 22px;
+  column-gap: 0;
   grid-template-rows: 22px 20px;
   align-items: center;
   width: 100%;
   border: 0;
-  padding: 10px 6px 10px 0;
+  padding: 9px 16px 9px 0;
   background: none;
   color: inherit;
   font: inherit;
@@ -91,8 +92,7 @@
   text-overflow: ellipsis;
 }
 
-.name[data-unread],
-.row[data-open] .name { font-weight: 600; }
+.name { font-weight: 600; }
 
 .when,
 .length {
@@ -101,6 +101,7 @@
   letter-spacing: -0.24px;
   font-variant-numeric: tabular-nums;
   text-align: right;
+  padding-right: 10px;
 }
 
 .info {
@@ -121,11 +122,11 @@
 .length { grid-column: 3; }
 
 .detail {
-  padding: 0 16px 12px 32px;
+  padding: 0 16px 10px 32px;
 }
 
 .beta {
-  margin: 4px 0 2px;
+  margin: 2px 0 2px;
   color: var(--secondary);
   font: 400 13px/18px var(--ios-font);
   letter-spacing: -0.08px;
@@ -136,6 +137,16 @@
   font: 400 15px/20px var(--ios-font);
   letter-spacing: -0.24px;
   overflow-wrap: anywhere;
+}
+
+.transcript [data-bold] { font-weight: 700; }
+
+/* Scaled (a scenario's few phrases, or the page's text size): the scale
+   multiplies a footnote-sized transcript, so it stays a transcript and not a
+   headline. */
+:global([data-lyric-scaled]) .transcript {
+  font: 400 13px/17px var(--ios-font);
+  letter-spacing: -0.08px;
 }
 
 .transcript[data-typing]::after {
@@ -250,8 +261,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  padding-bottom: 1px;
+  gap: 3px;
+  padding-bottom: 2px;
   color: #999;
   font: 500 10px/12px var(--ios-font);
   letter-spacing: 0.1px;
@@ -282,5 +293,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .transcript[data-typing]::after { animation: none; }
+  .transcript [data-bold] { font-weight: 700; }
+
+/* Scaled (a scenario's few phrases, or the page's text size): the scale
+   multiplies a footnote-sized transcript, so it stays a transcript and not a
+   headline. */
+:global([data-lyric-scaled]) .transcript {
+  font: 400 13px/17px var(--ios-font);
+  letter-spacing: -0.08px;
+}
+
+.transcript[data-typing]::after { animation: none; }
 }

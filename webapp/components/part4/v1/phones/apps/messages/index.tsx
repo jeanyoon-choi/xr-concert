@@ -6,15 +6,17 @@ import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./messages.module.css";
 import { follow } from "../follow";
 
-// iOS Messages, one thread per seat with that seat's contact. As in v2/7,
-// the lyric is the other person double texting: each sung line arrives as
-// its own incoming bubble and fills word by word while it is sung. The input
-// bar is real: what the participant sends lands as an outgoing bubble after
-// the line it answered, and stays in the thread.
-
-type Row =
-  | { kind: "in"; key: string; text: string; tail: boolean; arriving: boolean }
-  | { kind: "out"; key: string; text: string; tail: boolean; receipt: boolean };
+// iOS Messages, one thread per seat with that seat's ex, empty until the
+// song (a new conversation: nothing above the first message). Every sung line
+// is an iMessage this phone's owner sends — her own blue bubbles, one after
+// another, each filling as it is typed — and the ex never answers: the last
+// bubble stays "Delivered", never "Read". The thread opens with Messages' own
+// "iMessage / Today 13:14" header; consecutive bubbles group, the tail on the
+// last. What the participant sends from the input bar is one more blue bubble,
+// in order with the lines. A line marked bold is set in bold.
+//
+// The glyphs (back, video, plus, mic, send, chevron) are drawn here to the
+// iOS 18 Messages frames, not downloaded.
 
 const SEND_LIMIT = 80;
 
@@ -40,23 +42,16 @@ function MessagesState({ seat, lines, replies, shown, reducedMotion, act }: Phon
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
 
-  // Lines and replies merged in order: a reply sits after the line it followed.
-  const rows = useMemo(() => {
-    const merged: ({ at: number; kind: "in"; text: string; key: string } | { at: number; kind: "out"; text: string; key: string })[] = [
-      ...lines.map((line) => ({ at: line.cueIndex, kind: "in" as const, text: line.text, key: `l${line.cueIndex}` })),
-      ...replies.map((reply) => ({ at: reply.afterCue + 0.5, kind: "out" as const, text: reply.text, key: `r${reply.id}` })),
-    ].sort((a, b) => a.at - b.at);
-    const lastLineKey = lines.at(-1) ? `l${lines.at(-1)!.cueIndex}` : null;
-    const lastReplyKey = replies.at(-1) ? `r${replies.at(-1)!.id}` : null;
-
-    return merged.map((entry, index): Row => {
-      const next = merged[index + 1];
-      if (entry.kind === "in") {
-        return { kind: "in", key: entry.key, text: entry.text, tail: !next || next.kind !== "in", arriving: entry.key === lastLineKey };
-      }
-      return { kind: "out", key: entry.key, text: entry.text, tail: !next || next.kind !== "out", receipt: entry.key === lastReplyKey };
-    });
-  }, [replies, lines]);
+  // The sung lines and whatever the participant sends, in the order sent: all hers.
+  const rows = useMemo(
+    () =>
+      [
+        ...lines.map((line) => ({ at: line.cueIndex, key: `l${line.cueIndex}`, text: line.text, bold: Boolean(line.bold) })),
+        ...replies.map((reply) => ({ at: reply.afterCue + 0.5, key: `r${reply.id}`, text: reply.text, bold: false })),
+      ].sort((a, b) => a.at - b.at),
+    [replies, lines],
+  );
+  const firstMs = lines[0]?.startMs ?? 0;
 
   // The thread keeps its newest message in view, as Messages does.
   useLayoutEffect(() => {
@@ -94,36 +89,24 @@ function MessagesState({ seat, lines, replies, shown, reducedMotion, act }: Phon
 
       <div ref={threadRef} className={styles.thread} data-feed>
         <div className={styles.rows}>
-          <p className={styles.stamp}>
-            <b>Yesterday</b> 23:48
-          </p>
-          <p className={styles.bubble} data-side="in">are you still up</p>
-          <p className={styles.bubble} data-side="in" data-tail>
-            can we talk
-          </p>
-          <p className={styles.bubble} data-side="out" data-tail>
-            Not tonight.
-          </p>
-          <span className={styles.receipt}>Read 23:52</span>
-          {lines.length ? (
+          {rows.length ? (
             <p className={styles.stamp}>
-              <b>Today</b> {formatSongClock(lines[0]!.startMs)}
+              <b>iMessage</b>
+              <br />
+              <b>Today</b> {formatSongClock(firstMs)}
             </p>
           ) : null}
-          {rows.map((row) =>
-            row.kind === "in" ? (
-              <p key={row.key} className={styles.bubble} data-side="in" data-tail={row.tail || undefined} data-arriving={row.arriving || undefined}>
-                {row.text}
-              </p>
-            ) : (
+          {rows.map((row, index) => {
+            const last = index === rows.length - 1;
+            return (
               <div key={row.key} className={styles.outgoing}>
-                <p className={styles.bubble} data-side="out" data-tail={row.tail || undefined}>
+                <p data-lyric className={styles.bubble} data-side="out" data-tail={last || undefined} style={row.bold ? { fontWeight: 700 } : undefined}>
                   {row.text}
                 </p>
-                {row.receipt ? <span className={styles.receipt}>Delivered</span> : null}
+                {last ? <span className={styles.receipt}>Delivered</span> : null}
               </div>
-            ),
-          )}
+            );
+          })}
         </div>
       </div>
 

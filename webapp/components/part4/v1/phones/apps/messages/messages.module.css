@@ -269,7 +269,3 @@
 @media (prefers-reduced-motion: reduce) {
   .bubble[data-arriving] { animation: none; }
 }
-
-/* The exchange before the song, and the stamp the lyric opens with. */
-.rows > .receipt { align-self: flex-end; }
-.stamp:not(:first-child) { margin-top: 14px; }

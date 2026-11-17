@@ -1,0 +1,118 @@
+{
+  "photos": [
+    {
+      "file": "rain-windshield.jpg",
+      "source": "https://www.pexels.com/photo/raindrops-on-glass-window-9736437/",
+      "image": "https://images.pexels.com/photos/9736437/pexels-photo-9736437.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"billow926\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "dusk-moon.jpg",
+      "source": "https://www.pexels.com/photo/crescent-on-night-sky-over-power-lines-20276771/",
+      "image": "https://images.pexels.com/photos/20276771/pexels-photo-20276771.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"harpreet-grewal-855879376\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "bed-dark.jpg",
+      "source": "https://www.pexels.com/photo/shadow-of-person-on-bed-shee-6943425/",
+      "image": "https://images.pexels.com/photos/6943425/pexels-photo-6943425.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"cottonbro\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "glass.jpg",
+      "source": "https://www.pexels.com/photo/clear-drinking-glass-with-water-9988777/",
+      "image": "https://images.pexels.com/photos/9988777/pexels-photo-9988777.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"sovianna\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "sky-wires.jpg",
+      "source": "https://www.pexels.com/photo/electricity-wires-against-colorful-sky-in-evening-4949962/",
+      "image": "https://images.pexels.com/photos/4949962/pexels-photo-4949962.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"didsss\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "laptop-dark.jpg",
+      "source": "https://www.pexels.com/photo/black-flat-screen-computer-monitor-4069064/",
+      "image": "https://images.pexels.com/photos/4069064/pexels-photo-4069064.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"stefan-lobont\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "sheets.jpg",
+      "source": "https://www.pexels.com/photo/crumpled-fabric-on-soft-bed-6696879/",
+      "image": "https://images.pexels.com/photos/6696879/pexels-photo-6696879.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"tim-samuel\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "night-street.jpg",
+      "source": "https://www.pexels.com/photo/night-street-scene-with-blurred-car-lights-37557080/",
+      "image": "https://images.pexels.com/photos/37557080/pexels-photo-37557080.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"artem-stoliar\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    },
+    {
+      "file": "room-window.jpg",
+      "source": "https://www.pexels.com/photo/white-window-between-curtains-13207111/",
+      "image": "https://images.pexels.com/photos/13207111/pexels-photo-13207111.jpeg?auto=compress&cs=tinysrgb&w=780&h=1387&fit=crop",
+      "photographer": "Pexels user \"m1ddl3-m7n\" (profile slug; display name not looked up)",
+      "license": "Pexels License"
+    }
+  ],
+  "fonts": [
+    {
+      "file": "gabarito.woff2",
+      "font": "Gabarito 500",
+      "standsInFor": "Instagram Stories \"Modern\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "instrument-sans.woff2",
+      "font": "Instrument Sans 500",
+      "standsInFor": "Instagram Stories \"Classic\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "courier-prime.woff2",
+      "font": "Courier Prime 400",
+      "standsInFor": "Instagram Stories \"Typewriter\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "archivo.woff2",
+      "font": "Archivo 800 Italic",
+      "standsInFor": "Instagram Stories \"Strong\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "cormorant.woff2",
+      "font": "Cormorant 500",
+      "standsInFor": "Instagram Stories \"Literature\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "antic-didone.woff2",
+      "font": "Antic Didone 400",
+      "standsInFor": "Instagram Stories \"Elegant\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    },
+    {
+      "file": "fjalla-one.woff2",
+      "font": "Fjalla One 400",
+      "standsInFor": "Instagram Stories \"Squeeze\" text style",
+      "source": "Google Fonts (fonts.gstatic.com), latin subset",
+      "license": "SIL Open Font License 1.1"
+    }
+  ]
+}

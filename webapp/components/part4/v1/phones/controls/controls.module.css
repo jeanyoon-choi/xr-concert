@@ -74,3 +74,22 @@
 .chips button[aria-pressed="true"] { background: #171717; color: #fff; }
 
 .control button:focus-visible { outline: 2px solid #1469d8; outline-offset: 2px; }
+
+/* A group of apps (states.ts STATE_GROUPS): its name switches the whole group. */
+.group { display: grid; gap: 4px; justify-items: start; }
+
+.groupName {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: none;
+  color: #6b6b6b;
+  font: 600 16px Arial, Helvetica, sans-serif;
+  cursor: pointer;
+}
+
+.groupName[aria-pressed="true"] { color: #171717; }
+.groupName[aria-pressed="true"]::after { content: " · all"; font-weight: 400; }
+.groupName[aria-pressed="mixed"]::after { content: " · some"; font-weight: 400; }
+.groupName[aria-pressed="false"]::after { content: " · off"; font-weight: 400; }

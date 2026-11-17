@@ -1,26 +1,29 @@
 "use client";
 
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { clockAgo, formatSongClock } from "../../../clock/wall-clock";
+import { formatSongClock } from "../../../clock/wall-clock";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./messenger.module.css";
 import { follow } from "../follow";
 
-// Messenger for iOS, light, one chat with the ex. Messages already has the
-// ex double texting; here the lyric is what she starts to say back and takes
-// back. Each sung line appears as her outgoing bubble, word by word, and when
-// the next line starts it is unsent — the thread keeps Messenger's "You
-// unsent a message" placeholder where it was — so only the line being sung
-// is ever a real bubble. What the participant sends stays sent.
+// Messenger for iOS, light, one chat with the ex, new: nothing above the
+// first message but the profile block Messenger opens a conversation with.
+// Every sung line is a message this phone's owner sends — her own gradient
+// bubbles, one after another, each filling as it is typed — and they stay
+// sent. The ex never answers and never opens them: the last bubble keeps the
+// small grey "delivered" check, never his seen avatar. What the participant
+// sends from the composer is one more bubble, in order with the lines. A line
+// marked bold is set in bold.
 //
 // Sources: Messenger iOS chat chrome (header, composer's +, camera, gallery,
-// mic, "Aa", emoji and like; grey #F0F0F0 incoming; 18 pt bubbles grouped by
-// 4 pt inner corners; avatar beside a group's last incoming; small seen
-// avatar). The outgoing bubble is the default theme's gradient laid over the
-// whole screen and seen through each bubble, so a bubble shifts from purple
-// at the top to blue at the bottom as it scrolls, as Messenger does; the
-// endpoint colours are measured by eye from the app, Facebook publishes no
-// spec for them. Logo-free; glyphs are redrawn on Messenger's 24 pt grid.
+// mic, "Aa", emoji and like; 18 pt bubbles grouped by 4 pt inner corners;
+// the filled grey delivered check beside the last sent message; the centred
+// profile block of a new chat). The outgoing bubble is the default theme's
+// gradient laid over the whole screen and seen through each bubble, so a
+// bubble shifts from purple at the top to blue at the bottom as it scrolls,
+// as Messenger does; the endpoint colours are measured by eye from the app,
+// Facebook publishes no spec for them. Logo-free; every glyph, the delivered
+// check included, is redrawn here on Messenger's 24 pt grid, not downloaded.
 
 const SEND_LIMIT = 80;
 
@@ -54,52 +57,33 @@ function Glyph({ name }: { name: GlyphName }) {
   }
 }
 
-type Row =
-  | { kind: "in"; key: string; text: string }
-  | { kind: "out"; key: string; text: string; arriving: boolean }
-  | { kind: "unsent"; key: string };
-
-/** The ex's ordinary messages before the song. */
-const BEFORE: readonly Row[] = [
-  { kind: "in", key: "b0", text: "hey" },
-  { kind: "in", key: "b1", text: "you still have my grey hoodie?" },
-  { kind: "in", key: "b2", text: "i can come get it this week" },
-  { kind: "out", key: "b3", text: "ok", arriving: false },
-];
-
-/** The earlier exchange's stamp: 18 minutes before the song. */
-const OPENED = clockAgo(18);
-
 function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
   const contact = contactFor(seat);
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo(() => {
-    const lastCue = lines.at(-1)?.cueIndex;
-    const entries: { at: number; row: Row }[] = [
-      ...lines.map((line) => ({
-        at: line.cueIndex,
-        row:
-          line.cueIndex === lastCue
-            ? ({ kind: "out", key: `l${line.cueIndex}`, text: line.text, arriving: line.current } as const)
-            : ({ kind: "unsent", key: `l${line.cueIndex}` } as const),
-      })),
-      ...replies.map((reply) => ({ at: reply.afterCue + 0.5, row: { kind: "out", key: `r${reply.id}`, text: reply.text, arriving: false } as const })),
-    ];
-    return [...BEFORE, ...entries.sort((a, b) => a.at - b.at).map((entry) => entry.row)];
-  }, [lines, replies]);
-
-  // The ex has seen everything up to the last message that is not still being written.
-  const seenIndex = rows.findLastIndex((row) => row.kind !== "in" && !(row.kind === "out" && row.arriving));
+  // The sung lines and whatever the participant sends, in the order sent: all hers, all kept.
+  const rows = useMemo(
+    () =>
+      [
+        ...lines.map((line) => ({ at: line.cueIndex, key: `l${line.cueIndex}`, text: line.text, bold: Boolean(line.bold) })),
+        ...replies.map((reply) => ({ at: reply.afterCue + 0.5, key: `r${reply.id}`, text: reply.text, bold: false })),
+      ].sort((a, b) => a.at - b.at),
+    [lines, replies],
+  );
+  const firstMs = lines[0]?.startMs ?? 0;
 
   // The gradient belongs to the screen: each outgoing bubble shows the slice behind it.
+  // Measured on the glass (390 × 844) and divided by the lyric scale, which zooms a bubble and its background with it.
   const paint = useCallback(() => {
     const thread = threadRef.current;
-    if (!thread) return;
-    const offset = thread.offsetTop - thread.scrollTop;
+    const glass = thread?.parentElement?.getBoundingClientRect();
+    if (!thread || !glass || glass.height === 0) return;
+    const scale = Number.parseFloat(getComputedStyle(thread).getPropertyValue("--lyric-scale")) || 1;
     for (const bubble of thread.querySelectorAll<HTMLElement>("[data-gradient]")) {
-      bubble.style.backgroundPosition = `0 ${-(offset + bubble.offsetTop)}px`;
+      const top = ((bubble.getBoundingClientRect().top - glass.top) / glass.height) * 844;
+      bubble.style.backgroundSize = `${390 / scale}px ${844 / scale}px`;
+      bubble.style.backgroundPosition = `0 ${-top / scale}px`;
     }
   }, []);
 
@@ -117,8 +101,6 @@ function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: Pho
     act({ kind: "reply", text });
     setDraft("");
   };
-
-  const sideOf = (row: Row | undefined) => (row ? (row.kind === "in" ? "in" : row.kind === "out" ? "out" : "unsent") : null);
 
   return (
     <section className={styles.app} aria-label={`Messenger chat with ${contact.name}`} inert={!shown}>
@@ -144,53 +126,40 @@ function MessengerState({ seat, lines, replies, shown, reducedMotion, act }: Pho
 
       <div ref={threadRef} className={styles.thread} onScroll={paint}>
         <div className={styles.rows}>
-          <p className={styles.stamp}>Today at {OPENED}</p>
+          <div className={styles.identity}>
+            <span className={styles.identityAvatar} aria-hidden="true" style={{ background: contact.tint }}>
+              {contact.initials}
+            </span>
+            <strong>{contact.name}</strong>
+            <small>Facebook</small>
+            <small>You&apos;re friends on Facebook</small>
+          </div>
+          {rows.length ? <p className={styles.stamp}>Today at {formatSongClock(firstMs)}</p> : null}
           {rows.map((row, index) => {
-            const side = sideOf(row);
-            const groupedAbove = sideOf(rows[index - 1]) === side && side !== "unsent";
-            const groupedBelow = sideOf(rows[index + 1]) === side && side !== "unsent";
-            const stamp = index === BEFORE.length && lines.length > 0 ? (
-              <p key={`${row.key}-stamp`} className={styles.stamp}>
-                Today at {formatSongClock(lines[0]!.startMs)}
+            const last = index === rows.length - 1;
+            return (
+              <p
+                data-lyric
+                key={row.key}
+                className={styles.bubble}
+                data-side="out"
+                data-gradient
+                data-above={index > 0 || undefined}
+                data-below={!last || undefined}
+                style={row.bold ? { fontWeight: 700 } : undefined}
+              >
+                {row.text}
               </p>
-            ) : null;
-            const seen =
-              index === seenIndex ? (
-                <span key={`${row.key}-seen`} className={styles.seen} aria-label={`Seen by ${contact.name}`} style={{ background: contact.tint }}>
-                  {contact.initials}
-                </span>
-              ) : null;
-            const shape = { "data-above": groupedAbove || undefined, "data-below": groupedBelow || undefined };
-
-            let body;
-            if (row.kind === "in") {
-              body = (
-                <div key={row.key} className={styles.incoming} data-below={groupedBelow || undefined}>
-                  {groupedBelow ? <span className={styles.gutter} /> : (
-                    <span className={styles.small} aria-hidden="true" style={{ background: contact.tint }}>
-                      {contact.initials}
-                    </span>
-                  )}
-                  <p className={styles.bubble} data-side="in" {...shape}>
-                    {row.text}
-                  </p>
-                </div>
-              );
-            } else if (row.kind === "out") {
-              body = (
-                <p key={row.key} className={styles.bubble} data-side="out" data-gradient data-arriving={(row.arriving && !reducedMotion) || undefined} {...shape}>
-                  {row.text}
-                </p>
-              );
-            } else {
-              body = (
-                <p key={row.key} className={styles.unsent}>
-                  You unsent a message
-                </p>
-              );
-            }
-            return [stamp, body, seen];
+            );
           })}
+          {rows.length ? (
+            <span className={styles.delivered} role="img" aria-label="Delivered">
+              <svg aria-hidden="true" viewBox="0 0 14 14" width="14" height="14">
+                <circle cx="7" cy="7" r="7" fill="currentColor" />
+                <path d="m3.9 7.2 2.2 2.2 4-4.4" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          ) : null}
         </div>
       </div>
 

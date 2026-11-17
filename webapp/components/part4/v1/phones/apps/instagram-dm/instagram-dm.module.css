@@ -49,7 +49,6 @@
 }
 
 .headerAvatar,
-.monogram,
 .identityAvatar {
   display: grid;
   flex: none;
@@ -110,6 +109,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  margin-bottom: auto;
   padding: 28px 12px 24px;
 }
 
@@ -141,42 +141,14 @@
   text-align: center;
 }
 
-/* Rows: received bubbles from x 56 (28 pt avatar at x 16, 12 pt gap); 1 pt apart in a group, 20 pt between groups. */
-.inRow,
-.outGroup { margin-top: 1px; }
-
-.inRow[data-gap],
-.outGroup[data-gap] { margin-top: 20px; }
-
-.stamp + .inRow,
-.stamp + .outRow,
-.stamp + .outGroup,
-.storyQuote + .inRow,
-.storyQuote + .outGroup { margin-top: 0; }
-
-.inRow {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-}
-
+/* Sent bubbles sit 1 pt apart in a group. */
 .outRow {
   display: flex;
   justify-content: flex-end;
+  margin-top: 1px;
 }
 
-.outGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.rowAvatar {
-  width: 28px;
-  flex: none;
-  align-self: flex-end;
-}
-
-.monogram { width: 28px; height: 28px; font-size: 12px; }
+.stamp + .outRow { margin-top: 0; }
 
 .bubble {
   position: relative;
@@ -190,10 +162,6 @@
   user-select: none;
   -webkit-user-select: none;
 }
-
-.bubble[data-side="in"] { background: var(--received); color: var(--ink); }
-.bubble[data-side="in"]:not([data-last]) { border-bottom-left-radius: 4px; }
-.bubble[data-side="in"]:not([data-first]) { border-top-left-radius: 4px; }
 
 /* Sent: one gradient across the thread viewport (#424fff upper, #4a5df9 lower in the frame). */
 .bubble[data-side="out"] {
@@ -211,7 +179,7 @@
 .reaction {
   position: absolute;
   bottom: -20px;
-  left: 10px;
+  right: 10px;
   height: 26px;
   padding: 0 6px;
   border: 2px solid #fff;
@@ -219,66 +187,6 @@
   background: #eff1f4;
   font-size: 13px;
   line-height: 22px;
-}
-
-.bubble[data-arriving] {
-  transform-origin: 0 100%;
-  animation: arrive 240ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
-}
-
-@keyframes arrive {
-  from { opacity: 0; transform: translateY(8px) scale(0.92); }
-  to { opacity: 1; transform: none; }
-}
-
-.seen {
-  align-self: flex-end;
-  margin: 5px 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-/* Story reply: label, then the replied story as a quoted 9:16 thumbnail, aligned with the bubbles. */
-.storyLabel {
-  margin: 0 0 6px 40px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.storyQuote {
-  display: flex;
-  gap: 8px;
-  margin: 0 0 6px 40px;
-}
-
-.storyBar {
-  width: 3px;
-  border-radius: 1.5px;
-  background: #dbdee3;
-}
-
-.story {
-  display: grid;
-  width: 96px;
-  height: 170px;
-  padding: 10px;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #2f5547;
-  color: #fff;
-  font-family: var(--ios-display);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 15px;
-  text-align: center;
-}
-
-.story span {
-  padding: 2px 5px;
-  border-radius: 3px;
 }
 
 /* Composer: 42 pt pill from x 8 to 382, 41 pt above the bottom edge; 32 pt camera disc inset 5 pt. */
@@ -340,8 +248,4 @@
   background: none;
   color: var(--accent);
   font: 600 16px/20px var(--ios-font);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bubble[data-arriving] { animation: none; }
 }

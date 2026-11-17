@@ -1,0 +1,18 @@
+{
+  "license": "Unsplash License (https://unsplash.com/license)",
+  "note": "Each file is the photograph cropped to 16:9 and resized to 1170 x 658.",
+  "images": [
+    { "file": "still-01.jpg", "source": "https://unsplash.com/photos/59UGBRxv10U", "image": "https://images.unsplash.com/photo-1546257830-ca71950d5fd1", "photographer": "Irene Wong" },
+    { "file": "still-02.jpg", "source": "https://unsplash.com/photos/NilL2FZJcLo", "image": "https://images.unsplash.com/photo-1562792498-613cd47c2d6c", "photographer": "Brandon Hoogenboom" },
+    { "file": "still-03.jpg", "source": "https://unsplash.com/photos/fk0dZxMcFp0", "image": "https://images.unsplash.com/photo-1574162420441-9de06e5cc319", "photographer": "Andriyko Podilnyk" },
+    { "file": "still-04.jpg", "source": "https://unsplash.com/photos/jk03EGHhR9Y", "image": "https://images.unsplash.com/photo-1583487473038-73587dacc164", "photographer": "Matias Tapia" },
+    { "file": "still-05.jpg", "source": "https://unsplash.com/photos/WfA5h5r96LE", "image": "https://images.unsplash.com/photo-1612426885987-b56a0eb1ed42", "photographer": "Daniel Silva Gaxiola" },
+    { "file": "still-06.jpg", "source": "https://unsplash.com/photos/-sZ7Gpcn5lc", "image": "https://images.unsplash.com/photo-1590382950525-04ce5bf4d3dd", "photographer": "Ben Blennerhassett" },
+    { "file": "still-07.jpg", "source": "https://unsplash.com/photos/RVdbv1xoqGU", "image": "https://images.unsplash.com/photo-1634662404902-e559656e1993", "photographer": "Casey Horner" },
+    { "file": "still-08.jpg", "source": "https://unsplash.com/photos/pi3_ah1x-rs", "image": "https://images.unsplash.com/photo-1667290942551-3743113d22a4", "photographer": "Oksana Zub" },
+    { "file": "still-09.jpg", "source": "https://unsplash.com/photos/JUB3987D2KI", "image": "https://images.unsplash.com/photo-1664662803779-dbcce07b4c3e", "photographer": "Vlad ION" },
+    { "file": "still-10.jpg", "source": "https://unsplash.com/photos/rjzW_IIjBJc", "image": "https://images.unsplash.com/photo-1708201597035-60691c4152cb", "photographer": "Matheus Câmara da Silva" },
+    { "file": "still-11.jpg", "source": "https://unsplash.com/photos/ybuOACBtSWc", "image": "https://images.unsplash.com/photo-1760867448958-75317f93c21d", "photographer": "Ansis Kančs" },
+    { "file": "still-12.jpg", "source": "https://unsplash.com/photos/WENTRcpFYM8", "image": "https://images.unsplash.com/photo-1505762924203-b085ebd0c5ee", "photographer": "Kinga Howard" }
+  ]
+}

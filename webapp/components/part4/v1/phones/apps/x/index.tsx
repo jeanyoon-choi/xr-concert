@@ -15,6 +15,10 @@ import { follow } from "../follow";
 // the next line starts it is posted and joins the thread above, connected by
 // the thread line. The composer is real: what the participant types replaces
 // the lyric draft, and Post adds it to the thread after the line it followed.
+// Every post on the screen is hers — the opener, each sung line, whatever the
+// participant posts — and the account is a small personal one: single- and
+// low-double-digit views, a like or two, nobody replying. A line marked bold
+// is set in bold.
 //
 // Sources: ported from experiments-jyc SCC apps/scc/components/mobile/clone/13
 // (record apps/scc/docs/experiments/sns/mobile/13.md): x-web served tokens
@@ -38,7 +42,7 @@ const AUTHORS = [
 
 type Author = (typeof AUTHORS)[number];
 
-type Row = { key: string; text: string; age: string; seed: number };
+type Row = { key: string; text: string; age: string; seed: number; bold: boolean };
 
 /** "21:26" minus `minutes`, as X's 12-hour detail stamp. */
 function stamp(clock: string, minutes: number) {
@@ -94,12 +98,12 @@ function Post({ author, row, down, up }: { author: Author; row: Row; down: boole
             <XIcon name="more" size={17} />
           </span>
         </div>
-        <p className={styles.text}>{row.text}</p>
+        <p data-lyric className={styles.text} style={row.bold ? { fontWeight: 700 } : undefined}>{row.text}</p>
         <div className={styles.actions}>
-          <Action icon="reply" count={s % 3} label="Reply" />
-          <Action icon="repost" count={s % 4 === 0 ? 1 : 0} label="Repost" />
-          <Action icon="heart" count={2 + (s % 9)} label="Like" />
-          <Action icon="views" count={38 + ((s * 37) % 160)} label="Views" />
+          <Action icon="reply" label="Reply" />
+          <Action icon="repost" label="Repost" />
+          <Action icon="heart" count={s % 3 === 0 ? 1 : 0} label="Like" />
+          <Action icon="views" count={3 + ((s * 5) % 9)} label="Views" />
           <span className={styles.pair}>
             <Action icon="bookmark" label="Bookmark" />
             <Action icon="share" label="Share post" />
@@ -123,8 +127,8 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
   const rows = useMemo(() => {
     const posted = current ? lines.slice(0, -1) : lines;
     return [
-      ...posted.map((line) => ({ at: line.cueIndex, row: { key: `l${line.cueIndex}`, text: line.full, age: age(now - line.startMs + 4000), seed: line.cueIndex * 7 + seat } })),
-      ...replies.map((reply) => ({ at: reply.afterCue + 0.5, row: { key: `r${reply.id}`, text: reply.text, age: "now", seed: reply.id } })),
+      ...posted.map((line) => ({ at: line.cueIndex, row: { key: `l${line.cueIndex}`, text: line.full, age: age(now - line.startMs + 4000), seed: line.cueIndex * 7 + seat, bold: Boolean(line.bold) } })),
+      ...replies.map((reply) => ({ at: reply.afterCue + 0.5, row: { key: `r${reply.id}`, text: reply.text, age: "now", seed: reply.id, bold: false } })),
     ]
       .sort((a, b) => a.at - b.at)
       .map((entry) => entry.row);
@@ -177,13 +181,13 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
           </div>
           <p className={styles.focalText}>ok. some things I should have said out loud a long time ago. a thread 🧵</p>
           <p className={styles.meta}>
-            {stamp(opened, 3)} · {DAY} · <strong>{(1204 + seat * 87).toLocaleString("en-US")}</strong> Views
+            {stamp(opened, 3)} · {DAY} · <strong>{14 + (seat % 5) * 3}</strong> Views
           </p>
           <div className={styles.detailActions}>
-            <Action icon="reply" count={4 + rows.length} label="Reply" />
-            <Action icon="repost" count={3} label="Repost" />
-            <Action icon="heart" count={41 + seat} label="Like" />
-            <Action icon="bookmark" count={5} label="Bookmark" />
+            <Action icon="reply" count={rows.length} label="Reply" />
+            <Action icon="repost" label="Repost" />
+            <Action icon="heart" count={1 + (seat % 3)} label="Like" />
+            <Action icon="bookmark" label="Bookmark" />
             <Action icon="share" label="Share post" />
           </div>
         </article>
@@ -203,7 +207,7 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
           <label className={styles.field}>
             <span className={styles.hidden}>Post your reply</span>
             {!typing && current ? (
-              <span className={styles.lyric} aria-hidden="true">
+              <span data-lyric className={styles.lyric} aria-hidden="true" style={current.bold ? { fontWeight: 700 } : undefined}>
                 {current.text}
                 <span className={styles.caret} />
               </span>
@@ -247,7 +251,7 @@ function XState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateP
         <XIcon name="grok" size={26} />
         <span className={styles.bell}>
           <XIcon name="bell" size={26} />
-          <span className={styles.badge}>3</span>
+          
         </span>
         <XIcon name="chat" size={26} />
       </nav>

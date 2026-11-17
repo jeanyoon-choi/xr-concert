@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useLayoutEffect, useRef, useState } from "react";
-import { dateLabel, formatSongClock } from "../../../clock/wall-clock";
+import { formatSongClock } from "../../../clock/wall-clock";
 import { contactFor, type PhoneStateProps } from "../types";
 import styles from "./voicemail.module.css";
 import { follow } from "../follow";
@@ -14,11 +14,18 @@ import { follow } from "../follow";
 // speaker.wave.3.fill, phone.fill, trash). Colours are UIKit's light
 // palette (systemBlue #007AFF, systemRed #FF3B30, secondaryLabel).
 //
-// The lyric is a voicemail the seat's contact left tonight, opened at the
-// top of the list: Visual Voicemail's transcription spells it out as it is
-// sung, each line a sentence of the same transcript. The duration grows with
-// it. Earlier voicemails sit under it collapsed; tapping one opens it, as in
-// the app, and the play button toggles locally.
+// Metrics (points on the 390-pt glass): 44 pt navigation bar with 16 pt
+// margins, 52 pt large-title row (34/41 bold, 16 pt leading), the row's text
+// 32 pt from the edge behind the unread-dot gutter, the info button 16 pt from
+// the trailing edge, 0.33 pt separators, 49 pt tab bar above the 34 pt
+// home-indicator inset. All glyphs listed above are drawn here.
+//
+// The lyric is the one voicemail in the box, left tonight by the seat's
+// contact and open: Visual Voicemail's transcription spells it out as it is
+// sung, each line a sentence of the same paragraph (a `bold` line is a bold
+// sentence). The duration grows with it. Only the transcript text scales with
+// the lyric scale; the row grows with it and pushes the player down. Tapping
+// the row closes and opens it, as in the app; the play button toggles locally.
 
 type Glyph = "star" | "clock" | "person" | "keypad" | "tape" | "info" | "play" | "pause" | "speaker" | "phone" | "trash";
 
@@ -49,23 +56,8 @@ function Icon({ name }: { name: Glyph }) {
   }
 }
 
-type Voicemail = { key: string; name: string; label: string; when: string; seconds: number; unread: boolean; transcript: string };
-
-const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth", "twenty-first", "twenty-second", "twenty-third", "twenty-fourth", "twenty-fifth", "twenty-sixth", "twenty-seventh", "twenty-eighth", "twenty-ninth", "thirtieth", "thirty-first"];
-/** Days in the list, from today: 2 and 4 days back by weekday, 6 back as a date; today's appointment as the dentist says it. */
-const weekday = (offsetDays: number) => dateLabel("en-GB", { weekday: "long" }, offsetDays);
-const WHEN = { b: weekday(-2), c: weekday(-4), d: dateLabel("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }, -6) };
-const APPOINTMENT = `${weekday(0)} the ${ORDINALS[Number(dateLabel("en-GB", { day: "numeric" })) - 1]}`;
-
-/** The voicemails already in the box: ordinary calls, one earlier from the same person. */
-function earlierFor(name: string): Voicemail[] {
-  return [
-    { key: "a", name, label: "mobile", when: "Yesterday", seconds: 38, unread: true, transcript: `Hey, it's me. I know it's late. I just… call me back when you get this, okay? It's nothing bad. I just want to talk.` },
-    { key: "b", name: "Mum", label: "home", when: WHEN.b, seconds: 51, unread: false, transcript: "Hi love, it's Mum. Just checking you got home all right. Your dad says hello. Ring us when you're free, no rush." },
-    { key: "c", name: "Bright Smile Dental", label: "work", when: WHEN.c, seconds: 27, unread: false, transcript: `Hello, this is a reminder of your appointment on ${APPOINTMENT} at 9:40. Please call us if you need to reschedule. Thank you.` },
-    { key: "d", name, label: "mobile", when: WHEN.d, seconds: 14, unread: false, transcript: "Hey. Did you leave your charger at mine? I'll drop it round." },
-  ];
-}
+type Sentence = { key: number; text: string; bold: boolean };
+type Voicemail = { name: string; label: string; when: string; seconds: number; transcript: Sentence[] };
 
 const duration = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -75,20 +67,19 @@ const sentence = (text: string, done: boolean) => {
   return done && !/[.!?…,]$/.test(head) ? `${head}.` : head;
 };
 
-function Row({ mail, open, playing, onToggle, onPlay, transcript, typing }: {
+function Row({ mail, open, playing, onToggle, onPlay, typing }: {
   mail: Voicemail;
   open: boolean;
   playing: boolean;
   onToggle: () => void;
   onPlay: () => void;
-  transcript: string;
   typing: boolean;
 }) {
   return (
     <li className={styles.row} data-open={open || undefined}>
       <button type="button" className={styles.head} onClick={onToggle} aria-expanded={open}>
-        <span className={styles.dot} data-unread={(mail.unread && !open) || undefined} />
-        <span className={styles.name} data-unread={(mail.unread && !open) || undefined}>{mail.name}</span>
+        <span className={styles.dot} data-unread={!open || undefined} />
+        <span className={styles.name}>{mail.name}</span>
         <span className={styles.when}>{mail.when}</span>
         <span className={styles.info}><Icon name="info" /></span>
         <span className={styles.label}>{mail.label}</span>
@@ -96,8 +87,12 @@ function Row({ mail, open, playing, onToggle, onPlay, transcript, typing }: {
       </button>
       {open ? (
         <div className={styles.detail}>
-          <p className={styles.beta}>Transcription Beta</p>
-          <p className={styles.transcript} data-typing={typing || undefined}>{transcript}</p>
+          <p className={styles.beta}>Transcription</p>
+          <p data-lyric className={styles.transcript} data-typing={typing || undefined}>
+            {mail.transcript.map((part, index) => (
+              <span key={part.key} data-bold={part.bold || undefined}>{index ? " " : ""}{part.text}</span>
+            ))}
+          </p>
           <p className={styles.feedback}>
             Was this transcription <span>useful</span> or <span>not useful</span>?
           </p>
@@ -128,28 +123,22 @@ function Row({ mail, open, playing, onToggle, onPlay, transcript, typing }: {
 
 function VoicemailState({ seat, lines, shown, reducedMotion }: PhoneStateProps) {
   const contact = contactFor(seat);
-  const earlier = earlierFor(contact.name);
   const listRef = useRef<HTMLDivElement>(null);
-  const [opened, setOpened] = useState<string | null>(null);
-  const [playing, setPlaying] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
+  const [playing, setPlaying] = useState(false);
 
   const words = lines.reduce((sum, line) => sum + line.sung, 0);
+  // The box holds only tonight's voicemail; before the song it is empty.
   const tonight: Voicemail | null = lines.length
     ? {
-        key: "tonight",
         name: contact.name,
         label: "mobile",
         when: formatSongClock(lines[0]!.startMs),
         seconds: 3 + Math.round(words * 0.42),
-        unread: true,
-        transcript: lines.map((line) => sentence(line.text, !line.current)).join(" "),
+        transcript: lines.map((line) => ({ key: line.cueIndex, text: sentence(line.text, !line.current), bold: Boolean(line.bold) })),
       }
     : null;
-  const all = tonight ? [tonight, ...earlier] : earlier;
-  // Tonight's voicemail opens itself as it arrives; before the song, the newest one is open.
-  const open = opened ?? all[0]!.key;
-  const unread = all.filter((mail) => mail.unread && mail.key !== open).length;
-  const typing = Boolean(tonight && lines.at(-1)?.current && open === "tonight");
+  const typing = Boolean(tonight && lines.at(-1)?.current && open);
 
   // Keep the end of the transcript (where it is being written) in view.
   useLayoutEffect(() => {
@@ -170,18 +159,9 @@ function VoicemailState({ seat, lines, shown, reducedMotion }: PhoneStateProps) 
         </header>
         <h1 className={styles.large}>Voicemail</h1>
         <ul className={styles.list}>
-          {all.map((mail) => (
-            <Row
-              key={mail.key}
-              mail={mail}
-              open={open === mail.key}
-              playing={playing === mail.key}
-              onToggle={() => setOpened(open === mail.key ? "none" : mail.key)}
-              onPlay={() => setPlaying(playing === mail.key ? null : mail.key)}
-              transcript={mail.transcript}
-              typing={mail.key === "tonight" && typing}
-            />
-          ))}
+          {tonight ? (
+            <Row mail={tonight} open={open} playing={playing} onToggle={() => setOpen(!open)} onPlay={() => setPlaying(!playing)} typing={typing} />
+          ) : null}
         </ul>
       </div>
 
@@ -191,7 +171,7 @@ function VoicemailState({ seat, lines, shown, reducedMotion }: PhoneStateProps) 
         <span><Icon name="person" />Contacts</span>
         <span><Icon name="keypad" />Keypad</span>
         <span data-selected>
-          <i className={styles.tapeIcon}><Icon name="tape" />{unread ? <b className={styles.badge}>{unread}</b> : null}</i>
+          <i className={styles.tapeIcon}><Icon name="tape" />{tonight && !open ? <b className={styles.badge}>1</b> : null}</i>
           Voicemail
         </span>
       </nav>

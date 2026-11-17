@@ -1,0 +1,228 @@
+/* iOS 18 Photos, a memory movie playing with its controls shown, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: var(--ios-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The movie: one photograph filling the screen, the next dissolving in over it. */
+.reel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.slide[data-enter] {
+  animation: dissolve 1100ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes dissolve {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* The photograph's own box (it covers its view); the bar is inside it, so it moves with the push. */
+.shot {
+  position: absolute;
+  display: block;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.slide .shot {
+  will-change: transform;
+  animation: push 12s cubic-bezier(0.3, 0.45, 0.5, 1) both;
+}
+
+/* The slow Ken Burns move, about his eyes: in on one photograph, out on the next. */
+@keyframes push {
+  from { transform: scale(var(--from, 1)); }
+  to { transform: scale(var(--to, 1.14)); }
+}
+
+.app[data-paused] .slide,
+.app[data-paused] .slide .shot {
+  animation-play-state: paused;
+}
+
+.app[data-still] .slide,
+.app[data-still] .slide .shot {
+  animation: none;
+}
+
+/* The plain black bar over his eyes. */
+.censor {
+  position: absolute;
+  display: block;
+  background: #000;
+}
+
+/* The player darkens the top and the foot of the movie under its controls. */
+.shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0, rgba(0, 0, 0, 0.18) 110px, rgba(0, 0, 0, 0) 190px),
+    linear-gradient(to top, rgba(0, 0, 0, 0.78) 0, rgba(0, 0, 0, 0.62) 190px, rgba(0, 0, 0, 0.3) 400px, rgba(0, 0, 0, 0) 560px);
+  pointer-events: none;
+}
+
+/* Top row: back, the memory's name, volume and More. */
+.top {
+  position: absolute;
+  top: 64px;
+  left: 16px;
+  right: 16px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topRight {
+  display: flex;
+  gap: 8px;
+}
+
+.round {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(150, 150, 150, 0.46);
+  color: #fff;
+}
+
+.name {
+  position: absolute;
+  top: 68px;
+  left: 90px;
+  right: 90px;
+  margin: 0;
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.4px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The memory's title: large, bold, white, lower-left, its date line above it. */
+.card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 172px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.sub {
+  margin: 0 0 6px;
+  font: 700 13px/16px var(--ios-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.title {
+  margin: 0;
+  max-width: 100%;
+  /* As large as its length allows; never so large that its longest word leaves the screen. */
+  font: 800 56px/1.04 var(--ios-font);
+  font-size: min(var(--size, 56px), calc(var(--fit, 56px) / var(--lyric-scale, 1)));
+  letter-spacing: -0.022em;
+  text-wrap: wrap;
+  color: #fff;
+}
+
+/* The scrubber: the movie's photographs, the one playing larger, set apart. */
+.strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 685px;
+  height: 49px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 49px;
+  overflow: hidden;
+  clip-path: inset(3px 9px round 4px);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.2, 1), clip-path 600ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.thumb[data-on] {
+  clip-path: inset(0 0 round 5px);
+}
+
+.app[data-still] .thumb {
+  transition: none;
+}
+
+/* Foot: Memory Mixes, then Photos | Movie. */
+.mixes {
+  position: absolute;
+  left: 32px;
+  bottom: 36px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(150, 150, 150, 0.46);
+}
+
+.modes {
+  position: absolute;
+  left: 50%;
+  bottom: 36px;
+  width: 156px;
+  height: 44px;
+  margin-left: -78px;
+  padding: 4px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 22px;
+  background: rgba(150, 150, 150, 0.46);
+  font: 600 15px/36px var(--ios-font);
+  letter-spacing: -0.2px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.modeOn {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+/* The next photograph, fetched ahead of its line. */
+.ahead {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { LyricCue } from "../timeline/use-lyric-cue";
-import { APPS, type PhoneState } from "./states";
+import type { PhoneState } from "./states";
 
 // The phones' score. The lyric falls into passages — wider than a line,
 // narrower than a verse (PASSAGES). When a passage ends, the dice decide
@@ -35,6 +35,13 @@ const PASSAGE_CHANCE = 0.7;
  */
 const PASSAGES: readonly number[] = [0, 2, 4, 8, 11, 12, 15, 16, 19, 21, 25, 28, 29, 32, 33, 35, 37, 40, 41, 44];
 
+/** The passage a line (cue index) belongs to. */
+export function passageOfCue(cueIndex: number) {
+  let passage = 0;
+  for (let index = 1; index < PASSAGES.length; index += 1) if (PASSAGES[index]! <= cueIndex) passage = index;
+  return passage;
+}
+
 /**
  * The lines that lock every phone: every “We were toxic …” — “till the end”,
  * “till the end, end, end”, and the bare “We were toxic”.
@@ -51,19 +58,21 @@ function dice(passage: number, salt: number) {
 }
 
 /**
- * Every phone's app during passage `passage`. At each passage change the dice
- * either leave the grid as it is or turn every phone the same number of
- * places along the app list: all move, together, and no two phones land on
- * the same app.
+ * Every phone's app during passage `passage`, dealt from `pool` (the apps
+ * chosen in the options control). At each passage change the dice either
+ * leave the grid as it is or turn every phone the same number of places
+ * along the pool: all move, together, and while the pool is at least as
+ * large as the grid no two phones land on the same app.
  */
-export function appsAt(seats: number, passage: number): PhoneState[] {
-  const count = APPS.length;
+export function appsAt(pool: readonly PhoneState[], seats: number, passage: number): PhoneState[] {
+  const count = pool.length;
+  // At least four places where the pool allows, so no phone is handed its neighbour's app.
+  const least = count >= 8 ? 4 : 1;
   let turn = 0;
   for (let boundary = 1; boundary <= passage; boundary += 1) {
-    // At least four places, so no phone is handed its neighbour's app.
-    if (dice(boundary, 1) < PASSAGE_CHANCE) turn += 4 + Math.floor(dice(boundary, 2) * (count - 7));
+    if (count > 1 && dice(boundary, 1) < PASSAGE_CHANCE) turn += least + Math.floor(dice(boundary, 2) * (count - least));
   }
-  return Array.from({ length: seats }, (_, seat) => APPS[(seat + turn) % count]!);
+  return Array.from({ length: seats }, (_, seat) => pool[(seat + turn) % count]!);
 }
 
 export type PhoneScore = {
@@ -80,7 +89,7 @@ export type PhoneScore = {
  * changes only when a passage turns, a phone's preload comes due or a lock
  * line begins or ends, so the grid can skip every frame in between.
  */
-export function usePhoneScore(cue: LyricCue, seats: number): PhoneScore {
+export function usePhoneScore(cue: LyricCue, seats: number, pool: readonly PhoneState[]): PhoneScore {
   const { currentTimeMs, wordTimings } = cue;
   // Passage starts in song time; a move is centred on each.
   const moveStarts = useMemo(
@@ -103,12 +112,12 @@ export function usePhoneScore(cue: LyricCue, seats: number): PhoneScore {
   const locked = isLockLine(cue.lyric);
 
   return useMemo(() => {
-    const apps = appsAt(seats, passage);
-    const next = preloading > 0 ? appsAt(seats, passage + 1) : apps;
+    const apps = appsAt(pool, seats, passage);
+    const next = preloading > 0 ? appsAt(pool, seats, passage + 1) : apps;
     return {
       apps,
       upcoming: apps.map((app, seat) => (seat < preloading && next[seat] !== app ? next[seat]! : null)),
       locked,
     };
-  }, [locked, passage, preloading, seats]);
+  }, [locked, passage, pool, preloading, seats]);
 }

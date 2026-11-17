@@ -1,62 +1,35 @@
 "use client";
 
 import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { clockAgo, dateLabel, formatSongClock } from "../../../clock/wall-clock";
-import type { PhoneStateProps } from "../types";
-import styles from "./kakaotalk.module.css";
+import { dateLabel, formatSongClock } from "../../../clock/wall-clock";
 import { follow } from "../follow";
+import { contactFor, type PhoneStateProps } from "../types";
+import styles from "./kakaotalk.module.css";
 
-// KakaoTalk (iOS, 기본 테마, light), one group chat room: 우리끼리, four
-// members. The friends were talking about the ex and karaoke; then the song
-// arrives as the room singing along — each sung line is posted by the next
-// friend in turn (line i → friend i mod 3), filling word by word. The unread
-// counters behave as KakaoTalk's do: a friend's message starts at 2 (the
-// other two have not read it) and drops by one as each later line is posted;
-// the participant's own yellow bubbles start at 3. The composer is real.
+// KakaoTalk (iOS, 기본 테마, light), a 1:1 room with the ex, empty until the
+// song. Every sung line is a message this phone's owner sends — her own
+// yellow bubbles, one after another, each filling as it is typed — and the
+// ex never answers: every bubble keeps its unread "1". In KakaoTalk's
+// English setting: "1:14 PM" stamps and a "Tuesday, November 17, 2026" date
+// line.
 //
 // Sources: layout, colours and metrics from current KakaoTalk iOS chat-room
-// frames (room background #BACEE0, own bubble #FEE500, white incoming,
-// squircle profile 40 pt, yellow unread digits, 오전/오후 stamps, date pill
-// with calendar glyph, composer + / field / emoji / #). Kakao publishes no
-// in-app icon set, so the bar glyphs are drawn to those frames, not
-// downloaded. Profiles are monograms rather than photos.
-
-type Friend = { readonly name: string; readonly initial: string; readonly tint: string };
-
-const ROSTER: readonly Friend[] = [
-  { name: "지민", initial: "지", tint: "#9fb4c9" },
-  { name: "수아", initial: "수", tint: "#c4a9a0" },
-  { name: "현우", initial: "현", tint: "#a3b39a" },
-  { name: "예린", initial: "예", tint: "#b3a4c2" },
-  { name: "도윤", initial: "도", tint: "#a7a99a" },
-  { name: "하은", initial: "하", tint: "#c2b392" },
-];
+// frames (room background #BACEE0, own bubble #FEE500, yellow unread digits,
+// date pill with calendar glyph, composer + / field / emoji / #). Kakao
+// publishes no in-app icon set, so the bar glyphs are drawn to those frames,
+// not downloaded.
 
 const SEND_LIMIT = 80;
-const MEMBERS = 4;
 
-/** Three friends per seat, rotating through the roster. */
-function friendsFor(seat: number): readonly Friend[] {
-  return [0, 1, 2].map((offset) => ROSTER[(seat + offset * 2) % ROSTER.length]!);
-}
+const TODAY = dateLabel("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
-/** "21:31" → "오후 9:31", KakaoTalk's stamp. */
-function koreanStamp(clock: string) {
+/** "13:14" → "1:14 PM", KakaoTalk's English stamp. */
+function englishStamp(clock: string) {
   const [h, m] = clock.split(":").map(Number) as [number, number];
-  const half = h < 12 ? "오전" : "오후";
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${half} ${hour}:${String(m).padStart(2, "0")}`;
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 
-/** Today, "2026년 11월 3일 화요일", and the group's earlier messages, 43–25 minutes before the song. */
-const TODAY = dateLabel("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-const EARLIER = { a: koreanStamp(clockAgo(43)), b: koreanStamp(clockAgo(42)), me: koreanStamp(clockAgo(38)), c: koreanStamp(clockAgo(25)) };
-
-type Entry =
-  | { kind: "in"; key: string; at: number; friend: Friend; text: string; time: string; unread: number; arriving: boolean }
-  | { kind: "out"; key: string; at: number; text: string; time: string; unread: number };
-
-export function Glyph({ name }: { name: "back" | "search" | "menu" | "calendar" | "plus" | "emoji" | "hash" | "send" }) {
+function Glyph({ name }: { name: "back" | "search" | "menu" | "calendar" | "plus" | "emoji" | "hash" | "send" }) {
   const stroke = { fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" } as const;
   switch (name) {
     case "back":
@@ -78,15 +51,8 @@ export function Glyph({ name }: { name: "back" | "search" | "menu" | "calendar" 
   }
 }
 
-function Profile({ friend }: { friend: Friend }) {
-  return (
-    <span className={styles.profile} aria-hidden="true" style={{ background: friend.tint }}>
-      {friend.initial}
-    </span>
-  );
-}
 
-export function Meta({ unread, time, side }: { unread: number; time: string; side: "in" | "out" }) {
+function Meta({ unread, time, side }: { unread: number; time: string; side: "in" | "out" }) {
   return (
     <span className={styles.meta} data-side={side}>
       {unread > 0 ? <span className={styles.unread}>{unread}</span> : null}
@@ -95,41 +61,27 @@ export function Meta({ unread, time, side }: { unread: number; time: string; sid
   );
 }
 
+
 function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: PhoneStateProps) {
-  const friends = useMemo(() => friendsFor(seat), [seat]);
-  const [a, b, c] = friends as [Friend, Friend, Friend];
+  const ex = contactFor(seat).name;
   const [draft, setDraft] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
 
-  const entries = useMemo(() => {
-    const lastCue = lines.at(-1)?.cueIndex ?? -1;
-    const list: Entry[] = [
-      ...lines.map((line): Entry => ({
-        kind: "in",
-        key: `l${line.cueIndex}`,
-        at: line.cueIndex,
-        friend: friends[line.cueIndex % friends.length]!,
-        text: line.text,
-        time: koreanStamp(formatSongClock(line.startMs)),
-        // Two others have yet to read it; each later post is one more reader.
-        unread: Math.max(0, MEMBERS - 2 - (lastCue - line.cueIndex)),
-        arriving: line.current,
-      })),
-      ...replies.map((reply): Entry => {
-        const after = lines.filter((line) => line.cueIndex > reply.afterCue).length;
-        const at = lines.find((line) => line.cueIndex === reply.afterCue);
-        return {
-          kind: "out",
+  // The sung lines and whatever the participant sends, in the order sent.
+  const entries = useMemo(
+    () =>
+      [
+        ...lines.map((line) => ({ key: `l${line.cueIndex}`, at: line.cueIndex, text: line.text, startMs: line.startMs, bold: Boolean(line.bold) })),
+        ...replies.map((reply) => ({
           key: `r${reply.id}`,
           at: reply.afterCue + 0.5,
           text: reply.text,
-          time: koreanStamp(formatSongClock(at?.startMs ?? 0)),
-          unread: Math.max(0, MEMBERS - 1 - after),
-        };
-      }),
-    ];
-    return list.sort((x, y) => x.at - y.at);
-  }, [friends, lines, replies]);
+          startMs: lines.find((line) => line.cueIndex === reply.afterCue)?.startMs ?? 0,
+          bold: false,
+        })),
+      ].sort((x, y) => x.at - y.at),
+    [lines, replies],
+  );
 
   // The room keeps its newest message in view, as KakaoTalk does.
   useLayoutEffect(() => {
@@ -147,14 +99,12 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
   };
 
   return (
-    <section className={styles.app} aria-label="카카오톡 우리끼리" inert={!shown}>
+    <section className={styles.app} aria-label={`KakaoTalk, ${ex}`} inert={!shown}>
       <header className={styles.bar}>
         <span className={styles.back}>
           <Glyph name="back" />
         </span>
-        <span className={styles.title}>
-          우리끼리 <span className={styles.count}>{MEMBERS}</span>
-        </span>
+        <span className={styles.title}>{ex}</span>
         <span className={styles.actions}>
           <Glyph name="search" />
           <Glyph name="menu" />
@@ -163,109 +113,45 @@ function KakaoTalkState({ seat, lines, replies, shown, reducedMotion, act }: Pho
 
       <div ref={threadRef} className={styles.thread} data-feed>
         <div className={styles.rows}>
-          <p className={styles.date}>
-            <Glyph name="calendar" />
-            {TODAY}
-          </p>
-
-          <div className={styles.incoming}>
-            <Profile friend={a} />
-            <div className={styles.column}>
-              <span className={styles.name}>{a.name}</span>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in" data-head>야 걔 또 연락왔다며?</p>
-                <Meta unread={0} time={EARLIER.a} side="in" />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.incoming}>
-            <Profile friend={b} />
-            <div className={styles.column}>
-              <span className={styles.name}>{b.name}</span>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in" data-head>헐 진짜??</p>
-              </div>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in">답장하지마라 진짜로</p>
-                <Meta unread={0} time={EARLIER.b} side="in" />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.outgoing}>
-            <div className={styles.line} data-side="out">
-              <Meta unread={0} time={EARLIER.me} side="out" />
-              <p className={styles.bubble} data-side="out" data-head>ㅋㅋㅋ 안 해 이번엔</p>
-            </div>
-          </div>
-
-          <div className={styles.incoming}>
-            <Profile friend={c} />
-            <div className={styles.column}>
-              <span className={styles.name}>{c.name}</span>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in" data-head>이번엔 ㅋㅋ</p>
-              </div>
-              <div className={styles.line}>
-                <p className={styles.bubble} data-side="in">노래방 갈 사람</p>
-                <Meta unread={0} time={EARLIER.c} side="in" />
-              </div>
-            </div>
-          </div>
+          {entries.length > 0 ? (
+            <p className={styles.date}>
+              <Glyph name="calendar" />
+              {TODAY}
+            </p>
+          ) : null}
 
           {entries.map((entry, index) => {
-            const previous = index > 0 ? entries[index - 1] : undefined;
-            if (entry.kind === "out") {
-              const head = previous?.kind !== "out";
-              return (
-                <div key={entry.key} className={styles.outgoing} data-follow={!head || undefined}>
-                  <div className={styles.line} data-side="out">
-                    <Meta unread={entry.unread} time={entry.time} side="out" />
-                    <p className={styles.bubble} data-side="out" data-head={head || undefined}>
-                      {entry.text}
-                    </p>
-                  </div>
-                </div>
-              );
-            }
+            // As KakaoTalk does: messages sent in the same minute share one stamp, on the last of them.
+            const time = englishStamp(formatSongClock(entry.startMs));
+            const next = entries[index + 1];
+            const stamped = !next || englishStamp(formatSongClock(next.startMs)) !== time;
             return (
-              <div key={entry.key} className={styles.incoming}>
-                <Profile friend={entry.friend} />
-                <div className={styles.column}>
-                  <span className={styles.name}>{entry.friend.name}</span>
-                  <div className={styles.line}>
-                    <p className={styles.bubble} data-side="in" data-head data-arriving={entry.arriving || undefined}>
-                      {entry.text}
-                    </p>
-                    <Meta unread={entry.unread} time={entry.time} side="in" />
-                  </div>
-                </div>
+            <div key={entry.key} className={styles.outgoing} data-follow={index > 0 || undefined}>
+              <div className={styles.line} data-side="out">
+                <Meta unread={1} time={stamped ? time : ""} side="out" />
+                <p data-lyric className={styles.bubble} data-side="out" data-head={index === 0 || undefined} style={entry.bold ? { fontWeight: 700 } : undefined}>
+                  {entry.text}
+                </p>
               </div>
+            </div>
             );
           })}
         </div>
       </div>
 
       <form className={styles.composer} onSubmit={send}>
-        <button type="button" className={styles.plus} aria-label="더보기" tabIndex={-1}>
+        <button type="button" className={styles.plus} aria-label="More" tabIndex={-1}>
           <Glyph name="plus" />
         </button>
         <label className={styles.field}>
-          <span className={styles.visuallyHidden}>메시지 입력</span>
-          <input
-            value={draft}
-            maxLength={SEND_LIMIT}
-            onChange={(event) => setDraft(event.target.value)}
-            enterKeyHint="send"
-            autoComplete="off"
-          />
+          <span className={styles.visuallyHidden}>Message</span>
+          <input value={draft} maxLength={SEND_LIMIT} onChange={(event) => setDraft(event.target.value)} enterKeyHint="send" autoComplete="off" />
           <span className={styles.emoji} aria-hidden="true">
             <Glyph name="emoji" />
           </span>
         </label>
         {draft.trim() ? (
-          <button type="submit" className={styles.send} aria-label="전송">
+          <button type="submit" className={styles.send} aria-label="Send">
             <Glyph name="send" />
           </button>
         ) : (
