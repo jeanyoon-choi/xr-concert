@@ -1,0 +1,486 @@
+/* iOS 18 Photos, light, the Library grid at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+}
+
+/* One scrolling library; the photos run under the title and the bottom control. */
+.scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.scroll::-webkit-scrollbar { display: none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* The newest capture lands the way Photos fades a new item in. */
+.cell[data-new] {
+  animation: arrive 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes arrive {
+  from { opacity: 0; transform: scale(0.86); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #1c1c1e;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  /* The word inside is sized to the tile (cqw) and to its own length (--len). */
+  container-type: size;
+}
+
+.photo,
+.note,
+.message,
+.recording {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.photo {
+  align-items: center;
+  justify-content: center;
+  background-color: #2c2c2e;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Instagram story text, "Classic" with the background on: a white rounded slab, bold black type. */
+.story {
+  max-width: 86%;
+  padding: 2.5cqw 5cqw 3cqw;
+  border-radius: 4cqw;
+  background: #fff;
+  color: #000;
+  font: 700 min(20cqw, calc(130cqw / var(--len))) / 1.12 var(--ios-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  text-align: center;
+  box-decoration-break: clone;
+}
+
+/* Story text without a background: heavy white type set into the photo. */
+.overlay {
+  max-width: 90%;
+  color: #fff;
+  font: 800 min(24cqw, calc(150cqw / var(--len))) / 0.95 var(--ios-display);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
+}
+
+/* Snapchat caption band across the snap. */
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;
+  padding: 2cqw 4cqw 2.5cqw;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font: 500 min(11cqw, calc(100cqw / var(--len))) / 1.2 var(--ios-font);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/* A clip with the word burnt in as its subtitle, on a dark slab. */
+.caption {
+  position: absolute;
+  left: 8cqw;
+  right: 8cqw;
+  bottom: 18cqw;
+  display: flex;
+  justify-content: center;
+}
+
+.caption::before { content: none; }
+
+.photo .caption {
+  color: #fff;
+  font: 700 min(12cqw, calc(100cqw / var(--len))) / 1.15 var(--ios-font);
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-shadow: 0 0 2px #000, 0 1px 3px #000;
+}
+
+/* Screenshot of a note: the Notes bar, then the word as the note's title. */
+.note {
+  flex-direction: column;
+  align-items: stretch;
+  background: #fff;
+}
+
+.noteBar {
+  display: flex;
+  align-items: center;
+  height: 16cqw;
+  padding: 0 5cqw;
+  color: #e2a400;
+  font: 400 8cqw/1 var(--ios-font);
+}
+
+.noteWord {
+  padding: 4cqw 7cqw 0;
+  color: #000;
+  font: 700 min(20cqw, calc(140cqw / var(--len))) / 1.05 var(--ios-display);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* Screenshot of a thread: one incoming bubble, zoomed in as a screenshot crop is. */
+.message {
+  align-items: center;
+  padding: 0 7cqw 0 10cqw;
+  background: #fff;
+}
+
+.bubble {
+  position: relative;
+  max-width: 100%;
+  padding: 3.5cqw 7cqw 4cqw;
+  border-radius: 10cqw;
+  background: #e9e9eb;
+  color: #000;
+  font: 400 min(17cqw, calc(120cqw / var(--len))) / 1.18 var(--ios-font);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: -3cqw;
+  bottom: 0;
+  width: 9cqw;
+  height: 9cqw;
+  border-bottom-right-radius: 7cqw;
+  background: #e9e9eb;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: -6cqw;
+  bottom: 0;
+  width: 6cqw;
+  height: 9cqw;
+  border-bottom-right-radius: 5cqw;
+  background: #fff;
+}
+
+/* Screen recording: a black screen with the word on it, the red recording pill top left. */
+.recording {
+  align-items: center;
+  justify-content: center;
+  padding: 0 8cqw;
+  background: #000;
+}
+
+.recordingDot {
+  position: absolute;
+  top: 6cqw;
+  left: 6cqw;
+  width: 12cqw;
+  height: 6cqw;
+  border-radius: 3cqw;
+  background: #ff3b30;
+}
+
+.recordingWord {
+  color: #fff;
+  font: 600 min(17cqw, calc(130cqw / var(--len))) / 1.1 var(--ios-font);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/* Photos marks a video with its length, bottom right, white. */
+.duration {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+  color: #fff;
+  font: 600 12px/16px var(--ios-font);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
+}
+
+.footer {
+  margin: 0;
+  padding: 18px 16px 112px;
+  color: #000;
+  font: 600 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+  text-align: center;
+}
+
+/* iOS 18 Photos draws the title over the photos on a dark fade, in white. */
+.topFade {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 168px;
+  background: linear-gradient(rgb(0 0 0 / 62%) 0%, rgb(0 0 0 / 38%) 55%, rgb(0 0 0 / 0%) 100%);
+  pointer-events: none;
+}
+
+.header {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 6px 16px 0 20px;
+  color: #fff;
+}
+
+.title {
+  margin: 0;
+  font: 700 34px/41px var(--ios-display);
+  letter-spacing: 0.4px;
+}
+
+.date {
+  margin: -2px 0 0;
+  color: rgb(255 255 255 / 82%);
+  font: 600 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.round {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(242, 242, 247, 0.92);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  color: #000;
+}
+
+.select {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  background: rgba(242, 242, 247, 0.92);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  font: 600 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+}
+
+/* Apple Account monogram. */
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(#a5abb8, #848a96);
+  color: #fff;
+  font: 600 14px/1 var(--ios-font);
+  letter-spacing: 0.2px;
+}
+
+.bottomFade {
+  position: absolute;
+  inset: auto 0 0;
+  height: 110px;
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.85));
+  pointer-events: none;
+}
+
+.bar {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bar > .round {
+  position: absolute;
+  right: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.segments {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 3px;
+  border-radius: 22px;
+  background: rgba(242, 242, 247, 0.94);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.segments > span {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 19px;
+  font: 600 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+}
+
+.segments > .segmentOn {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* One item, full screen. */
+.viewer {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+}
+
+.viewerImage {
+  position: absolute;
+  inset: 0;
+}
+
+.viewerImage .story { font-size: 30px; line-height: 38px; padding: 6px 14px 8px; border-radius: 10px; }
+.viewerImage .band { font-size: 22px; line-height: 28px; padding: 6px 12px; }
+.viewerImage .caption { left: 24px; right: 24px; bottom: 180px; font-size: 30px; line-height: 36px; }
+.viewerImage .note { padding: 150px 20px 0; }
+.viewerImage .noteWord { font-size: 28px; line-height: 34px; }
+.viewerImage .message { padding: 0 16px; }
+.viewerImage .bubble { padding: 7px 12px 8px; border-radius: 18px; font-size: 17px; line-height: 22px; }
+.viewerImage .recordingWord { font-size: 34px; line-height: 41px; }
+.viewerImage .note,
+.viewerImage .message { box-shadow: none; }
+
+.viewerBar {
+  position: absolute;
+  top: 54px;
+  left: 16px;
+  right: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+}
+
+.viewerRound {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(242, 242, 247, 0.94);
+  color: #000;
+  cursor: pointer;
+}
+
+.viewerTitle {
+  display: grid;
+  justify-items: center;
+  padding: 3px 14px 4px;
+  border-radius: 22px;
+  background: rgba(242, 242, 247, 0.94);
+  color: #000;
+  font: 400 12px/16px var(--ios-font);
+}
+
+.viewerTitle strong {
+  font: 600 15px/20px var(--ios-font);
+  letter-spacing: -0.24px;
+}
+
+.viewerPill {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: rgba(242, 242, 247, 0.94);
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+.viewerTools {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 34px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.viewerGroup {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 22px;
+  background: rgba(242, 242, 247, 0.94);
+  color: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-new] { animation: none; }
+}
+
+/* Over the dark fade the header's controls are dark glass with white glyphs. */
+.header .round,
+.header .select {
+  background: rgb(118 118 128 / 44%);
+  box-shadow: none;
+  color: #fff;
+}

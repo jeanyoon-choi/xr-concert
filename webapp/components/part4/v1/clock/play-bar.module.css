@@ -1,0 +1,86 @@
+/* Page chrome: real pixels, the same size in any window. */
+.bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: #000;
+  color: #fff;
+  font: 16px/1 Arial, Helvetica, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.bar button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+
+.time { padding: 0 8px; }
+
+/* The timeline: section segments to scale, a playhead, and an unseen
+   slider over all of it that takes the pointer. */
+.timeline {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+}
+
+.sections {
+  position: absolute;
+  inset: 8px 0;
+  display: flex;
+  gap: 2px;
+}
+
+.segment {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 6px;
+  background: #333;
+  color: #aaa;
+  font-size: 12px;
+  line-height: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.segment[data-current] { background: #fff; color: #000; }
+
+.playhead {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  margin-left: -1px;
+  background: #ff3b30;
+  pointer-events: none;
+}
+
+.scrub {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.timeline:has(.scrub:focus-visible) { outline: 2px solid #fff; outline-offset: -2px; }

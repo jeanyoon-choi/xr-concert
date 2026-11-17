@@ -1,0 +1,273 @@
+/* google.com in iOS 18 Safari, light, on the 390 × 844 glass. Values from
+   Google's served CSS for the focused search overlay (.Sl6fgd) and rows (.sbct). */
+.app {
+  --g-font: "Google Sans", "Helvetica Neue", Arial, sans-serif;
+  --g-text: #202124;
+  --g-icon: #70757a;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fff;
+  color: var(--g-text);
+}
+
+/* ---- Focused search: Google's full-screen suggest overlay ---- */
+.overlay {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  bottom: 134px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  min-height: 48px;
+}
+
+.back {
+  flex: 0 0 auto;
+  height: 48px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: #1a73e8;
+}
+
+.back svg { display: block; padding: 0; margin: 0 6px; }
+
+.query {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.query textarea,
+.mirror {
+  grid-area: 1 / 1 / 2 / 2;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 144px;
+  margin: 0;
+  padding: 0;
+  border: solid transparent;
+  border-width: 12px 0;
+  background: none;
+  font: 400 16px/24px var(--g-font);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* The mirror draws the query; the textarea over it holds the real caret and input. */
+.query textarea {
+  overflow: hidden;
+  color: transparent;
+  outline: none;
+  resize: none;
+  caret-color: #1a73e8;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mirror {
+  overflow: hidden;
+  color: var(--g-text);
+  pointer-events: none;
+}
+
+.mirror[data-typing]::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 20px;
+  margin-left: 1px;
+  background: #1a73e8;
+  vertical-align: -4px;
+  animation: caret 1.06s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+.tools {
+  display: flex;
+  flex: 0 0 auto;
+  height: 48px;
+  margin-right: 6px;
+  color: #4e5059;
+}
+
+.clear,
+.tool {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.clear { color: var(--g-icon); }
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0 6px 0 10px;
+  padding: 0;
+  overflow: hidden;
+  border-top: 1px solid #dadce0;
+  list-style: none;
+  font-family: var(--g-font);
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 12px;
+  margin-left: 8px;
+}
+
+.sprite {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-size: 24px;
+}
+
+.text {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  margin: 5px 0;
+  overflow: hidden;
+  color: var(--g-text);
+  font-size: 16px;
+  line-height: 22px;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.text b { font-weight: 700; }
+
+.history { color: #681da8; }
+
+.fill {
+  display: flex;
+  flex: 0 0 auto;
+  align-self: stretch;
+  align-items: center;
+  padding: 0 12px;
+}
+
+/* ---- google.com at rest ---- */
+.home {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  bottom: 134px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  height: 48px;
+  padding: 0 4px;
+  color: #5f6368;
+}
+
+.menu {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 8px 0 4px;
+  border-radius: 50%;
+  background: #8e96a8;
+  color: #fff;
+  font: 500 16px/1 var(--g-font);
+}
+
+.logo {
+  display: block;
+  width: 160px;
+  height: 54px;
+  margin: 68px 0 22px;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  height: 48px;
+  margin: 0 8px;
+  padding: 0;
+  border: 1px solid #dadce0;
+  border-radius: 25px;
+  background: #fff;
+  color: #4e5059;
+}
+
+.boxSearch {
+  display: flex;
+  padding: 0 12px;
+  color: #9aa0a6;
+}
+
+.boxSpacer { flex: 1; }
+
+.country {
+  align-self: stretch;
+  margin-top: auto;
+  padding: 14px 24px;
+  background: #f2f2f2;
+  color: #70757a;
+  font: 400 14px/20px var(--g-font);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mirror[data-typing]::after { animation: none; }
+}

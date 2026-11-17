@@ -58,6 +58,7 @@ export const navigationExperiments: readonly NavigationExperiment[] = [
   { key: `${parametricV4}/3`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Twenty-nine hyper-real text interfaces — voicemail, mail, search, 지식iN, 에브리타임, 당근, a camera roll — moving together by lyric passage" },
   { key: `${parametricV4}/tabs`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Controller that opens real browser windows, each running one of v2's interfaces on the controller's clock" },
   { key: part4V0, area: "part4", family: part4V0, date: "2026-11-17", phrase: "Concert part 4, ROSÉ — parametric-interface v4's phones rebuilt as one modular base: every interface drawn once and scaled to the desktop or phone width it is given" },
+  { key: "part4/v1", area: "part4", family: "part4/v1", date: "2026-11-17", phrase: "The song staged section by section, beside the phone grid — Verse 1: one phone in KakaoTalk, then a second on the right" },
   { key: "face-voronoi/1", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living portrait photographs clipped to changing Voronoi territories" },
   { key: "face-voronoi/2", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living Voronoi population pulse with monochrome, face, and politician renderers" },
   { key: "face-voronoi/3", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Moving Voronoi material field with colour and portrait-gradient modes" },

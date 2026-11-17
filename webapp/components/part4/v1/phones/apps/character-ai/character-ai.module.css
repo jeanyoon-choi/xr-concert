@@ -1,0 +1,272 @@
+/* Character.AI for iOS, dark, one chat open, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #18181b;
+  color: #f4f4f5;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px 44px;
+  align-items: center;
+  height: 110px;
+  padding: 54px 8px 0 4px;
+  border-bottom: 0.5px solid #2e2e33;
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #f4f4f5;
+}
+
+.who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: block;
+  flex: none;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.whoText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.whoName {
+  overflow: hidden;
+  font: 600 16px/20px var(--ios-font);
+  letter-spacing: -0.2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoBy {
+  color: #a1a1aa;
+  font: 400 12px/16px var(--ios-font);
+}
+
+.thread {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.messages {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px 16px 12px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px 28px;
+  text-align: center;
+}
+
+.introName {
+  margin: 12px 0 2px;
+  font: 600 20px/26px var(--ios-font);
+  letter-spacing: -0.3px;
+}
+
+.introTagline {
+  margin: 0 0 6px;
+  color: #d4d4d8;
+  font: 400 14px/20px var(--ios-font);
+}
+
+.introBy {
+  margin: 0;
+  color: #a1a1aa;
+  font: 400 12px/16px var(--ios-font);
+}
+
+.char {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.char > .avatar { margin-top: 2px; }
+
+.charBody {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.charName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  font: 600 13px/18px var(--ios-font);
+}
+
+.tag {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #2e2e33;
+  color: #a1a1aa;
+  font: 500 10px/15px var(--ios-font);
+}
+
+.charRow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.bubble,
+.me {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font: 400 16px/22px var(--ios-font);
+  letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
+}
+
+.bubble {
+  max-width: 290px;
+  border-top-left-radius: 4px;
+  background: #26272b;
+}
+
+/* The reply still being written ends in the app's three-dot typing tail. */
+.bubble[data-streaming]::after {
+  content: "…";
+  margin-left: 2px;
+  color: #a1a1aa;
+}
+
+.action {
+  color: #a1a1aa;
+  font-style: italic;
+}
+
+.swipe {
+  display: grid;
+  width: 32px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  color: #a1a1aa;
+}
+
+.rating {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 0 4px;
+  color: #71717a;
+}
+
+.me {
+  align-self: flex-end;
+  max-width: 290px;
+  margin: 0 0 16px;
+  border-top-right-radius: 4px;
+  background: #3f3f46;
+}
+
+.composer {
+  padding: 4px 12px 42px;
+  background: #18181b;
+}
+
+.notice {
+  margin: 0 0 8px;
+  color: #71717a;
+  font: 400 11px/14px var(--ios-font);
+  text-align: center;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 2px 4px 2px 18px;
+  border-radius: 24px;
+  background: #26272b;
+}
+
+.field {
+  position: relative;
+  display: block;
+  flex: 1;
+}
+
+.field input {
+  width: 100%;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #f4f4f5;
+  font: 400 16px/22px var(--ios-font);
+  outline: none;
+  caret-color: #f4f4f5;
+}
+
+.field input::placeholder { color: #a1a1aa; }
+
+.tool,
+.send {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  color: #d4d4d8;
+}
+
+.send {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.send svg {
+  box-sizing: content-box;
+  padding: 6px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  color: #18181b;
+}
+
+.send:focus-visible { outline: 2px solid #f4f4f5; outline-offset: 2px; }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

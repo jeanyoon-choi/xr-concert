@@ -1,3 +1,15 @@
+/* TikTok Sans (OFL), the latin subset of the variable font, served from
+   public/fonts/tiktok-sans rather than through next/font/google, whose
+   production build fails on this family. */
+@font-face {
+  font-family: "TikTok Sans";
+  font-style: normal;
+  font-weight: 300 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("/fonts/tiktok-sans/tiktok-sans-latin.woff2") format("woff2");
+}
+
 /*
  * TikTok iOS For You, dark, on the 390 × 844 glass (1 CSS px = 1 pt).
  * Metrics ported from experiments-jyc SCC clone/12 tiktok.module.css, with the
@@ -17,6 +29,8 @@
   overflow: hidden;
   background: #000;
   color: #fff;
+  font-family: "TikTok Sans", sans-serif;
+  font-style: normal;
   font-size: 15px;
   line-height: 1.35;
   letter-spacing: 0;

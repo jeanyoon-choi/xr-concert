@@ -1,0 +1,22 @@
+/* On the page's desktop surface: 1px is one design point. */
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+/* The phones out slide to make room (before the next one is due: opening.tsx
+   MAKE_ROOM_MS); the next one then fades up in the seat left for it. */
+.phone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  opacity: 0;
+  transition: transform 500ms cubic-bezier(0.32, 0.72, 0, 1), opacity 350ms ease;
+}
+
+.phone[data-shown] { opacity: 1; }
+
+.stage[data-reduced-motion] .phone { transition: none; }

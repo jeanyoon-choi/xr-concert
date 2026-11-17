@@ -1,0 +1,126 @@
+/* iOS 18 Notes, light, one note open, at native points on the 390 × 844 glass. */
+.app {
+  --notes-tint: #e2a400;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: #000;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  margin-top: 54px;
+  padding: 0 16px 0 8px;
+  color: var(--notes-tint);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 20px 24px;
+  scrollbar-width: none;
+}
+
+.body::-webkit-scrollbar { display: none; }
+
+.date {
+  margin: 2px 0 14px;
+  color: #8e8e93;
+  font: 400 13px/18px var(--ios-font);
+  letter-spacing: -0.08px;
+  text-align: center;
+}
+
+.title,
+.line {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  margin-bottom: 4px;
+  font: 700 28px/34px var(--ios-display);
+  letter-spacing: 0.36px;
+}
+
+.line {
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+}
+
+/* The line being typed carries the caret, Notes' own yellow. */
+.title[data-typing]::after,
+.line[data-typing]::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 1px;
+  background: var(--notes-tint);
+  vertical-align: -0.16em;
+  animation: caret 1.06s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+.draft { display: block; }
+
+.draft textarea {
+  display: block;
+  width: 100%;
+  min-height: 66px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #000;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  outline: none;
+  resize: none;
+  caret-color: var(--notes-tint);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 49px;
+  margin-bottom: 34px;
+  padding: 0 22px;
+  color: var(--notes-tint);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title[data-typing]::after,
+  .line[data-typing]::after { animation: none; }
+}

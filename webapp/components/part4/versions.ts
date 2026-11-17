@@ -1,7 +1,8 @@
 import { part4V0 } from "./v0/version";
+import { part4V1 } from "./v1/version";
 
 // Thin index only. Each version directory owns all of its own code.
-export const part4Versions = [part4V0] as const;
+export const part4Versions = [part4V0, part4V1] as const;
 
 export type Part4Version = (typeof part4Versions)[number];
 

@@ -1,0 +1,121 @@
+/* Google Docs for iOS, light, editing, print layout off, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: #fff;
+  color: #000;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  margin-top: 54px;
+  padding: 0 4px;
+  border-bottom: 1px solid #e3e3e3;
+  background: #fff;
+}
+
+.done {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #0b57d0;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  color: #444746;
+}
+
+.tools svg {
+  box-sizing: content-box;
+  padding: 12px 10px;
+}
+
+.page {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 20px 64px;
+  scrollbar-width: none;
+}
+
+.page::-webkit-scrollbar { display: none; }
+
+.title,
+.paragraph {
+  margin: 0;
+  font-family: Arial, Helvetica, var(--ios-font), sans-serif;
+  overflow-wrap: anywhere;
+}
+
+/* Docs' Title style: Arial 26 pt, against Normal text's 11 pt. */
+.title {
+  margin-bottom: 6px;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+/* Normal text: Arial at 1.15 line spacing. */
+.paragraph {
+  min-height: 1.15em;
+  margin-bottom: 12px;
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+/* The editor's caret: Docs' blue bar at the end of the newest paragraph. */
+.paragraph[data-caret]::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  margin-left: 1px;
+  background: #1a73e8;
+  vertical-align: -0.22em;
+}
+
+.paragraph[data-caret="blink"]::after { animation: caret 1.06s steps(1) infinite; }
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+.draft {
+  position: relative;
+  display: block;
+}
+
+.draft textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #000;
+  font: 16px/1.15 Arial, Helvetica, var(--ios-font), sans-serif;
+  outline: none;
+  resize: none;
+  caret-color: #1a73e8;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paragraph[data-caret]::after { animation: none; }
+}

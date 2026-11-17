@@ -1,0 +1,238 @@
+/* Threads iOS, light, home feed, at native points on the 390 × 844 glass.
+   Colours are the served www.threads.com `.__fb-light-mode` tokens. */
+.app {
+  --text: rgb(0 0 0);
+  --secondary: rgb(153 153 153);
+  --charcoal: rgb(66 66 66);
+  --nav: rgb(184 184 184);
+  --outline: rgba(0 0 0 / 0.15);
+  --well: rgb(240 240 240);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--ios-font);
+  font-size: 15px;
+  line-height: 21px;
+  letter-spacing: -0.2px;
+}
+
+.app p { margin: 0; }
+
+/* ---------- header: the logo alone ---------- */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 102px;
+  padding-top: 54px;
+  background: rgba(255 255 255 / 0.85);
+}
+
+.feed {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.feed::-webkit-scrollbar { display: none; }
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.main { min-width: 0; }
+
+/* ---------- inline composer ---------- */
+.composer {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 4px 16px 12px;
+  border-bottom: 0.5px solid var(--outline);
+}
+
+.me {
+  display: block;
+  font-weight: 600;
+}
+
+.field { display: block; }
+
+.field textarea {
+  display: block;
+  width: 100%;
+  min-height: 21px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  field-sizing: content;
+  background: transparent;
+  color: var(--text);
+  /* 16 pt, not the app's 15: iOS zooms focused fields under 16 px. */
+  font: 400 16px/21px var(--ios-font);
+  letter-spacing: -0.2px;
+}
+
+.field textarea::placeholder { color: var(--secondary); }
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 36px;
+  margin-top: 4px;
+  color: var(--secondary);
+}
+
+.postButton {
+  min-height: 36px;
+  margin-left: auto;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  font: 600 15px/21px var(--ios-font);
+  cursor: pointer;
+}
+
+/* ---------- post ---------- */
+.slot {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.slot > .post { min-height: 0; overflow: hidden; }
+
+.slot[data-arriving] { animation: arrive 0.42s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.slot[data-arriving] > .post { animation: settle 0.42s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.app[data-still] .slot[data-arriving],
+.app[data-still] .slot[data-arriving] > .post { animation: none; }
+
+@keyframes arrive { from { grid-template-rows: 0fr; } to { grid-template-rows: 1fr; } }
+@keyframes settle { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+
+.post {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 12px 16px 4px;
+  border-bottom: 0.5px solid var(--outline);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 21px;
+  white-space: nowrap;
+}
+
+.head strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.time { color: var(--secondary); }
+
+.more {
+  display: grid;
+  margin-left: auto;
+  place-items: center;
+  color: var(--text);
+}
+
+.text {
+  margin-top: 1px !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  margin-left: 1px;
+  vertical-align: -3px;
+  background: var(--text);
+  animation: caret 1s steps(1) infinite;
+}
+
+.app[data-still] .caret { animation: none; }
+
+@keyframes caret { 50% { opacity: 0; } }
+
+/* 사칙연산: like, reply, repost, share. */
+.actions {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  margin: 4px 0 0 -8px;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 8px;
+  color: var(--charcoal);
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.action svg { color: var(--text); }
+
+/* ---------- tab bar ---------- */
+.tabbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 83px;
+  padding: 10px 8px 0;
+  background: rgba(255 255 255 / 0.96);
+}
+
+.tab {
+  display: grid;
+  width: 56px;
+  height: 40px;
+  place-items: center;
+  color: var(--nav);
+}
+
+.tab[data-active] { color: var(--text); }
+
+.create {
+  display: grid;
+  width: 56px;
+  height: 40px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--well);
+  color: var(--nav);
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

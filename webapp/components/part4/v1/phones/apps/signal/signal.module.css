@@ -1,0 +1,297 @@
+/* Signal for iOS, light, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: #fff;
+  color: #1b1b1b;
+  font-family: var(--ios-font);
+}
+
+/* Glyphs are Signal's template images, inked with the current colour. */
+.chevron,
+.timer16,
+.navIcon,
+.systemIcon,
+.messageTimer,
+.status,
+.toolIcon,
+.sticker,
+.sendArrow {
+  display: inline-block;
+  flex: none;
+  background: currentColor;
+  mask: var(--src) center / contain no-repeat;
+}
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  height: 98px;
+  padding: 54px 8px 0 4px;
+  background: rgb(255 255 255 / 0.97);
+  box-shadow: 0 0.5px 0 rgb(0 0 0 / 0.14);
+}
+
+.back {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #1b1b1b;
+}
+
+.chevron { width: 28px; height: 28px; }
+
+.peer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Signal's default avatar: a pale palette circle with its initials in the deep tone. */
+.avatar {
+  display: grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3e3fe;
+  color: #3838f5;
+  font: 500 15px/1 var(--ios-font);
+  letter-spacing: 0;
+}
+
+.peerText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.peerName {
+  overflow: hidden;
+  color: #1b1b1b;
+  font: 600 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peerStatus {
+  display: flex;
+  align-items: center;
+  color: #1b1b1b;
+  font: 500 13px/16px var(--ios-font);
+  letter-spacing: -0.08px;
+}
+
+.timer16 { width: 13px; height: 13px; }
+
+.calls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #1b1b1b;
+}
+
+.navIcon { width: 24px; height: 24px; margin: 10px; }
+
+.thread {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.rows {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 16px 12px;
+}
+
+.date {
+  margin: 0 0 12px;
+  color: #5e5e5e;
+  font: 600 13px/18px var(--ios-font);
+  letter-spacing: -0.08px;
+  text-align: center;
+}
+
+.system {
+  margin: 0 12px 20px;
+  color: #5e5e5e;
+  font: 400 13px/18px var(--ios-font);
+  letter-spacing: -0.08px;
+  text-align: center;
+}
+
+.systemIcon {
+  width: 16px;
+  height: 16px;
+  margin: 0 5px 0 0;
+  vertical-align: -3px;
+}
+
+.bubble {
+  position: relative;
+  max-width: 290px;
+  margin: 0 0 2px;
+  padding: 7px 12px 8px;
+  border-radius: 18px;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  overflow-wrap: anywhere;
+}
+
+.bubble[data-last] { margin-bottom: 12px; }
+
+.bubble[data-side="in"] {
+  align-self: flex-start;
+  background: #e9e9e9;
+  color: #1b1b1b;
+}
+
+.bubble[data-side="out"] {
+  align-self: flex-end;
+  background: linear-gradient(180deg, #0552f0, #2c6bed);
+  color: #fff;
+}
+
+/* A cluster's inner corners tighten on the sender's side. */
+.bubble[data-side="in"]:not([data-first]) { border-top-left-radius: 4px; }
+.bubble[data-side="in"]:not([data-last]) { border-bottom-left-radius: 4px; }
+.bubble[data-side="out"]:not([data-first]) { border-top-right-radius: 4px; }
+.bubble[data-side="out"]:not([data-last]) { border-bottom-right-radius: 4px; }
+
+.body { white-space: pre-wrap; }
+
+/* Time, timer and status ride the last text line when it has room, else drop below it. */
+.footer {
+  display: inline-flex;
+  float: right;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 -2px 10px;
+  font: 400 12px/16px var(--ios-font);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.bubble[data-side="in"] .footer { color: #5e5e5e; }
+.bubble[data-side="out"] .footer { color: rgb(255 255 255 / 0.8); }
+
+.messageTimer { width: 12px; height: 12px; }
+.status { width: 18px; height: 12px; }
+
+.bubble[data-arriving] {
+  transform-origin: 0 100%;
+  animation: arrive 240ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 8px 8px 42px;
+  background: #fff;
+  box-shadow: 0 -0.5px 0 rgb(0 0 0 / 0.1);
+}
+
+.attach {
+  display: grid;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: #1b1b1b;
+}
+
+.toolIcon { width: 28px; height: 28px; }
+
+.field {
+  position: relative;
+  display: flex;
+  min-height: 40px;
+  flex: 1;
+  align-items: center;
+  border-radius: 20px;
+  padding: 0 6px 0 14px;
+  background: #e9e9e9;
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  height: 38px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #1b1b1b;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  outline: none;
+  caret-color: #2c6bed;
+}
+
+.field input::placeholder { color: #848484; }
+
+.sticker { width: 24px; height: 24px; margin: 0 2px; color: #5e5e5e; }
+
+.media {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 6px 0 8px;
+  color: #1b1b1b;
+}
+
+.send {
+  display: grid;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin: 4px 6px 4px 8px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #2c6bed;
+  color: #fff;
+  cursor: pointer;
+}
+
+.sendArrow { width: 20px; height: 20px; }
+
+.send:focus-visible { outline: 2px solid #2c6bed; outline-offset: 2px; }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble[data-arriving] { animation: none; }
+}

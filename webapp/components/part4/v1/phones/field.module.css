@@ -1,0 +1,24 @@
+/* On a desktop surface: 1px is one design point of its 1440-point width. */
+.field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+.box {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+}
+
+.seat {
+  position: relative;
+  contain: strict;
+}

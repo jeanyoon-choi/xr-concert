@@ -8,7 +8,8 @@
 // were checked against the TikTok App Store iPhone frames
 // (apps.apple.com/us/app/tiktok/id835599320) and the comment-sheet image in
 // TikTok's September 2026 newsroom post "Say more in the comments". Type is
-// TikTok Sans, TikTok's own open-source face (OFL, Google Fonts).
+// TikTok Sans, TikTok's own open-source face (OFL), self-hosted:
+// public/fonts/tiktok-sans (the latin subset of the variable font).
 //
 // Lyric slot: the video's auto-captions. The sung line is the creator's
 // voice in the clip, so it appears as TikTok's on-video caption — white
@@ -18,13 +19,10 @@
 // The comment sheet is real: what the participant posts goes through `act`
 // and stays at the top of the sheet as their own comment.
 
-import { TikTok_Sans } from "next/font/google";
 import { memo, useState, type FormEvent } from "react";
 import type { PhoneStateProps } from "../types";
 import { Icon, type IconName } from "./icons";
 import styles from "./tiktok.module.css";
-
-const tiktokSans = TikTok_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], display: "swap", preload: false });
 
 const SEND_LIMIT = 150;
 const STILL = "/parametric-interface/v4/apps/tiktok/room.svg";
@@ -109,7 +107,7 @@ function TikTokState({ seat, lines, replies, shown, reducedMotion, act }: PhoneS
 
   return (
     <section
-      className={`${styles.app} ${tiktokSans.className}`}
+      className={styles.app}
       aria-label="TikTok, For You"
       inert={!shown}
       data-running={(shown && !reducedMotion) || undefined}
