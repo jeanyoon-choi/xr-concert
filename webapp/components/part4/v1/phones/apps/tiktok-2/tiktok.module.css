@@ -139,8 +139,11 @@
   hyphens: none;
 }
 
+/* No side padding on the inline box: it would be counted on the first and
+   last lines only and push them off centre. The boxes' side room is painted
+   as shadows instead (below), the same on both sides of every line. */
 .lyric p > span {
-  padding: 0.16em 0.36em 0.2em;
+  padding: 0.16em 0 0.2em;
   border-radius: 0.28em;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -150,6 +153,7 @@
 
 .lyricBox > span {
   background: #fff;
+  box-shadow: 0.36em 0 0 #fff, -0.36em 0 0 #fff;
   color: transparent;
 }
 

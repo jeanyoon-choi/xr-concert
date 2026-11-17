@@ -149,8 +149,8 @@ function PhotoAvatar({ photo, size }: { photo: string; size: "tiny" | "medium" }
  */
 function sizeCap(text: string) {
   const longest = Math.max(1, ...text.split(" ").map((word) => word.length));
-  // The column is 250 pt; a word's box is its letters (about 0.54 em each) and 1.44 em of padding and line-edge allowance.
-  return Math.floor(Math.min(250 / (0.54 * longest + 1.44), Math.sqrt(75_000 / Math.max(1, text.length))));
+  // The column is 250 pt; a word's box is its letters (about 0.54 em each) and 0.36 em of room on each side.
+  return Math.floor(Math.min(250 / (0.54 * longest + 0.8), Math.sqrt(75_000 / Math.max(1, text.length))));
 }
 
 /**

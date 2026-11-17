@@ -1,5 +1,10 @@
-/* iOS 18 lock screen at native points, metrics from experiments-jyc SCC
-   mobiles/1 os.module.css (.lock*): status bar 54 pt, home indicator 34 pt. */
+/*
+ * The iOS 26 lock screen at native points (1 px = 1 pt) on the 390 × 844
+ * glass. Sources and what is measured, what is approximated: index.tsx.
+ * Padlock, date and clock keep the metrics of experiments-jyc SCC mobiles/1
+ * os.module.css (.lock*); the notifications and the two controls are
+ * measured from Apple's iOS 26 picture (index.tsx, [1]).
+ */
 .lock {
   position: absolute;
   inset: 0;
@@ -40,72 +45,118 @@
   text-shadow: 0 2px 24px rgb(0 0 0 / 10%);
 }
 
-/* One app's notifications, grouped: the newest in front, earlier ones tucked beneath. */
+/*
+ * One app's notifications, grouped into a stack at the bottom of the screen:
+ * the newest in front, two earlier ones as edges beneath it. Measured in
+ * [1]: 13.6 pt from each side of the screen (14 here); the lowest edge of
+ * the notifications 132 pt above the bottom of the screen, which is where
+ * the second tucked edge ends (148 − 2 × 8).
+ */
+@property --part4-lock-cut {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
 .stack {
+  --spring: linear(0, 0.056 5%, 0.175 10%, 0.312 15%, 0.445 20%, 0.562 25%, 0.66 30%, 0.74 35%, 0.803 40%, 0.852 45%, 0.89 50%, 0.94 60%, 0.968 70%, 0.983 80%, 0.991 90%, 1);
+  --move: 600ms;
+
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 146px;
+  left: 14px;
+  right: 14px;
+  bottom: 148px;
   display: grid;
   border: 0;
   padding: 0;
   background: none;
   color: inherit;
+  font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.stack:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 22px; }
+.stack:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 26px; }
 
-.stack[data-tucked="1"] { margin-bottom: 8px; }
-.stack[data-tucked="2"] { margin-bottom: 16px; }
-
-.front {
+/*
+ * A notification: one plate of glass, one backdrop-filter. Measured in [1]:
+ * the fill is the wallpaper, blurred, plus 15% white; a hairline rim about
+ * 30% white all the way round and one darker pixel outside it; radius 22.5 pt
+ * (23 here); white type. No refraction (that needs an SVG displacement map).
+ *
+ * Its place in the stack is data-depth, and every change of place is a
+ * transition from wherever the plate is drawn at that moment — on the
+ * critically damped spring of --spring — so a word that follows 150 ms after
+ * the last never makes a plate jump or start again.
+ *   0  in front
+ *   1  8 pt lower, 94%   } only its lower edge shows, and it is dimmer
+ *   2  16 pt lower, 88%  }
+ *   3  gone: it fades where the second edge is, under the plate that takes its place
+ */
+.note {
   position: relative;
-  z-index: 3;
   grid-area: 1 / 1;
-  animation: arrive 480ms cubic-bezier(0.2, 1, 0.3, 1) both;
+  display: grid;
+  min-height: 64px;
+  align-items: center;
+  padding: 10px 18px 10px 14px;
+  border-radius: 23px;
+  background: rgb(255 255 255 / 15%);
+  box-shadow:
+    inset 0 0 0 0.75px rgb(255 255 255 / 30%),
+    0 0 0 0.75px rgb(0 0 0 / 6%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  backdrop-filter: blur(22px) saturate(135%);
+  color: #fff;
+  transform-origin: 50% 100%;
+  transform: none;
+  opacity: 1;
+  /* Under the plate in front, a plate thins out to the strip that shows
+     beneath it (a soft edge, once the new plate has covered it), so the
+     glass in front is not lit twice. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--part4-lock-cut) - 34%), #000 var(--part4-lock-cut));
+  mask-image: linear-gradient(to bottom, transparent calc(var(--part4-lock-cut) - 34%), #000 var(--part4-lock-cut));
+  -webkit-mask-clip: no-clip;
+  mask-clip: no-clip;
+  transition:
+    transform var(--move) var(--spring),
+    opacity 240ms ease-out,
+    --part4-lock-cut 280ms ease-in-out 140ms;
 }
 
-/* The earlier notifications: only their lower edges show, tucked under the
-   front card, each a little narrower — never behind its translucent body. */
-.under {
-  position: absolute;
-  bottom: -8px;
-  left: 10px;
-  right: 10px;
-  height: 8px;
-  border-radius: 0 0 14px 14px;
-  background: rgb(246 246 246 / 55%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  backdrop-filter: blur(26px) saturate(180%);
+/* A new notification rolls up from the bottom of the screen ([2]) as it appears. */
+.note[data-depth="0"] {
+  @starting-style {
+    transform: translateY(60px);
+    opacity: 0;
+  }
 }
 
-.under[data-depth="1"] { z-index: 2; }
-.under[data-depth="2"] { z-index: 1; bottom: -16px; left: 20px; right: 20px; background: rgb(246 246 246 / 38%); }
+.note:not([data-depth="0"]) {
+  --part4-lock-cut: 60%;
 
-@keyframes arrive {
-  from { transform: translateY(-28px) scale(0.94); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  pointer-events: none;
 }
 
-.card {
+.note[data-depth="1"] { transform: translateY(8px) scale(0.94); opacity: 0.72; }
+.note[data-depth="2"] { transform: translateY(16px) scale(0.88); opacity: 0.46; }
+.note[data-depth="3"] { transform: translateY(16px) scale(0.88); opacity: 0; }
+
+/* Icon and word. They leave a plate that steps back: beneath the glass in
+   front only the plate remains. Measured in [1]: icon 39 pt (38 here), 14 pt
+   from the plate's edge, the type 13.5 pt after it. */
+.content {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
-  column-gap: 10px;
-  align-items: start;
-  padding: 12px 14px 13px 12px;
-  border-radius: 22px;
-  background: rgb(246 246 246 / 72%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  backdrop-filter: blur(26px) saturate(180%);
-  color: #000;
-  font: 400 15px/20px var(--ios-font);
-  letter-spacing: -0.24px;
+  column-gap: 14px;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 200ms ease-out;
 }
 
+.note:not([data-depth="0"]) .content { opacity: 0; }
+
 .icon {
-  grid-row: span 2;
   width: 38px;
   height: 38px;
   overflow: hidden;
@@ -119,45 +170,58 @@
   height: 100%;
 }
 
-/* Under the name, the sung line: regular weight, as iOS sets a
-   notification's message, at 1.2 times its 15 pt. */
-/* The app's name, as iOS sets a notification's title. */
+/* The sung word, where the app's name would stand: a notification's title is
+   the emphasized (semibold) Subhead, 15/20 at the default text size; it is
+   set here at the size iOS gives it at the largest standard Dynamic Type
+   step, xxxLarge: 21/28 ([6]). */
 .title {
   overflow: hidden;
-  font-size: 15px;
-  line-height: 20px;
-  font-weight: 600;
+  font: 600 21px/28px var(--ios-font);
+  letter-spacing: -0.35px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.body {
-  grid-column: 2;
-  display: -webkit-box;
-  overflow: hidden;
-  font-size: 18px;
-  line-height: 23px;
-  font-weight: 400;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
+/* Flashlight and camera: glass discs. Measured in [1]: 59–60 pt across,
+   46 pt from the sides, 52 pt above the bottom of the screen; the wallpaper
+   plus about 12% white, a hairline rim. */
 .button {
   position: absolute;
-  bottom: 78px;
+  bottom: 52px;
   display: grid;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   place-items: center;
   border-radius: 50%;
-  background: rgb(0 0 0 / 26%);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  background: rgb(255 255 255 / 12%);
+  box-shadow: inset 0 0 0 0.75px rgb(255 255 255 / 28%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+  backdrop-filter: blur(20px) saturate(135%);
 }
 
 .button[data-side="left"] { left: 46px; }
 .button[data-side="right"] { right: 46px; }
 
+/* Reduce Motion: nothing moves; a notification fades in where it stands and
+   the one before it fades to its edge. */
+.lock[data-reduced-motion] .note {
+  transition: opacity 240ms linear;
+}
+
+.lock[data-reduced-motion] .note[data-depth="0"] {
+  @starting-style {
+    transform: none;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .front { animation: none; }
+  .note { transition: opacity 240ms linear; }
+
+  .note[data-depth="0"] {
+    @starting-style {
+      transform: none;
+      opacity: 0;
+    }
+  }
 }
