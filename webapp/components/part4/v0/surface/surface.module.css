@@ -1,0 +1,18 @@
+/* The box a surface is given. */
+.box {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.box[data-fill="viewport"] { position: fixed; }
+
+/* The sheet: design points inside, zoomed as one unit to the given width.
+   A size container, so 100cqw × 100cqh is the sheet. */
+.sheet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  container-type: size;
+}

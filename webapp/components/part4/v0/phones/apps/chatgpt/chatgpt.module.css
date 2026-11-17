@@ -1,0 +1,218 @@
+/* ChatGPT for iOS, light, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: #0d0d0d;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  height: 106px;
+  padding: 54px 10px 0;
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #0d0d0d;
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  gap: 4px;
+  font: 600 18px/24px var(--ios-font);
+  letter-spacing: -0.3px;
+}
+
+.modelChevron {
+  display: grid;
+  color: #8f8f8f;
+}
+
+.thread {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.greeting {
+  display: grid;
+  height: 100%;
+  margin: 0;
+  padding: 0 32px 40px;
+  place-items: center;
+  font: 600 24px/30px var(--ios-display);
+  letter-spacing: -0.4px;
+  text-align: center;
+}
+
+.turns {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px 20px 16px;
+}
+
+.user {
+  align-self: flex-end;
+  max-width: 300px;
+  margin: 16px 0 20px;
+  padding: 10px 16px;
+  border-radius: 22px;
+  background: #f4f4f4;
+  font: 400 17px/24px var(--ios-font);
+  letter-spacing: -0.41px;
+  overflow-wrap: anywhere;
+}
+
+.user + .user { margin-top: -12px; }
+
+.assistant { margin: 0 0 8px; }
+
+.answer {
+  margin: 0;
+  font: 400 17px/26px var(--ios-font);
+  letter-spacing: -0.41px;
+  overflow-wrap: anywhere;
+}
+
+/* The streaming cursor: the black dot at the end of the text being written. */
+.answer[data-streaming]::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #0d0d0d;
+  vertical-align: -1px;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  height: 36px;
+  align-items: center;
+  margin: 6px 0 0 -1px;
+  color: #5d5d5d;
+}
+
+.composer {
+  padding: 6px 12px 42px;
+  background: #fff;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e5e5;
+  border-radius: 28px;
+  padding: 12px 10px 8px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.05);
+}
+
+.field {
+  position: relative;
+  display: block;
+  padding: 0 8px 8px;
+}
+
+.field input {
+  width: 100%;
+  height: 26px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0d0d0d;
+  font: 400 17px/26px var(--ios-font);
+  letter-spacing: -0.41px;
+  outline: none;
+  caret-color: #0d0d0d;
+}
+
+.field input::placeholder { color: #8f8f8f; }
+
+/* Her prompt being typed: it wraps and grows the box, as the field does. */
+.field[data-typed] input {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  opacity: 0;
+}
+
+.typed {
+  display: block;
+  max-height: 104px;
+  overflow: hidden;
+  color: #0d0d0d;
+  font: 400 17px/26px var(--ios-font);
+  letter-spacing: -0.41px;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.typed::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 21px;
+  margin-left: 1px;
+  background: #0d0d0d;
+  vertical-align: -4px;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+}
+
+.tool {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #0d0d0d;
+}
+
+.spacer { flex: 1; }
+
+.round {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #0d0d0d;
+  color: #fff;
+}
+
+button.round { cursor: pointer; }
+
+button.round:focus-visible { outline: 2px solid #0d0d0d; outline-offset: 2px; }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

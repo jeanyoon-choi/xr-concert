@@ -1,0 +1,275 @@
+/* iOS 18 Messages, light, at native points on the 390 × 844 glass. */
+.app {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #fff;
+  color: #000;
+}
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 76px 1fr 76px;
+  align-items: start;
+  padding: 58px 12px 8px;
+  background: rgb(249 249 249 / 0.97);
+  box-shadow: 0 0.5px 0 rgb(0 0 0 / 0.16);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 13px;
+  color: #007aff;
+}
+
+.backCount {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: #007aff;
+  color: #fff;
+  font: 500 15px/22px var(--ios-font);
+  letter-spacing: -0.2px;
+  text-align: center;
+}
+
+.contact {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.avatar {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #a5abb8, #858994);
+  color: #fff;
+  font: 500 24px/1 var(--ios-display);
+  letter-spacing: 0;
+}
+
+.contactName {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #000;
+  font: 400 12px/15px var(--ios-font);
+  letter-spacing: 0;
+}
+
+.contactName svg { color: #8e8e93; }
+
+.video {
+  justify-self: end;
+  padding: 14px 6px 0 0;
+  color: #007aff;
+}
+
+.thread {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.thread::-webkit-scrollbar { display: none; }
+
+.rows {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px 16px 10px;
+}
+
+.stamp {
+  margin: 0 0 10px;
+  color: #8e8e93;
+  font: 400 11px/14px var(--ios-font);
+  letter-spacing: 0.06px;
+  text-align: center;
+}
+
+.stamp b { font-weight: 600; }
+
+.bubble {
+  position: relative;
+  max-width: 264px;
+  margin: 0 0 2px;
+  padding: 7px 13px 8px;
+  border-radius: 19px;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  overflow-wrap: anywhere;
+}
+
+.bubble[data-tail] { margin-bottom: 9px; }
+
+.bubble[data-side="in"] {
+  align-self: flex-start;
+  background: #e9e9eb;
+  color: #000;
+}
+
+.bubble[data-side="out"] {
+  align-self: flex-end;
+  background: #007aff;
+  color: #fff;
+}
+
+/* The tail: a curl of the bubble colour cut by a glass-coloured curl. */
+.bubble[data-tail]::before,
+.bubble[data-tail]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  height: 20px;
+}
+
+.bubble[data-side="in"][data-tail]::before {
+  left: -7px;
+  width: 20px;
+  border-bottom-right-radius: 16px;
+  background: #e9e9eb;
+}
+
+.bubble[data-side="in"][data-tail]::after {
+  left: -26px;
+  width: 26px;
+  border-bottom-right-radius: 10px;
+  background: #fff;
+}
+
+.bubble[data-side="out"][data-tail]::before {
+  right: -7px;
+  width: 20px;
+  border-bottom-left-radius: 16px;
+  background: #007aff;
+}
+
+.bubble[data-side="out"][data-tail]::after {
+  right: -26px;
+  width: 26px;
+  border-bottom-left-radius: 10px;
+  background: #fff;
+}
+
+.bubble[data-arriving] {
+  transform-origin: 0 100%;
+  animation: arrive 260ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes arrive {
+  from { transform: translateY(10px) scale(0.86); }
+  to { transform: none; }
+}
+
+.outgoing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.receipt {
+  margin: -6px 2px 8px 0;
+  color: #8e8e93;
+  font: 500 11px/14px var(--ios-font);
+  letter-spacing: 0.06px;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  padding: 6px 12px 42px;
+  background: #fff;
+}
+
+.plus {
+  display: grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #e9e9eb;
+  color: #7c7c80;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  min-height: 36px;
+  flex: 1;
+  align-items: center;
+  border: 1px solid #c6c6c8;
+  border-radius: 18px;
+  padding: 0 4px 0 14px;
+}
+
+.field input {
+  min-width: 0;
+  flex: 1;
+  height: 34px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #000;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  outline: none;
+  caret-color: #007aff;
+}
+
+.field input::placeholder { color: #c4c4c6; }
+
+.field:focus-within { border-color: #9a9a9e; }
+
+.mic {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  color: #8e8e93;
+}
+
+.send {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: #007aff;
+  cursor: pointer;
+}
+
+.send:focus-visible { outline: 2px solid #007aff; outline-offset: 2px; border-radius: 50%; }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble[data-arriving] { animation: none; }
+}
+
+/* The exchange before the song, and the stamp the lyric opens with. */
+.rows > .receipt { align-self: flex-end; }
+.stamp:not(:first-child) { margin-top: 14px; }

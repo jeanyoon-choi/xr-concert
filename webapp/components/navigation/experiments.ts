@@ -26,6 +26,7 @@ const parametricV0 = "parametric-interface/v0";
 const parametricV2 = "parametric-interface/v2";
 const parametricV4 = "parametric-interface/v4";
 const parametricV3 = "parametric-interface/v3";
+const part4V0 = "part4/v0";
 
 // Dates and phrases for every routed experiment. Each version directory owns
 // its code; this index only names it.
@@ -56,6 +57,7 @@ export const navigationExperiments: readonly NavigationExperiment[] = [
   { key: `${parametricV4}/1`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "A grid of phones: seventeen hyper-real chat and social apps, each taking the sung line in its own slot" },
   { key: `${parametricV4}/3`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Twenty-nine hyper-real text interfaces — voicemail, mail, search, 지식iN, 에브리타임, 당근, a camera roll — moving together by lyric passage" },
   { key: `${parametricV4}/tabs`, area: "parametric-interface", family: parametricV4, date: "2026-11-03", phrase: "Controller that opens real browser windows, each running one of v2's interfaces on the controller's clock" },
+  { key: part4V0, area: "part4", family: part4V0, date: "2026-11-17", phrase: "Concert part 4, ROSÉ — parametric-interface v4's phones rebuilt as one modular base: every interface drawn once and scaled to the desktop or phone width it is given" },
   { key: "face-voronoi/1", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living portrait photographs clipped to changing Voronoi territories" },
   { key: "face-voronoi/2", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Living Voronoi population pulse with monochrome, face, and politician renderers" },
   { key: "face-voronoi/3", area: "face-voronoi", family: "face-voronoi", date: "2026-09-01", phrase: "Moving Voronoi material field with colour and portrait-gradient modes" },

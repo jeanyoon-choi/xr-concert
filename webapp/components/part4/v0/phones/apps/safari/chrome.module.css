@@ -1,0 +1,68 @@
+/* iOS 18 Safari bottom bar, light, at native points: 8 pt above the field,
+   the 44 pt field, the 44 pt toolbar, then the 34 pt home-indicator area. */
+.bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 8px 0 34px;
+  background: #f6f6f6;
+  box-shadow: 0 -0.33px 0 rgba(0, 0, 0, 0.16);
+}
+
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin: 0 10px;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page,
+.reload {
+  position: absolute;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #000;
+}
+
+.page { left: 2px; }
+
+.reload { right: 2px; }
+
+.domain {
+  overflow: hidden;
+  max-width: 260px;
+  color: #000;
+  font: 400 17px/22px var(--ios-font);
+  letter-spacing: -0.41px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  margin-top: 4px;
+  padding: 0 24px;
+  color: #007aff;
+}
+
+.toolbar span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.toolbar .disabled { color: #c4c4c7; }
