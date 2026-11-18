@@ -4,7 +4,8 @@
 .control {
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  /* Above the play bar (clock/play-bar.tsx PLAY_BAR_HEIGHT). */
+  bottom: calc(64px + env(safe-area-inset-bottom));
   z-index: 10;
   display: grid;
   justify-items: end;
@@ -36,7 +37,7 @@
 
 .panel {
   width: min(300px, calc(100vw - 32px));
-  max-height: calc(100vh - 96px);
+  max-height: calc(100vh - 144px);
   overflow-y: auto;
   display: grid;
   gap: 8px;

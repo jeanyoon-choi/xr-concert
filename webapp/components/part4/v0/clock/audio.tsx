@@ -10,7 +10,10 @@ import { SongClockContext, useReducedMotion } from ".";
 
 type SongTransport = {
   readonly start: () => Promise<void>;
+  /** Play or pause; starts the song if it has not started. */
   readonly toggle: () => void;
+  /** Jumps to a song position, playing or paused as it was; starts the song first if it has not started. */
+  readonly seek: (timeMs: number) => Promise<void>;
 };
 
 const SongTransportContext = createContext<SongTransport | null>(null);
@@ -61,16 +64,29 @@ export function AudioSongClock({ children, song = activeSong }: { children: Reac
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !startedRef.current) return;
+    if (!audio) return;
+    if (!startedRef.current) return void start();
     if (audio.paused) void audio.play().catch(() => undefined);
     else audio.pause();
-  }, []);
+  }, [start]);
+
+  const seek = useCallback(
+    async (timeMs: number) => {
+      if (!startedRef.current) await start();
+      const audio = audioRef.current;
+      if (!audio) return;
+      const clamped = Math.min(Math.max(0, timeMs), song.durationMs - 50);
+      audio.currentTime = clamped / 1_000;
+      setCurrentTimeMs(Math.round(clamped));
+    },
+    [song.durationMs, start],
+  );
 
   const clock = useMemo(
     () => ({ song, currentTimeMs, hasStarted, isPlaying, reducedMotion }),
     [currentTimeMs, hasStarted, isPlaying, reducedMotion, song],
   );
-  const transport = useMemo(() => ({ start, toggle }), [start, toggle]);
+  const transport = useMemo(() => ({ start, toggle, seek }), [seek, start, toggle]);
 
   return (
     <SongTransportContext.Provider value={transport}>

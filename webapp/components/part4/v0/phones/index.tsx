@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AudioSongClock } from "../clock/audio";
+import { isTyping } from "../clock/keys";
+import { PLAY_BAR_HEIGHT, PlayBar } from "../clock/play-bar";
 import { PlayOverlay } from "../clock/play-overlay";
 import { anchorSongClock, formatSongClock } from "../clock/wall-clock";
 import { DesktopSurface, useSurface } from "../surface";
@@ -18,8 +20,10 @@ import styles from "./field.module.css";
 // thread, a note, a lock-screen notification — so one line is read many ways
 // at once, while each phone stays an ordinary, usable phone. `?phones=` sets
 // the count. The field is a desktop surface, so the phones scale with the
-// width of the window. The options control and the play button are page
-// chrome, not interfaces: they sit outside the surface at a fixed size.
+// width of the window. The options control, the play bar (pause, scrub, step
+// by section; Space and the arrow keys) and the play button are page chrome,
+// not interfaces: they sit outside the surface at a fixed size. X hides the
+// bar and the options control.
 
 const DEFAULT_PHONES = 12;
 
@@ -32,12 +36,27 @@ export default function Part4Phones() {
   });
   const [mode, setMode] = useState<StateMode>("score");
 
+  // X hides the page chrome (the play bar and the options control) and brings it back.
+  const [chrome, setChrome] = useState(true);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "x" || isTyping(event)) return;
+      setChrome((shown) => !shown);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <AudioSongClock>
-      <DesktopSurface>
-        <PhoneField phones={phones} mode={mode} />
-      </DesktopSurface>
-      <Controls phones={phones} mode={mode} onPhones={setPhones} onMode={setMode} />
+      {/* The field fills the page above the play bar, or all of it while the chrome is hidden. */}
+      <div style={{ position: "fixed", inset: `0 0 ${chrome ? PLAY_BAR_HEIGHT : 0}px 0` }}>
+        <DesktopSurface fill="parent">
+          <PhoneField phones={phones} mode={mode} />
+        </DesktopSurface>
+      </div>
+      {chrome ? <Controls phones={phones} mode={mode} onPhones={setPhones} onMode={setMode} /> : null}
+      <PlayBar hidden={!chrome} />
       <PlayOverlay />
     </AudioSongClock>
   );
